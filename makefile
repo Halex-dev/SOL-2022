@@ -69,6 +69,20 @@ $(OBJ_DIR)/log/%.o : $(CODE_DIR)/log/%.c $(INC_DIR)/log/%.h  $(OBJ_DIR)/log/log.
 $(OBJ_DIR)/log/log.o : $(CODE_DIR)/log/log.c $(INC_DIR)/log/log.h
 	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
+#	-------------- Logs Library -------------  #
+UTIL_SRC := $(wildcard $(CODE_DIR)/config/*.c)
+UTIL_OBJ := $(patsubst $(CODE_DIR)/config/%.c, $(OBJ_DIR)/config/%.o, $(UTIL_SRC))
+UTIL_INC := $(patsubst $(CODE_DIR)/config/%.c, $(INC_DIR)/config/%.h, $(UTIL_SRC))
+
+$(LIB_DIR)/libconfig.so : $(UTIL_OBJ)
+	$(CC) $(CFLAGS) -shared $^ -o $@
+
+$(OBJ_DIR)/config/%.o : $(CODE_DIR)/config/%.c $(INC_DIR)/config/%.h  $(OBJ_DIR)/config/config.o
+	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+
+$(OBJ_DIR)/config/config.o : $(CODE_DIR)/config/config.c $(INC_DIR)/config/config.h
+	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+
 # 	------------------- Server ------------------- 	#
 
 SERVER_SRC := $(wildcard $(CODE_DIR)/server/*.c) $(wildcard $(CODE_DIR)/server/file/*.c)
