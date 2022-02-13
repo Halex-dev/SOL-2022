@@ -23,8 +23,7 @@ typedef struct _config {
     struct _list_c* tail;
 } config_file;
 
-char* get_config(config_file* cf, char* key);
-config_file* init_config(char* path);
+config_file* init_config(const char* path);
 void printConfig(config_file* cf);
 void free_config(config_file* cf);
 

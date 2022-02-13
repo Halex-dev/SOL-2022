@@ -26,4 +26,10 @@
 #include <sys/un.h>
 #include <syscall.h>
 
+void UpperCase(char *str);
+void* safe_malloc(size_t size);
+void* safe_calloc(size_t nmemb, size_t size);
+void* safe_realloc(void* ptr, size_t size);
+bool isNumber(char* str);
+
 #endif

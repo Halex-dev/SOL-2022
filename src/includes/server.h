@@ -2,14 +2,14 @@
 #define _SERVER_H
 
 #include "util/util.h"
-#include "other/log.h"
-#include "other/config.h"
+#include "util/log.h"
+#include "util/config.h"
 
 /** File replacement policy. */
 typedef enum {
     LRU,
     FIFO,
-    MRU,
+    MFU,
     LFU
 } policy_r;
 
@@ -36,9 +36,9 @@ typedef struct {
     unsigned int workers;
     size_t max_space;
     unsigned int max_files;
-    char socket_path[PATH_MAX];
-    char log_path[PATH_MAX];
-    //char storage_path[PATH_MAX];
+    char* socket_path;
+    char* log_path;
+    //char* storage_path;
     policy_r policy;
     server_socket socket;
     bool debug;
@@ -62,5 +62,8 @@ typedef struct {
 } server_state;
 
 extern server_config server;
+
+//____________________________ FUNCTION _________________________
+bool read_config(const char * path);
 
 #endif

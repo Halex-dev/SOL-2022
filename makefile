@@ -39,27 +39,29 @@ createDir:
 	@bash $(SCRIPT_DIR)/createDir.sh
 
 #	-------------- Other Library -------------  #
-OTHER_SRC := $(wildcard $(CODE_DIR)/other/*.c)
-OTHER_OBJ := $(patsubst $(CODE_DIR)/other/%.c, $(OBJ_DIR)/other/%.o, $(OTHER_SRC))
-OTHER_INC := $(patsubst $(CODE_DIR)/other/%.c, $(INC_DIR)/other/%.h, $(OTHER_SRC))
+OTHER_SRC := $(wildcard $(CODE_DIR)/util/*.c)
+OTHER_OBJ := $(patsubst $(CODE_DIR)/util/%.c, $(OBJ_DIR)/util/%.o, $(OTHER_SRC))
+OTHER_INC := $(patsubst $(CODE_DIR)/util/%.c, $(INC_DIR)/util/%.h, $(OTHER_SRC))
 
-$(LIB_DIR)/libhalex.so : $(OTHER_SRC)
+$(LIB_DIR)/libutil.so : $(OTHER_SRC)
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
-$(OBJ_DIR)/other/log.o : $(CODE_DIR)/other/log.c $(INC_DIR)/other/log.h
+$(OBJ_DIR)/util/log.o : $(CODE_DIR)/util/log.c $(INC_DIR)/util/log.h
 	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
-$(OBJ_DIR)/other/config.o : $(CODE_DIR)/other/config.c $(INC_DIR)/other/config.h
+$(OBJ_DIR)/util/config.o : $(CODE_DIR)/util/config.c $(INC_DIR)/util/config.h
 	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
+$(OBJ_DIR)/util/util.o : $(CODE_DIR)/util/util.c $(INC_DIR)/util/util.h
+	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 # 	------------------- Server ------------------- 	#
 
 SERVER_SRC := $(wildcard $(CODE_DIR)/server/*.c) $(wildcard $(CODE_DIR)/server/file/*.c)
 SERVER_OBJ := $(patsubst $(CODE_DIR)/server/%.c, $(OBJ_DIR)/server/%.o, $(SERVER_SRC))
 SERVER_INC := $(INC_DIR)/server.h
 
-SERVER_DEPS := $(LIB_DIR)/libhalex.so #$(LIB_DIR)/libutil.so
-SERVER_LIBS := $(DYN_LINK) -lpthread -lhalex #-lutil 
+SERVER_DEPS := $(LIB_DIR)/libutil.so
+SERVER_LIBS := $(DYN_LINK) -lpthread -lutil 
 
 $(BIN_DIR)/server : $(SERVER_OBJ)
 	$(CC) $(CFLAGS) $^ -o $@ $(SERVER_LIBS)

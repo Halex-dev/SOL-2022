@@ -6,11 +6,10 @@ if  [ ! -d src/objs/server ]            \
     || [ ! -d src/objs/client ]         \
     || [ ! -d src/objs/util ]           \
     || [ ! -d src/objs/util/data ]      \
-    || [ ! -d src/objs/other ]            \
     || [ ! -d src/objs/server/file ]    
 then
     echo "Creating directories objs..."
-    mkdir -p src/objs/server src/objs/server/file src/objs/api src/objs/client src/objs/util src/objs/util/data src/objs/other
+    mkdir -p src/objs/server src/objs/server/file src/objs/api src/objs/client src/objs/util src/objs/util/data
     echo "Directories created!"
 fi
 

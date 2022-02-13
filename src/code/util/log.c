@@ -4,7 +4,7 @@
  * 
  */
 
-#include "other/log.h"
+#include "util/log.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +15,8 @@ pthread_mutex_t s_mutex;
 FILE* log_file;
 
 log_config config ={
-    .thread_safe = false
+    .thread_safe = false,
+    .file = false
 };
 
 //__________________________________ SETTING LOG _________________________________//
@@ -139,7 +140,7 @@ void init_log_file(const char* path, const char* mode){
         fprintf(stderr, "\x1b[41m [LOG] Fatal error in creating or open log file. Aborting.\x1B[0m\n");
         exit(EXIT_FAILURE);
     }
-
+    config.file = true;
     free(log_file_path);
 }
 
@@ -160,7 +161,7 @@ static void stdout_callback(log_event *ev, int level) {
     //ON TERMINAL BUT WHIT COLOR
     if(level_console[level]){
         if(level_line[level])
-            fprintf(ev->udata, "%s | %s:%d: |%s%-5s\x1b[0m | ",buf, ev->file, ev->line, level_colors[level], level_strings[level]);
+            fprintf(ev->udata, "%s | %s:%d: | %s%-5s\x1b[0m | ",buf, ev->file, ev->line, level_colors[level], level_strings[level]);
         else
             fprintf(ev->udata, "%s | %s%-5s\x1b[0m | ",buf, level_colors[level], level_strings[level]);
     }
@@ -177,11 +178,14 @@ static void stdout_callback(log_event *ev, int level) {
 
     #endif
 
+    
     //ON FILE
-    if(level_line[level])
-        fprintf(log_file, "%s | %s:%d: | %-5s | ",buf, ev->file, ev->line, level_strings[level]);
-    else
-        fprintf(log_file, "%s | %-5s | ",buf, level_strings[level]);
+    if(config.file){
+        if(level_line[level])
+            fprintf(log_file, "%s | %s:%d: | %-5s | ",buf, ev->file, ev->line, level_strings[level]);
+        else
+            fprintf(log_file, "%s | %-5s | ",buf, level_strings[level]);
+    }
 
     va_list aq;
 
@@ -193,10 +197,12 @@ static void stdout_callback(log_event *ev, int level) {
         fflush(ev->udata);
     }
 
-    vfprintf(log_file, ev->fmt, aq);
-    fprintf(log_file, "\n");
-    fflush(log_file);
-
+    //Write on file
+    if(config.file){
+        vfprintf(log_file, ev->fmt, aq);
+        fprintf(log_file, "\n");
+        fflush(log_file);
+    }
 }
 
 void mylog(int level, const char *file, int line, const char *fmt, ...) {

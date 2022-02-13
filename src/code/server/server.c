@@ -1,6 +1,6 @@
 #include "server.h"
 
-config_file* cf;
+
 
 server_config server ={
     .workers = 0,
@@ -26,6 +26,12 @@ server_state curr_state ={
     .max_space = 0
 };
 
+void clean_memory();
+
+char* getPolicy(){
+    return ( server.policy == FIFO ? "FIFO" : (server.policy == LRU ? "LRU" : (server.policy == LFU ? "LFU" : "MFU")) );
+}
+
 int main(int argc, char* argv[]){ 
     
     if(argc > 2){
@@ -34,25 +40,36 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    char* config_path = (argc == 1) ? "system/config/config.conf" : argv[1];
-
+    const char* config_path = (argc == 1) ? "system/config/config.conf" : argv[1];
+    
     // ________________________ INIZIALIZE SERVER __________________________________ //
 
     // ------------------------ CONFIG ------------------------- //
-    if ((cf = init_config(config_path)) == NULL) {
-        perror("read_config_file()");
+    if(!read_config(config_path))
         return -1;
-    }
 
-    server.workers = get_config(cf, "WORKERS");
-    server.max_files = get_config(cf, "MAX_FILES");
-    strcpy(server.socket_path, get_config(cf, "SOCK_PATH"));
-    strcpy(server.log_path, get_config(cf, "LOG_PATH"));
-    server.policy = get_config(cf, "POLICY");
-    server.max_space = get_config(cf, "MAX_SPACE");
-    server.debug = get_config(cf, "DEBUG");
 
-    printConfig(cf);
-    free_config(cf);
+    log_setConsole(LOG_INFO, server.debug);
+
+    log_info("Open server with these options:\n - WORKERS: %d\n - MAX_FILES: %d\n \
+- SOCK_PATH: %s\n - LOG_PATH: %s\n - POLICY: %s\n - MAX_SPACE: %dMB\n", 
+        server.workers
+        ,server.max_files
+        ,server.socket_path
+        ,server.log_path
+        ,getPolicy()
+        ,server.max_space/1048576
+        ,server.debug
+    );
+
+    // ------------------------ LOG ------------------------- //
+
+    init_log_file(server.log_path, WRITE);
+
     return 0;
+}
+
+void clean_memory(){
+    free(server.log_path);
+    free(server.socket_path);
 }

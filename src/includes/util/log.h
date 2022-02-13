@@ -47,6 +47,7 @@ typedef struct {
 
 typedef struct {
   bool thread_safe;
+  bool file;
 } log_config;
 
 enum { LOG_STATS, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
@@ -62,7 +63,7 @@ enum { LOG_STATS, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
  * Given a path to a config file tries 
  * to read the server configuration from the file.
  * 
- * EXIT_FAILURE if 
+ * EXIT_FAILURE on error
  */
 void init_log_file(const char* path, const char* mode);
 
