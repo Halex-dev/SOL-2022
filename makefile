@@ -1,6 +1,6 @@
 # Compilation options
 CC 		= gcc
-CFLAGS 	+= -std=c99 -Wall -pedantic -g -I./src/includes -D_POSIX_C_SOURCE=200112L -D_DEFAULT_SOURCE -DLOG_USE_COLOR
+CFLAGS 	+= -std=c99 -Wall -pedantic -g -I./src/includes -D_POSIX_C_SOURCE=200112L -D_DEFAULT_SOURCE -DLOG_USE_COLOR -fPIC
 
 # Directories
 
@@ -25,7 +25,7 @@ DYN_LINK = -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR)
 
 # 	---------------- Default rule ----------------	#
 
-all : createDir $(BIN_DIR)/server $(BIN_DIR)/client
+all : createDir $(BIN_DIR)/server #$(BIN_DIR)/client
 
 # 	---------------- Debug macro -----------------  #
 
@@ -38,49 +38,18 @@ debug : all
 createDir:
 	@bash $(SCRIPT_DIR)/createDir.sh
 
-#	-------------- Utilities Library -------------  #
-UTIL_SRC := $(wildcard $(CODE_DIR)/util/*.c) $(wildcard $(CODE_DIR)/util/data/*.c)
-UTIL_OBJ := $(patsubst $(CODE_DIR)/util/%.c, $(OBJ_DIR)/util/%.o, $(UTIL_SRC))
-UTIL_INC := $(patsubst $(CODE_DIR)/util/%.c, $(INC_DIR)/util/%.h, $(UTIL_SRC))
+#	-------------- Other Library -------------  #
+OTHER_SRC := $(wildcard $(CODE_DIR)/other/*.c)
+OTHER_OBJ := $(patsubst $(CODE_DIR)/other/%.c, $(OBJ_DIR)/other/%.o, $(OTHER_SRC))
+OTHER_INC := $(patsubst $(CODE_DIR)/other/%.c, $(INC_DIR)/other/%.h, $(OTHER_SRC))
 
-$(LIB_DIR)/libutil.so : $(UTIL_OBJ)
+$(LIB_DIR)/libhalex.so : $(OTHER_SRC)
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
-$(OBJ_DIR)/util/%.o : $(CODE_DIR)/util/%.c $(INC_DIR)/util/%.h  $(OBJ_DIR)/util/util.o
+$(OBJ_DIR)/other/log.o : $(CODE_DIR)/other/log.c $(INC_DIR)/other/log.h
 	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
-$(OBJ_DIR)/util/data/%.o :  $(CODE_DIR)/util/data/%.c $(INC_DIR)/util/data/*%.h $(OBJ_DIR)/util/util.o
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
-
-$(OBJ_DIR)/util/util.o : $(CODE_DIR)/util/util.c $(INC_DIR)/util/util.h
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
-
-#	-------------- Logs Library -------------  #
-UTIL_SRC := $(wildcard $(CODE_DIR)/log/*.c)
-UTIL_OBJ := $(patsubst $(CODE_DIR)/log/%.c, $(OBJ_DIR)/log/%.o, $(UTIL_SRC))
-UTIL_INC := $(patsubst $(CODE_DIR)/log/%.c, $(INC_DIR)/log/%.h, $(UTIL_SRC))
-
-$(LIB_DIR)/liblog.so : $(UTIL_OBJ)
-	$(CC) $(CFLAGS) -shared $^ -o $@
-
-$(OBJ_DIR)/log/%.o : $(CODE_DIR)/log/%.c $(INC_DIR)/log/%.h  $(OBJ_DIR)/log/log.o
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
-
-$(OBJ_DIR)/log/log.o : $(CODE_DIR)/log/log.c $(INC_DIR)/log/log.h
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
-
-#	-------------- Logs Library -------------  #
-UTIL_SRC := $(wildcard $(CODE_DIR)/config/*.c)
-UTIL_OBJ := $(patsubst $(CODE_DIR)/config/%.c, $(OBJ_DIR)/config/%.o, $(UTIL_SRC))
-UTIL_INC := $(patsubst $(CODE_DIR)/config/%.c, $(INC_DIR)/config/%.h, $(UTIL_SRC))
-
-$(LIB_DIR)/libconfig.so : $(UTIL_OBJ)
-	$(CC) $(CFLAGS) -shared $^ -o $@
-
-$(OBJ_DIR)/config/%.o : $(CODE_DIR)/config/%.c $(INC_DIR)/config/%.h  $(OBJ_DIR)/config/config.o
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
-
-$(OBJ_DIR)/config/config.o : $(CODE_DIR)/config/config.c $(INC_DIR)/config/config.h
+$(OBJ_DIR)/other/config.o : $(CODE_DIR)/other/config.c $(INC_DIR)/other/config.h
 	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
 # 	------------------- Server ------------------- 	#
@@ -89,8 +58,8 @@ SERVER_SRC := $(wildcard $(CODE_DIR)/server/*.c) $(wildcard $(CODE_DIR)/server/f
 SERVER_OBJ := $(patsubst $(CODE_DIR)/server/%.c, $(OBJ_DIR)/server/%.o, $(SERVER_SRC))
 SERVER_INC := $(INC_DIR)/server.h
 
-SERVER_DEPS := $(LIB_DIR)/libutil.so $(LIB_DIR)/liblog.so
-SERVER_LIBS := $(DYN_LINK) -lutil -lpthread -llog
+SERVER_DEPS := $(LIB_DIR)/libhalex.so #$(LIB_DIR)/libutil.so
+SERVER_LIBS := $(DYN_LINK) -lpthread -lhalex #-lutil 
 
 $(BIN_DIR)/server : $(SERVER_OBJ)
 	$(CC) $(CFLAGS) $^ -o $@ $(SERVER_LIBS)
@@ -101,32 +70,6 @@ $(OBJ_DIR)/server/file/%.o : $(CODE_DIR)/server/file/%.c $(SERVER_INC) $(SERVER_
 $(OBJ_DIR)/server/%.o : $(CODE_DIR)/server/%.c $(SERVER_INC) $(SERVER_DEPS)
 	$(CC) $(CFLAGS) $< -c -o $@
 
-# 	----------------- Server API -----------------  #
-
-API_SRC := $(wildcard $(CODE_DIR)/api/*.c)
-API_OBJ := $(patsubst $(CODE_DIR)/api/%.c, $(OBJ_DIR)/api/%.o, $(API_SRC))
-API_INC := $(INC_DIR)/api.h $(wildcard $(INC_DIR)/api/*.h) 
-
-$(LIB_DIR)/libapi.so : $(API_OBJ) $(DEP_LIST)
-	$(CC) $(CFLAGS) -shared $(API_OBJ) -o $@
-
-$(OBJ_DIR)/api/%.o : $(CODE_DIR)/api/%.c $(API_INC) $(DEP_LIST)
-	$(CC) -fPIC $(CFLAGS) $< -c -o $@
-
-# 	------------------- Client -------------------	#
-
-CLIENT_SRC := $(wildcard $(CODE_DIR)/client/*.c)
-CLIENT_OBJ := $(patsubst $(CODE_DIR)/client/%.c, $(OBJ_DIR)/client/%.o, $(CLIENT_SRC))
-CLIENT_INC := $(INC_DIR)/client.h
-
-CLIENT_DEPS = $(LIB_DIR)/libutil.so $(LIB_DIR)/libapi.so $(LIB_DIR)/liblog.so
-CLIENT_LIBS = $(DYN_LINK) -lutil -lapi -llog
-
-$(BIN_DIR)/client : $(CLIENT_OBJ)
-	$(CC) $(CFLAGS) $^ -o $@ $(CLIENT_LIBS)
-
-$(OBJ_DIR)/client/%.o : $(CODE_DIR)/client/%.c $(CLIENT_INC) $(CLIENT_DEPS)
-	$(CC) $(CFLAGS) -c $< -o $@
 # 	-------------------------------------------------------------- COMMANDS --------------------------------------------------------------	#
 
 # 	------------------ Cleaning ------------------	#
@@ -186,6 +129,8 @@ cleanTest3:
 
 .PHONY: cleanTest
 cleanTest: cleanTest1 cleanTest2 cleanTest3 cleanlog
+
+# 	------------------ Script ------------------	#
 
 .PHONY: stats
 stats:

@@ -1,4 +1,4 @@
-#include "config.h"
+#include "other/config.h"
 
 config_file* init_config(char* path){
     FILE* fp;
@@ -39,9 +39,10 @@ config_file* init_config(char* path){
                 continue;
             }
             //perror("[CONFIG] fscanf()");
+            
             free(el);
             continue;
-        }
+        }     
 
         if(cf->size == 0){ //Empty config node
             cf->head = el;
@@ -58,6 +59,22 @@ config_file* init_config(char* path){
     return cf;
 }
 
+char* get_config(config_file* cf, char* key){
+
+    if(cf == NULL)
+        return NULL;
+
+    List_c* el = cf->head;
+
+    while(el != NULL){
+        el = el->next;
+
+        if(strcmp(el->key, key) == 0)
+            return el->data;
+    }
+
+    return NULL;
+}
 
 void printConfig(config_file* cf){
 
