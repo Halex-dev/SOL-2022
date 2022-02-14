@@ -1,31 +1,5 @@
 #include "server.h"
 
-
-
-server_config server ={
-    .workers = 0,
-    .max_space = 0,
-    .max_files = 0,
-    .policy = LRU,
-    .socket_path = "",
-    .log_path = "",
-    .socket ={
-        .fd_listen = 0,
-        .fd_max = 0,
-        .mode = CLOSE_SERVER
-    }
-};
-
-server_state curr_state ={
-    .conn = 0,
-    .files = 0,
-    .space = 0,
-    .n_policy = 0,
-    .max_conn = 0,
-    .max_files = 0,
-    .max_space = 0
-};
-
 void clean_memory();
 
 char* getPolicy(){
@@ -66,10 +40,20 @@ int main(int argc, char* argv[]){
 
     init_log_file(server.log_path, WRITE);
 
+
+    // ------------------------ Threadpool ------------------------- //
+    if((tm  = threadpool_create(server.workers, QUEUE, 0)) == NULL){
+        log_error("Failed to create threadpool. Aborting.");
+        return -1;
+    }
+
+    clean_memory();
     return 0;
 }
 
 void clean_memory(){
     free(server.log_path);
     free(server.socket_path);
+    threadpool_destroy(tm, 1);
+    close_logger();
 }
