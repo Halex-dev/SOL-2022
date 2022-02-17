@@ -1,7 +1,7 @@
 #include "server.h"
 
-rbtree *rbt;
-hashmap *hash;
+rbtree *rbt = NULL;
+hashmap *hash = NULL;
 
 char* getPolicy(){
     return ( server.policy == FIFO ? "FIFO" : (server.policy == LRU ? "LRU" : (server.policy == LFU ? "LFU" : "MFU")) );
@@ -14,40 +14,124 @@ void print_entry(void* key, size_t ksize, void* value, void* usr)
 	// assumes the key is a null-terminated string
 	printf("Entry \"%s\": %s\n", (char *)key, (char *)value);
 }
-void storage_init(){
-    hash = hashmap_create();
 
-    /* create a red-black tree */
-	if ((rbt = rb_create(compare_func, destroy_func)) == NULL) {
-		log_error("Create red-black tree failed\n");
-		exit(EXIT_FAILURE);
-	}
+/* ________________________________ RBT data management side __________________________________________________ */
+int compare_func(const void *d1, const void *d2)
+{
+	Node *p1, *p2;
+	
+	assert(d1 != NULL);
+	assert(d2 != NULL);
+	
+	p1 = (Node *) d1;
+	p2 = (Node *) d2;
+
+	return strcmp(p1->key, p2->key);
+}
+
+void destroy_func(void *d)
+{
+	Node *p;
+	
+	assert(d != NULL);
+	
+	p = (Node *) d;
+    delete_node_full(p);
+}
+
+void print_func(void *d)
+{
+	Node *p;
+	
+	assert(d != NULL);
+	
+	p = (Node *) d;
+	printf("- [%s]", p->key);
+}
+
+
+/* ________________________________ STORAGE __________________________________________________ */
+
+void storage_init(){
+
+    if(server.storage == HASH){
+        if ((hash = hashmap_create()) == NULL) {
+            log_error("Create red-black tree failed\n");
+            exit(EXIT_FAILURE);
+	    }
+    }
+    else if(server.storage == RBT){ /* create a red-black tree */
+        if ((rbt = rb_create(compare_func, destroy_func)) == NULL) {
+            log_error("Create red-black tree failed\n");
+            exit(EXIT_FAILURE);
+	    }
+    }	
 }
 
 void print_storage(){
-    hashmap_iterate(hash, print_entry, NULL);
+    if(server.storage == HASH){
+        hashmap_iterate(hash, print_entry, NULL);
+    }
+    else if(server.storage == RBT){
+        rb_print(rbt, print_func);
+    }
 }
 
 void clean_storage(){
-    rb_destroy(rbt);
-    hashmap_free(hash);
+    if(server.storage == HASH){
+        hashmap_free(hash);
+    }
+    else if(server.storage == RBT){
+        rb_destroy(rbt);
+    }
 }
 
-/**
- * 
-	char *a[] = {"Resto", "Dio", "Ciaone", "Dario", "Porco", "Dio", "Test", "Hello", "Dario", "Tok"};
-	int i;
-	mydata *data;
-	for (i = 0; i < sizeof(a) / sizeof(a[0]); i++) {
-		if ((data = makedata(a[i])) == NULL || rb_insert(rbt, data) == NULL) {
-			fprintf(stderr, "insert %s: out of memory\n", a[i]);
-			free(data);
-			break;
-		}
-		printf("insert %s", a[i]);
-		rb_print(rbt, print_char_func);
-		printf("\n");
-	}
 
- * 
- */
+void insert_storage(char* key, void* data){
+
+    if(server.storage == HASH){
+        int len = strlen(key);
+        hashmap_set(hash, key, len, data);
+    }
+    else if(server.storage == RBT){
+        Node* node = create_node(key, data);
+
+        if (rb_insert(rbt, node) == NULL) {
+            log_error("RBT out of memory for key %s",key);
+			free(data);
+		}
+    }
+}
+
+void del_storage(char* key){
+
+    if(server.storage == HASH){
+        int len = strlen(key);
+        hashmap_remove(hash, key, len);
+    }
+    else if(server.storage == RBT){
+        Node node;
+        void* out = NULL;
+        node.key = key;
+
+        if ((out = rb_find(rbt, &node)) != NULL)
+		    rb_delete(rbt, out, 0);
+    }
+}
+
+void* search_storage(char* key){
+
+    void* out = NULL;
+
+    if(server.storage == HASH){
+        int len = strlen(key);
+        hashmap_get(hash, key, len, &out);
+    }
+    else if(server.storage == RBT){
+        Node node;
+
+        node.key = key;
+        out = rb_find(rbt, &node);
+    }
+    return out;
+}

@@ -317,7 +317,7 @@ void hashmap_remove(hashmap* m, void* key, size_t ksize)
 		// "tombstone" entry is signified by a NULL key with a nonzero value
 		// element removal is optional because of the overhead of tombstone checks
 		entry->key = NULL;
-		entry->value = 0xDEAD; // I mean, it's a tombstone...
+		entry->value = (void*)0xDEAD; // I mean, it's a tombstone...
 
 		++m->tombstone_count;
 	}
@@ -335,7 +335,7 @@ void hashmap_remove_free(hashmap* m, void* key, size_t ksize, hashmap_callback c
 		// "tombstone" entry is signified by a NULL key with a nonzero value
 		// element removal is optional because of the overhead of tombstone checks
 		entry->key = NULL;
-		entry->value = 0xDEAD; // I mean, it's a tombstone...
+		entry->value = (void*)0xDEAD; // I mean, it's a tombstone...
 
 		++m->tombstone_count;
 	}

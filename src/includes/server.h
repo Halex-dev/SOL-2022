@@ -4,16 +4,19 @@
 #include "util/util.h"
 #include "util/log.h"
 #include "util/config.h"
-//___________________________ RBT __________________________//
-#include "util/data/rbt.h"
-#include "util/data/rbt_data.h"
 
+#include "util/data/rbt.h"
 #include "util/data/hashmap.h"
 
 #include "util/data/nodeList.h"
 #include "util/data/node.h"
 
 #define SYSTEM_CALL_EXIT(sys_call, str) if(sys_call != 0) {\
+        log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
+        exit(EXIT_FAILURE); \
+    }
+
+#define CHECK_ERROR(call, str) if(call == -1) {\
         log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
         exit(EXIT_FAILURE); \
     }
@@ -237,16 +240,6 @@ void threadpool_queue_next(tpool_t *pool, int worker);
  */
 #define WEND 1
 
-/**____________________________________________________  STORAGE FUNCTION  ____________________________________________________ **/
-
-char* getPolicy();
-void print_storage();
-void clean_storage();
-void storage_init();
-
-/**____________________________________________________  SIGNAL HANDLER  ____________________________________________________ **/
-int init_sig_handler();
-void cleen_handler(shutdown_mode_t flags);
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
 extern server_config server;
@@ -254,7 +247,26 @@ extern tpool_t *tm;
 
 extern int* sig_handler_pipe;
 extern pthread_t sig_handler_tid;
-/**____________________________________________________  FUNCTION   ____________________________________________________ **/
+
+/**____________________________________________________  STORAGE FUNCTION  ____________________________________________________ **/
+
+char* getPolicy();
+void print_storage();
+void clean_storage();
+void storage_init();
+
+void insert_storage(char* key, void* data);
+void* search_storage(char* key);
+
+/**____________________________________________________  SIGNAL HANDLER  ____________________________________________________ **/
+int init_sig_handler();
+void cleen_handler(shutdown_mode_t flags);
+
+/**____________________________________________________  CONFIG   ____________________________________________________ **/
 bool read_config(const char * path);
+void print_config();
+
+/**____________________________________________________  FUNCTION   ____________________________________________________ **/
+void clean_socket();
 
 #endif

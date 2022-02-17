@@ -192,3 +192,16 @@ bool read_config(const char * path){
     free_config(cf);
     return true;
 }
+
+void print_config(){
+    log_info("Open server with these options:\n - WORKERS: %d\n - MAX_FILES: %d\n \
+- SOCK_PATH: %s\n - LOG_PATH: %s\n - POLICY: %s\n - MAX_SPACE: %dMB\n", 
+        server.workers
+        ,server.max_files
+        ,server.socket_path
+        ,server.log_path
+        ,getPolicy()
+        ,server.max_space/1048576
+        ,server.debug
+    );
+}

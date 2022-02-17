@@ -9,8 +9,8 @@ server_config server ={
     .socket_path = "",
     .log_path = "",
     .socket ={
-        .fd_listen = 0,
-        .fd_max = 0,
+        .fd_listen = -1,
+        .fd_max = -1,
         .mode = CLOSE_SERVER
     }
 };

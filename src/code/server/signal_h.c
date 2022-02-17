@@ -59,10 +59,7 @@ int init_sig_handler(){
     sig_handler_pipe = safe_calloc(2, sizeof(int));
     pipe_init(sig_handler_pipe);
 
-    if( pipe(sig_handler_pipe) == -1){
-        perror("Error in creating sig_handler_pipe");
-        return -1;
-    }
+    SYSTEM_CALL_EXIT(pipe(sig_handler_pipe),"Error in creating sig_handler_pipe");
 
     server.socket.fd_max = sig_handler_pipe[REND];
     
