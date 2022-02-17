@@ -128,7 +128,7 @@ tpool_t *threadpool_create(int thread_count, int queue_size, int flags)
     return NULL;
 }
 
-int threadpool_destroy(tpool_t *pool, threadpool_shutdown_t flags)
+int threadpool_destroy(tpool_t *pool, shutdown_mode_t flags)
 {
     int i, err = 0;
 

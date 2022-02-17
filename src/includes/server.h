@@ -13,13 +13,13 @@
 #include "util/data/nodeList.h"
 #include "util/data/node.h"
 
-#define SYSTEM_CALL_EXIT(sys_call) if(sys_call != 0) {\
-        log_error("System call error | %s (codice %d)\n", strerror(errno), errno); \
+#define SYSTEM_CALL_EXIT(sys_call, str) if(sys_call != 0) {\
+        log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
         exit(EXIT_FAILURE); \
     }
 
-#define SYSTEM_CALL(sys_call) if(sys_call != 0) {\
-        log_error("System call error | %s (codice %d)\n", strerror(errno), errno); \
+#define SYSTEM_CALL(sys_call, str) if(sys_call != 0) {\
+        log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
         return -1; \
     }
 
@@ -104,7 +104,7 @@ typedef struct tpool_t tpool_t;
 typedef enum {
     immediate_shutdown = 1,
     graceful_shutdown  = 2
-} threadpool_shutdown_t;
+} shutdown_mode_t;
 
 /**
  *  @struct tpool_task
@@ -215,7 +215,7 @@ int threadpool_add(tpool_t *pool, void (*routine)(void *),
 /**
  * Destroy thread pools, flags can be used to specify how to close them
  */
-int threadpool_destroy(tpool_t *pool, threadpool_shutdown_t flags);
+int threadpool_destroy(tpool_t *pool, shutdown_mode_t flags);
 
 /**
  * @function implement Event Loop
@@ -244,11 +244,16 @@ void print_storage();
 void clean_storage();
 void storage_init();
 
+/**____________________________________________________  SIGNAL HANDLER  ____________________________________________________ **/
+int init_sig_handler();
+void cleen_handler(shutdown_mode_t flags);
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
 extern server_config server;
 extern tpool_t *tm;
 
+extern int* sig_handler_pipe;
+extern pthread_t sig_handler_tid;
 /**____________________________________________________  FUNCTION   ____________________________________________________ **/
 bool read_config(const char * path);
 

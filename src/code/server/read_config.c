@@ -183,6 +183,11 @@ bool read_config(const char * path){
         log_error("SOCK_PATH and LOG_PATH must be present in the log file");
     }
 
+    // SET SOCKET //
+    server.socket.fd_listen = -1;
+    server.socket.fd_max = -1;
+    server.socket.mode = ACCEPT_CONN;
+
     //printConfig(cf);
     free_config(cf);
     return true;

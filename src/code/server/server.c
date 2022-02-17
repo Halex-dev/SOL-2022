@@ -33,26 +33,34 @@ int main(int argc, char* argv[]){
     );
 
     // ------------------------ LOG ------------------------- //
-
     init_log_file(server.log_path, WRITE);
+    log_threadsafe(true);
 
+    // ------------------------- SIGNAL HANDLER --------------------- //
+    init_sig_handler();
 
     // ------------------------ Threadpool ------------------------- //
     if((tm  = threadpool_create(server.workers, QUEUE, 0)) == NULL){
         log_error("Failed to create threadpool. Aborting.");
         return -1;
     }
-
-    //--------------------------- STORAGE ----------------------------- //
+    // --------------------------- STORAGE ----------------------------- //
     storage_init();
 
+    // --------------------------- SOCKET ----------------------------- //
+    log_info("Server inizialized, i'm listening....");
+
+    while(server.socket.mode == ACCEPT_CONN){
+        usleep(200);
+    }
     
-    
+    log_info("Clean memory and closing server....");
     clean_memory();
     return 0;
 }
 
 void clean_memory(){
+    cleen_handler(graceful_shutdown);
     threadpool_destroy(tm, graceful_shutdown);
     clean_storage();
     free(server.log_path);
