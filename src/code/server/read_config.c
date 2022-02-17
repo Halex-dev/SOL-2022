@@ -4,10 +4,18 @@ bool read_config(const char * path){
 
     config_file* cf;
 
-    if ((cf = init_config(path)) == NULL) {
+    char buf[PATH_MAX];
+    realpath(path, buf);
+
+    char* path_config = safe_calloc(strlen(buf) + 1, sizeof(char));
+    strcpy(path_config, buf);
+
+    if ((cf = init_config(buf)) == NULL) {
         perror("read_config_file()");
         return -1;
     }
+
+    free(path_config);
 
     bool workes = false;
     bool max_files = false;
@@ -16,6 +24,7 @@ bool read_config(const char * path){
     bool log_path = false;
     bool policy = false;
     bool debug = false;
+    bool storage = false;
 
     List_c* el = cf->head;
 
@@ -135,6 +144,25 @@ bool read_config(const char * path){
             //log_debug("SOCK_PATH %d", server.debug);
         }
 
+        if(strcmp(el->key, "STORAGE") == 0){
+            if(isNumber(el->data)){
+                log_error("STORAGE must be a RBT or HASH");
+                exit(EXIT_FAILURE);
+            }
+
+            if(strcmp(el->data, "HASH") == 0)
+                server.storage = HASH;
+            else if(strcmp(el->data, "RBT") == 0)
+                server.debug = RBT;
+            else{
+                log_error("STORAGE must be a RBT or HASH");
+                exit(EXIT_FAILURE);
+            }
+
+            debug = true;
+            //log_debug("SOCK_PATH %d", server.debug);
+        }
+
         el = el->next;
     }
 
@@ -148,6 +176,8 @@ bool read_config(const char * path){
         server.policy = FIFO;
     if(!debug)
         server.debug = false;
+    if(!storage)
+        server.storage = HASH;
 
     if(!socket_path || !log_path){
         log_error("SOCK_PATH and LOG_PATH must be present in the log file");

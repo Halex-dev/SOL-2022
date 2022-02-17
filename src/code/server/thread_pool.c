@@ -112,8 +112,7 @@ tpool_t *threadpool_create(int thread_count, int queue_size, int flags)
     /* Start worker threads */
     /* Create a specified number of threads to start running */
     for(i = 0; i < thread_count; i++) {
-        if(pthread_create(&(pool->threads[i]), NULL,
-                          tpool_thread, (void*)pool) != 0) {
+        if(pthread_create(&(pool->threads[i]), NULL, tpool_thread, (void*)pool) != 0) {
             threadpool_destroy(pool, 0);
             return NULL;
         }
@@ -129,7 +128,7 @@ tpool_t *threadpool_create(int thread_count, int queue_size, int flags)
     return NULL;
 }
 
-int threadpool_destroy(tpool_t *pool, int flags)
+int threadpool_destroy(tpool_t *pool, threadpool_shutdown_t flags)
 {
     int i, err = 0;
 
@@ -151,8 +150,7 @@ int threadpool_destroy(tpool_t *pool, int flags)
         }
 
         /* Gets the specified closing mode */
-        pool->shutdown = (flags & threadpool_graceful) ?
-            graceful_shutdown : immediate_shutdown;
+        pool->shutdown = flags;
 
         /* Wake up all worker threads */
         /* Wake up all threads blocked by dependent variables and release mutexes */

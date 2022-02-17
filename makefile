@@ -39,13 +39,16 @@ createDir:
 	@bash $(SCRIPT_DIR)/createDir.sh
 
 #	-------------- Other Library -------------  #
-OTHER_SRC := $(wildcard $(CODE_DIR)/util/*.c)
+OTHER_SRC := $(wildcard $(CODE_DIR)/util/*.c) $(wildcard $(CODE_DIR)/util/data/*.c)
 OTHER_OBJ := $(patsubst $(CODE_DIR)/util/%.c, $(OBJ_DIR)/util/%.o, $(OTHER_SRC))
 OTHER_INC := $(patsubst $(CODE_DIR)/util/%.c, $(INC_DIR)/util/%.h, $(OTHER_SRC))
 
 $(LIB_DIR)/libutil.so : $(OTHER_SRC)
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
+$(OBJ_DIR)/util/%.o : $(CODE_DIR)/util/%.c $(INC_DIR)/util/%.h  $(OBJ_DIR)/util/util.o
+	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+	
 $(OBJ_DIR)/util/log.o : $(CODE_DIR)/util/log.c $(INC_DIR)/util/log.h
 	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
@@ -54,6 +57,10 @@ $(OBJ_DIR)/util/config.o : $(CODE_DIR)/util/config.c $(INC_DIR)/util/config.h
 
 $(OBJ_DIR)/util/util.o : $(CODE_DIR)/util/util.c $(INC_DIR)/util/util.h
 	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+
+$(OBJ_DIR)/util/data/%.o :  $(CODE_DIR)/util/data/%.c $(INC_DIR)/util/data/*%.h $(OBJ_DIR)/util/util.o
+	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+
 # 	------------------- Server ------------------- 	#
 
 SERVER_SRC := $(wildcard $(CODE_DIR)/server/*.c) $(wildcard $(CODE_DIR)/server/file/*.c)

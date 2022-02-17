@@ -26,4 +26,4 @@ server_state curr_state ={
 };
 
 // ___________________ Thread pool ___________________ //
-tpool_t *tm;
+tpool_t *tm = NULL;

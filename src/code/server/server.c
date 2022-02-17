@@ -2,10 +2,6 @@
 
 void clean_memory();
 
-char* getPolicy(){
-    return ( server.policy == FIFO ? "FIFO" : (server.policy == LRU ? "LRU" : (server.policy == LFU ? "LFU" : "MFU")) );
-}
-
 int main(int argc, char* argv[]){ 
     
     if(argc > 2){
@@ -47,13 +43,19 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
+    //--------------------------- STORAGE ----------------------------- //
+    storage_init();
+
+    
+    
     clean_memory();
     return 0;
 }
 
 void clean_memory(){
+    threadpool_destroy(tm, graceful_shutdown);
+    clean_storage();
     free(server.log_path);
     free(server.socket_path);
-    threadpool_destroy(tm, 1);
     close_logger();
 }

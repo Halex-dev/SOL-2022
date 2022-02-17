@@ -29,6 +29,7 @@ config_file* init_config(const char* path){
 
         if (fscanf(fp, "%s = %s", el->key, el->data) != 2) { //Read node
             if (feof(fp)) {
+                free(el);
                 break;
             }
             if (el->key[0] == '#') { //Key can't be like a comment

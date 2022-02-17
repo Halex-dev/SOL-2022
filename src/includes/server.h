@@ -4,6 +4,24 @@
 #include "util/util.h"
 #include "util/log.h"
 #include "util/config.h"
+//___________________________ RBT __________________________//
+#include "util/data/rbt.h"
+#include "util/data/rbt_data.h"
+
+#include "util/data/hashmap.h"
+
+#include "util/data/nodeList.h"
+#include "util/data/node.h"
+
+#define SYSTEM_CALL_EXIT(sys_call) if(sys_call != 0) {\
+        log_error("System call error | %s (codice %d)\n", strerror(errno), errno); \
+        exit(EXIT_FAILURE); \
+    }
+
+#define SYSTEM_CALL(sys_call) if(sys_call != 0) {\
+        log_error("System call error | %s (codice %d)\n", strerror(errno), errno); \
+        return -1; \
+    }
 
 /** File replacement policy. */
 typedef enum {
@@ -12,6 +30,12 @@ typedef enum {
     MFU,
     LFU
 } policy_r;
+
+/** File replacement policy. */
+typedef enum {
+    HASH,
+    RBT
+} mode_storage;
 
 typedef enum {
     /** Server accepts both new connections and requests. */
@@ -42,6 +66,7 @@ typedef struct {
     policy_r policy;
     server_socket socket;
     bool debug;
+    mode_storage storage;
 } server_config;
 
 typedef struct {
@@ -190,7 +215,7 @@ int threadpool_add(tpool_t *pool, void (*routine)(void *),
 /**
  * Destroy thread pools, flags can be used to specify how to close them
  */
-int threadpool_destroy(tpool_t *pool, int flags);
+int threadpool_destroy(tpool_t *pool, threadpool_shutdown_t flags);
 
 /**
  * @function implement Event Loop
@@ -212,6 +237,12 @@ void threadpool_queue_next(tpool_t *pool, int worker);
  */
 #define WEND 1
 
+/**____________________________________________________  STORAGE FUNCTION  ____________________________________________________ **/
+
+char* getPolicy();
+void print_storage();
+void clean_storage();
+void storage_init();
 
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
