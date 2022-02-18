@@ -72,7 +72,83 @@ int main(int argc, char* argv[]){
     log_info("Server inizialized, i'm listening....");
 
     while(server.socket.mode == ACCEPT_CONN){
-        usleep(200);
+        tmpset = set;
+
+        SYSTEM_CALL_EXIT(select(server.socket.fd_max + 1, &tmpset, NULL, NULL, NULL), "Select failed");
+
+        for (int i = 0; i <= server.socket.fd_max; i++){
+            // i-th file descriptor is not set
+            if(!FD_ISSET(i, &tmpset)) continue;
+            // i is set
+            
+            if(i == server.socket.fd_listen && server.socket.mode == ACCEPT_CONN){ // new connection request
+                long fd_client;
+
+                SYSTEM_CALL_EXIT(fd_client = accept(server.socket.fd_listen, (struct sockaddr*)NULL, NULL), "Accept failed");
+
+                // no need for mutex, only this thread deals with max_conn
+                curr_state.conn++;
+                if(curr_state.conn > curr_state.max_conn)
+                    curr_state.max_conn = curr_state.conn;
+
+                log_stats("[CLIENT-NEW] New connection! File descriptor: %ld. (Attualmente connessi: %d)", fd_client, curr_state.conn);
+                
+                // adding client to master set
+                FD_SET(fd_client, &set);
+
+                if(fd_client > server.socket.fd_max)
+                    server.socket.fd_max = fd_client;
+                continue;
+            }
+
+            // termination signal from sig_handler thread
+            if(i == sig_handler_pipe[REND]){
+                if(server.socket.mode == CLOSE_SERVER) {
+                    break;
+                } else{ // mode == REFUSE_CONN
+                    continue;
+                } 
+            }
+
+            // worker or client
+            bool is_client_request = true;
+
+            for(int j = 0; j < tm->thread_count; j++){
+                if(i != tm->worker_pipes[j][REND]) continue;
+                // found the right pipe!
+                is_client_request = false;
+                // reading the result from thread
+            }
+            if(!is_client_request) continue;
+
+            // it's a client request
+            long fd_client = i;
+            log_stats("[CLIENT-REQ] New request from client %ld", fd_client);
+            
+            //worker_arg* arg = safe_calloc(1, sizeof(worker_arg));
+            //arg->fd_client = fd_client;
+            //threadpool_add(tm, worker, arg, 0);
+
+            // removing i from the select set
+            FD_CLR(i, &set);
+            if(i == server.socket.fd_max) {
+                server.socket.fd_max = update_max(set, server.socket.fd_max);
+                if(server.socket.fd_max == -1){
+                    fprintf(stderr, "Fatal error: no file descriptor connected.");
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+
+        // no more connections
+        if(server.socket.mode == REFUSE_CONN){
+            log_info("Don't accept more connections. Process the last users request and close.");
+            server.socket.mode = CLOSE_SERVER;
+        }
+        else if(server.socket.mode == FORCE_CLOSE_SERVER){
+            log_info("Forcing to close...");
+            server.socket.mode = FORCE_CLOSE_SERVER;
+        }
     }
     
     log_info("Clean memory and closing server....");

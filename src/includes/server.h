@@ -248,6 +248,8 @@ extern tpool_t *tm;
 extern int* sig_handler_pipe;
 extern pthread_t sig_handler_tid;
 
+/** Current server state. */
+extern server_state curr_state;
 /**____________________________________________________  STORAGE FUNCTION  ____________________________________________________ **/
 
 char* getPolicy();

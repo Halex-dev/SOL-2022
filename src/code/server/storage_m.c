@@ -2,6 +2,7 @@
 
 rbtree *rbt = NULL;
 hashmap *hash = NULL;
+pthread_mutex_t storage_thread_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 char* getPolicy(){
     return ( server.policy == FIFO ? "FIFO" : (server.policy == LRU ? "LRU" : (server.policy == LFU ? "LFU" : "MFU")) );
@@ -69,12 +70,16 @@ void storage_init(){
 }
 
 void print_storage(){
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+
     if(server.storage == HASH){
         hashmap_iterate(hash, print_entry, NULL);
     }
     else if(server.storage == RBT){
         rb_print(rbt, print_func);
     }
+    
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
 void clean_storage(){
@@ -89,6 +94,8 @@ void clean_storage(){
 
 void insert_storage(char* key, void* data){
 
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+
     if(server.storage == HASH){
         int len = strlen(key);
         hashmap_set(hash, key, len, data);
@@ -101,9 +108,12 @@ void insert_storage(char* key, void* data){
 			free(data);
 		}
     }
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
 void del_storage(char* key){
+
+    safe_pthread_mutex_lock(&storage_thread_mtx);
 
     if(server.storage == HASH){
         int len = strlen(key);
@@ -117,9 +127,13 @@ void del_storage(char* key){
         if ((out = rb_find(rbt, &node)) != NULL)
 		    rb_delete(rbt, out, 0);
     }
+
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
 void* search_storage(char* key){
+
+    safe_pthread_mutex_lock(&storage_thread_mtx);
 
     void* out = NULL;
 
@@ -133,5 +147,8 @@ void* search_storage(char* key){
         node.key = key;
         out = rb_find(rbt, &node);
     }
+
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
+
     return out;
 }
