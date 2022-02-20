@@ -16,15 +16,16 @@ SocketConnection* addSocket(const char* sockname){
     if(socket_m == NULL)
         socket_m = dict_init();
     
+    char * key;
     //Get absolute path
-    if( (sockname = realpath(sockname, NULL)) == NULL){
+    if((key = realpath(sockname, NULL)) == NULL){
         log_error("Error in converting relative path into an absolute one");
         return NULL;
     }
 
     SocketConnection* socket_c = safe_calloc(1, sizeof(SocketConnection));
     resetSocket(socket_c);
-    dict_insert(socket_m, (char*) sockname, (void*)socket_c);
+    dict_insert(socket_m, key, (void*)socket_c);
     return socket_c;
 }
 
@@ -32,14 +33,15 @@ SocketConnection* getSocket(const char* sockname){
     if(socket_m == NULL)
         socket_m = dict_init();
 
+    char * key;
     //Get absolute path
-    if( (sockname = realpath(sockname, NULL)) == NULL){
+    if((key = realpath(sockname, NULL)) == NULL){
         log_error("Error in converting relative path into an absolute one");
         return NULL;
     }
 
-    SocketConnection* socket_c = dict_get(socket_m, (char*) sockname);
-
+    SocketConnection* socket_c = dict_get(socket_m, key);
+    free(key);
     return socket_c;
 }
 
@@ -47,13 +49,15 @@ void removeSocket(const char* sockname){
     if(socket_m == NULL)
         socket_m = dict_init();
     
+    char * key;
     //Get absolute path
-    if( (sockname = realpath(sockname, NULL)) == NULL){
+    if( (key = realpath(sockname, NULL)) == NULL){
         log_error("Error in converting relative path into an absolute one");
         return;
     }
 
-    dict_del(socket_m, (char*) sockname);
+    dict_del(socket_m, key);
+    free(key);
 }
 
 int openConnection(const char* sockname, int msec, const struct timespec abstime){
@@ -120,6 +124,13 @@ int closeConnection(const char* sockname) {
         return -1;
     }
 
+    dict_print(socket_m);
+
+    if(socket_m == NULL || dict_size(socket_m) == 0){
+        log_error("There must be at least one connection open for it to be closed"); 
+        return -1;
+    }
+        
     SocketConnection* socket_c;
 
     if((socket_c = getSocket(sockname)) == NULL){
@@ -129,7 +140,12 @@ int closeConnection(const char* sockname) {
         
     close(socket_c->fd);
     resetSocket(socket_c);
-    free(socket_c);
+    removeSocket(sockname);
+
+    if(dict_size(socket_m) == 0)
+        dict_free(socket_m);
+        
+
     log_info("Connected closed to %s", sockname); 
     
     return 0;

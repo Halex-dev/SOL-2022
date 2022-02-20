@@ -24,6 +24,7 @@ int main(int argc, char* argv[]){
         perror("Couldn't close connection");
         return -1;
     }
+
     //LOG
     close_logger();
     return 0;

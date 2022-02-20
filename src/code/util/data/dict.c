@@ -4,6 +4,12 @@ void print_entry(void* key, size_t ksize, void* value, void* usr){
 	printf("- Key %s\n", (char *)key);
 }
 
+void free_data(void* key, size_t ksize, void* data, void* usr){
+    printf("ELIMINO Key %s\n", (char *)key);
+	free(key);
+    free(data);
+}
+
 Dict* dict_init(){
 
     Dict* dict = safe_calloc(1, sizeof(Dict));
@@ -66,8 +72,8 @@ void dict_del(Dict* dict, char* key){
         return;
     }
 
-    void* clean = dict_get(dict, key);
-    free(clean);
+    int len = strlen(key);
+    hashmap_remove_free(dict->hash, key, len, free_data, NULL);
     dict->elem--;
 }
 

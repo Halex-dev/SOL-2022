@@ -1,2 +1,2 @@
-20-02-2022 14:06:18 | INFO  | Connected to ./system/bin/SOL-SOCKET.sk
-20-02-2022 14:06:18 | INFO  | Connected closed to ./system/bin/SOL-SOCKET.sk
+20-02-2022 14:52:00 | INFO  | Connected to ./system/bin/SOL-SOCKET.sk
+20-02-2022 14:52:00 | INFO  | Connected closed to ./system/bin/SOL-SOCKET.sk
