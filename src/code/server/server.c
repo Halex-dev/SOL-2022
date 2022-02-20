@@ -1,6 +1,12 @@
 #include "server.h"
 
-void clean_memory();
+static inline int update_max(fd_set set, int fd_max){
+    for(int i = fd_max; i >= 0; i--)
+        if(FD_ISSET(i, &set)) 
+            return i;
+    
+    return -1;
+}
 
 int main(int argc, char* argv[]){ 
     
@@ -35,14 +41,14 @@ int main(int argc, char* argv[]){
     // --------------------------- STORAGE ----------------------------- //
     storage_init();
 
+    
     print_config();
     // ------------------------ SOCKET SERVER ------------------------- //
-    clean_socket();
-    atexit(clean_socket);
+    unlink_socket();
+    atexit(unlink_socket);
 
     //SOCKET
-    server.socket.fd_listen = socket(AF_UNIX, SOCK_STREAM, 0);
-    CHECK_ERROR(server.socket.fd_listen,"Error in socket creation");
+    SYSTEM_CALL_EXIT((server.socket.fd_listen = socket(AF_UNIX, SOCK_STREAM, 0)),"Error in socket creation");
 
     struct sockaddr_un sock_addr;
     memset(&sock_addr, '0', sizeof(sock_addr));
@@ -84,7 +90,7 @@ int main(int argc, char* argv[]){
             if(i == server.socket.fd_listen && server.socket.mode == ACCEPT_CONN){ // new connection request
                 long fd_client;
 
-                SYSTEM_CALL_EXIT(fd_client = accept(server.socket.fd_listen, (struct sockaddr*)NULL, NULL), "Accept failed");
+                SYSTEM_CALL_EXIT((fd_client = accept(server.socket.fd_listen, (struct sockaddr*)NULL, NULL)), "Accept failed");
 
                 // no need for mutex, only this thread deals with max_conn
                 curr_state.conn++;
@@ -123,8 +129,9 @@ int main(int argc, char* argv[]){
 
             // it's a client request
             long fd_client = i;
-            log_stats("[CLIENT-REQ] New request from client %ld", fd_client);
+            //log_stats("[CLIENT-REQ] New request from client %ld", fd_client);
             
+            close_connection(fd_client);
             //worker_arg* arg = safe_calloc(1, sizeof(worker_arg));
             //arg->fd_client = fd_client;
             //threadpool_add(tm, worker, arg, 0);
@@ -152,23 +159,18 @@ int main(int argc, char* argv[]){
     }
     
     log_info("Clean memory and closing server....");
-    clean_memory();
+    if(server.socket.fd_listen != -1){
+        close(server.socket.fd_listen);
+        server.socket.fd_listen = -1;
+    }
+    if(server.socket.fd_listen != -1){
+        close(server.socket.fd_listen);
+        server.socket.fd_listen = -1;
+    }
+    if(server.socket.fd_listen != -1){
+        close(server.socket.fd_listen);
+        server.socket.fd_listen = -1;
+    }
+    close_server();
     return 0;
-}
-
-void clean_memory(){
-
-    //THREAD
-    cleen_handler(graceful_shutdown);
-    threadpool_destroy(tm, graceful_shutdown);
-
-    //STORAGE
-    clean_storage();
-
-    //LOG
-    close_logger();
-
-    //GLOBAL VARIABLE ALLOCATED
-    free(server.log_path);
-    free(server.socket_path);
 }

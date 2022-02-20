@@ -57,7 +57,7 @@ void storage_init(){
 
     if(server.storage == HASH){
         if ((hash = hashmap_create()) == NULL) {
-            log_error("Create red-black tree failed\n");
+            log_error("Create hashmap failed\n");
             exit(EXIT_FAILURE);
 	    }
     }
@@ -66,7 +66,7 @@ void storage_init(){
             log_error("Create red-black tree failed\n");
             exit(EXIT_FAILURE);
 	    }
-    }	
+    }
 }
 
 void print_storage(){

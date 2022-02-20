@@ -8,15 +8,15 @@
 #include "util/data/rbt.h"
 #include "util/data/hashmap.h"
 
-#include "util/data/nodeList.h"
+#include "util/data/LinkedList.h"
 #include "util/data/node.h"
 
-#define SYSTEM_CALL_EXIT(sys_call, str) if(sys_call != 0) {\
+#define SYSTEM_CALL0_EXIT(sys_call, str) if(sys_call != 0) {\
         log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
         exit(EXIT_FAILURE); \
     }
 
-#define CHECK_ERROR(call, str) if(call == -1) {\
+#define SYSTEM_CALL_EXIT(sys_call, str) if(sys_call == -1) {\
         log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
         exit(EXIT_FAILURE); \
     }
@@ -63,9 +63,8 @@ typedef struct {
     unsigned int workers;
     size_t max_space;
     unsigned int max_files;
-    char* socket_path;
-    char* log_path;
-    //char* storage_path;
+    char socket_path[PATH_MAX];
+    char log_path[PATH_MAX];
     policy_r policy;
     server_socket socket;
     bool debug;
@@ -269,6 +268,9 @@ bool read_config(const char * path);
 void print_config();
 
 /**____________________________________________________  FUNCTION   ____________________________________________________ **/
-void clean_socket();
+void unlink_socket();
+void clean_memory();
+void close_server();
+void close_connection(long fd_client);
 
 #endif

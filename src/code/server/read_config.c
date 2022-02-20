@@ -75,7 +75,6 @@ bool read_config(const char * path){
             char buf[PATH_MAX];
             realpath(el->data, buf);
 
-            server.socket_path = safe_calloc(strlen(buf) + 1, sizeof(char));
             strcpy(server.socket_path, buf);
 
             socket_path = true;
@@ -91,8 +90,6 @@ bool read_config(const char * path){
 
             char buf[PATH_MAX];
             realpath(el->data, buf);
-
-            server.log_path = safe_calloc(strlen(buf) + 1, sizeof(char));
             strcpy(server.log_path, buf);
 
             log_path = true;

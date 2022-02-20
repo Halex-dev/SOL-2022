@@ -25,7 +25,7 @@ DYN_LINK = -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR)
 
 # 	---------------- Default rule ----------------	#
 
-all : createDir $(BIN_DIR)/server #$(BIN_DIR)/client
+all : createDir $(BIN_DIR)/server $(BIN_DIR)/client
 
 # 	---------------- Debug macro -----------------  #
 
@@ -78,6 +78,33 @@ $(OBJ_DIR)/server/file/%.o : $(CODE_DIR)/server/file/%.c $(SERVER_INC) $(SERVER_
 
 $(OBJ_DIR)/server/%.o : $(CODE_DIR)/server/%.c $(SERVER_INC) $(SERVER_DEPS)
 	$(CC) $(CFLAGS) $< -c -o $@
+
+# 	----------------- Server API -----------------  #
+
+API_SRC := $(wildcard $(CODE_DIR)/api/*.c)
+API_OBJ := $(patsubst $(CODE_DIR)/api/%.c, $(OBJ_DIR)/api/%.o, $(API_SRC))
+API_INC := $(INC_DIR)/api.h $(wildcard $(INC_DIR)/api/*.h) 
+
+$(LIB_DIR)/libapi.so : $(API_OBJ) $(DEP_LIST)
+	$(CC) $(CFLAGS) -shared $(API_OBJ) -o $@
+
+$(OBJ_DIR)/api/%.o : $(CODE_DIR)/api/%.c $(API_INC) $(DEP_LIST)
+	$(CC) -fPIC $(CFLAGS) $< -c -o $@
+
+# 	------------------- Client -------------------	#
+
+CLIENT_SRC := $(wildcard $(CODE_DIR)/client/*.c)
+CLIENT_OBJ := $(patsubst $(CODE_DIR)/client/%.c, $(OBJ_DIR)/client/%.o, $(CLIENT_SRC))
+CLIENT_INC := $(INC_DIR)/client.h
+
+CLIENT_DEPS = $(LIB_DIR)/libutil.so $(LIB_DIR)/libapi.so
+CLIENT_LIBS = $(DYN_LINK) -lutil -lapi
+
+$(BIN_DIR)/client : $(CLIENT_OBJ)
+	$(CC) $(CFLAGS) $^ -o $@ $(CLIENT_LIBS)
+
+$(OBJ_DIR)/client/%.o : $(CODE_DIR)/client/%.c $(CLIENT_INC) $(CLIENT_DEPS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # 	-------------------------------------------------------------- COMMANDS --------------------------------------------------------------	#
 

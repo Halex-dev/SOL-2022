@@ -1,0 +1,12 @@
+20-02-2022 14:06:15 | INFO  | [SIG-HANDLER] Started signal handler thread.
+20-02-2022 14:06:15 | INFO  | Open server with these options:
+ - WORKERS: 8
+ - MAX_FILES: 10
+ - SOCK_PATH: /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
+ - LOG_PATH: /home/halex/Desktop/Repository/SOL-2022/system/logs/server
+ - POLICY: MFU
+ - MAX_SPACE: 32MB
+
+20-02-2022 14:06:15 | INFO  | Server inizialized, i'm listening....
+20-02-2022 14:06:18 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
+20-02-2022 14:06:18 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)

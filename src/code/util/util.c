@@ -103,3 +103,16 @@ void pipe_init(int pipe[]){
     pipe[0] = -1;
     pipe[1] = -1;
 }
+
+
+// _______________________________ TIME _______________________________ //
+
+int nsleep(int us){
+    struct timespec wait;
+    us = 1000*us; //ms
+    //printf("Will sleep for is %ld\n", diff); //This will take extra ~70 microseconds
+    
+    wait.tv_sec = us / (1000 * 1000);
+    wait.tv_nsec = (us % (1000 * 1000)) * 1000;
+    return nanosleep(&wait, NULL);
+}

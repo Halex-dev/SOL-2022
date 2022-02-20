@@ -1,8 +1,8 @@
-#include "util/data/nodeList.h"
+#include "util/data/LinkedList.h"
 
-NodeList* create_List() {
+LinkedList* create_List() {
 
-    NodeList* list = safe_calloc(1,sizeof(NodeList));
+    LinkedList* list = safe_calloc(1,sizeof(LinkedList));
 
     list->head = NULL;
     list->tail = NULL;
@@ -11,7 +11,7 @@ NodeList* create_List() {
     return list;
 }
 
-void List_add(NodeList* list, void* key, void* data) {
+void List_add(LinkedList* list, void* key, void* data) {
     if (list == NULL){
         errno = EINVAL;
         return;
@@ -33,7 +33,7 @@ void List_add(NodeList* list, void* key, void* data) {
     list->size++;
 }
 
-void List_addHead(NodeList* list, void* key, void* data) {
+void List_addHead(LinkedList* list, void* key, void* data) {
     if (list == NULL){
         errno = EINVAL;
         return;
@@ -55,11 +55,11 @@ void List_addHead(NodeList* list, void* key, void* data) {
     list->size++;
 }
 
-bool List_isEmpty(NodeList* list) {
+bool List_isEmpty(LinkedList* list) {
     return list->head == NULL;
 }
 
-int List_size(NodeList* list) {
+int List_size(LinkedList* list) {
     if (list == NULL){
         errno = EINVAL;
         return -1;
@@ -68,7 +68,7 @@ int List_size(NodeList* list) {
     return list->size;
 }
 
-void List_destroy(NodeList *list, int mode) {
+void List_destroy(LinkedList *list, int mode) {
     if (list == NULL){
         errno = EINVAL;
         return;
@@ -93,7 +93,7 @@ void List_destroy(NodeList *list, int mode) {
     free(list);
 }
 
-void List_delel(NodeList *list, void* key, int mode) {
+void List_delel(LinkedList *list, void* key, int mode) {
     if (list == NULL){
         errno = EINVAL;
         return;
@@ -124,8 +124,30 @@ void List_delel(NodeList *list, void* key, int mode) {
     }
 }
 
+void* List_get(LinkedList *list, void* key) {
+    if (list == NULL){
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if(List_isEmpty(list))
+        return NULL;
+
+    Node* node = NULL;
+
+    while(node != NULL){
+
+        if(node->key == key){
+            return node->data;
+        }
+            
+        node = node->next;
+    }
+    return NULL;
+}
+
 /**
-void List_print(NodeList *list) {
+void List_print(LinkedList *list) {
     if (list == NULL){
         errno = EINVAL;
         return;

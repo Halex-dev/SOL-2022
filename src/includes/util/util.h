@@ -94,6 +94,11 @@ void safe_pthread_cond_broadcast(pthread_cond_t* cond);
  */
 void pipe_init(int pipe[]);
 
-// _______________________________ PIPE _______________________________ //
+// _______________________________ TIME _______________________________ //
 
+/**
+ * Given a non-negative integer representing a time in milliseconds,
+ * initializes a struct timespec with the given time.
+ */
+int nsleep(int us);
 #endif
