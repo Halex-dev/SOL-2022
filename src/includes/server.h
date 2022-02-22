@@ -10,6 +10,7 @@
 
 #include "util/data/LinkedList.h"
 #include "util/data/node.h"
+#include "util/data/dict.h"
 
 #define SYSTEM_CALL0_EXIT(sys_call, str) if(sys_call != 0) {\
         log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
@@ -238,6 +239,33 @@ void threadpool_queue_next(tpool_t *pool, int worker);
  * Writing endpoint for a pipe.
  */
 #define WEND 1
+
+/** ______________________________________________________  WORKER  ______________________________________________________ **/
+ 
+/** Argument to pass to a threadPool. */
+typedef struct {
+    long fd_client;
+} worker_arg;
+
+/** The code for the result of a worker elaboration of a client request. */
+typedef enum {
+    SUCCESS,
+    CLOSE,
+    FATAL_ERROR,
+    NOT_FATAL
+} worker_code;
+
+/** 
+ * The result of a worker elaboration of a client request,
+ * together with the client file descriptor.
+ */
+typedef struct {
+    worker_code code;
+    long fd_client;
+} worker_res;
+
+
+void worker(void* arg);
 
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 

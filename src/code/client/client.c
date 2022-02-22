@@ -19,11 +19,14 @@ int main(int argc, char* argv[]){
         return -1;
     } 
 
-    //setCurrent(SOCKETNAME);
+    setCurrent(SOCKETNAME);
 
-    //openFile("test", O_CREATE);
+    nsleep(2000);
 
-    usleep(5000);
+    log_info("Invio messaggio con test");
+    openFile("test", O_CREATE);
+
+    nsleep(2000);
 
     // ------- CLOSING CONNECTION ------ //
     if(closeConnection(SOCKETNAME) == -1){

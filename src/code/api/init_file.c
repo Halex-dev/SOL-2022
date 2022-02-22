@@ -15,7 +15,8 @@ int openFile(const char* pathname, int flags){
     api_msg* msg = safe_calloc(1, sizeof(api_msg));
 
     msg->data = (void*)pathname;
-    msg->action = REQ_OPEN_FILE;
+    msg->operation = REQ_OPEN_FILE;
+    msg->response = RES_NULL;
     msg->flags = O_CREATE;
     int err = send_msg(current_socket->fd, msg);
     free(msg);

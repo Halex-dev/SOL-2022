@@ -55,12 +55,19 @@ void setCurrent(char* key){
     if(socket_m == NULL)
         socket_m = dict_init();
     
-    SocketConnection* socket_c = dict_get(socket_m, key);
+    char * socketpath;
+    
+    if((socketpath = absolute_path(key)) == NULL)
+        return;
+
+    SocketConnection* socket_c = dict_get(socket_m, socketpath);
 
     if(!isConnect(socket_c)){
-        log_error("The socket %s is not connected", key);
+        log_error("The socket %s is not connected", socketpath);
+        free(socketpath);
         return;
     }
 
+    free(socketpath);
     current_socket = socket_c;
 }

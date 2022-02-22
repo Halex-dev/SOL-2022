@@ -131,10 +131,11 @@ int main(int argc, char* argv[]){
             long fd_client = i;
             //log_stats("[CLIENT-REQ] New request from client %ld", fd_client);
             
-            close_connection(fd_client);
-            //worker_arg* arg = safe_calloc(1, sizeof(worker_arg));
-            //arg->fd_client = fd_client;
-            //threadpool_add(tm, worker, arg, 0);
+            worker_arg* arg = safe_calloc(1, sizeof(worker_arg));
+            arg->fd_client = fd_client;
+            threadpool_add(tm, worker, arg, 0);
+            //close_connection(fd_client);
+
 
             // removing i from the select set
             FD_CLR(i, &set);

@@ -27,6 +27,7 @@
 #include <sys/un.h>
 #include <syscall.h>
 
+#include "api-communication.h"
 // _______________________________ STRING _______________________________ //
 
 void UpperCase(char *str);
@@ -122,4 +123,14 @@ ssize_t writen(int fd, const void *vptr, size_t n);
 
 
 char * absolute_path(const char* str);
+
+// _______________________________ COMMUNICATION _______________________________ //
+
+int send_msg(int fd, api_msg* msg);
+int read_msg(int fd, api_msg* msg);
+char * print_flag(api_flags flag);
+char * print_operation(api_op flag);
+char * print_res(api_res res);
+void print_msg(api_msg* msg);
+
 #endif

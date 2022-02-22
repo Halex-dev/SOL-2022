@@ -178,3 +178,130 @@ char * absolute_path(const char* str){
     free(key);
     return path;
 }
+
+
+
+// _______________________________ COMMUNICATION _______________________________ //
+
+int send_msg(int fd, api_msg* msg){
+
+    if(msg == NULL || fd == -1){
+        errno = EINVAL;
+        return -1;
+    }
+
+    return writen(fd,msg, sizeof(api_msg));
+}
+
+int read_msg(int fd, api_msg* msg){
+
+    if(msg == NULL || fd == -1){
+        errno = EINVAL;
+        return -1;
+    }
+
+    return readn(fd, msg,sizeof(api_msg));
+}
+
+char * print_flag(api_flags flag){
+
+    switch (flag){
+        case O_CREATE:
+            return "O_CREATE";
+            break;
+        case O_LOCK:
+            return "O_LOCK";
+            break;
+        default:
+            return "IDK";
+            break;
+    }
+}
+
+char * print_operation(api_op op){
+
+    switch (op){
+        case REQ_OPEN_FILE:
+            return "OPEN_FILE";
+            break;
+        case REQ_CLOSE_FILE:
+            return "CLOSE_FILE";
+            break;
+        case REQ_READ_FILE:
+            return "READ_FILE";
+            break;
+        case REQ_WRITE_FILE:
+            return "WRITE_FILE";
+            break;
+        case REQ_READ_N_FILES:
+            return "READ_N_FILE";
+            break;
+        case REQ_LOCK_FILE:
+            return "LOCK_FILE";
+            break;
+        case REQ_UNLOCK_FILE:
+            return "UNLOCK_FILE";
+            break;
+        case REQ_REMOVE_FILE:
+            return "REMOVE_FILE";
+            break;
+        case REQ_APPEND_TO_FILE:
+            return "APPEND_TO_FILE";
+            break;   
+        case REQ_NULL:
+            return "APPEND_TO_FILE";
+            break;   
+        default:
+            return "IDK";
+            break;
+    }
+}
+
+char * print_res(api_res res){
+
+    switch (res){
+        case RES_SUCCESS:
+            return "SUCCESS";
+            break;
+        case RES_ERROR:
+            return "ERROR";
+            break; 
+        case RES_CLOSE:
+            return "CLOSE";
+            break; 
+        case RES_EXIST:
+            return "EXIST";
+            break; 
+        case RES_NOT_EXIST:
+            return "NOT_EXIST";
+            break; 
+        case RES_NOT_OPEN:
+            return "NOT_OPEN";
+            break; 
+        case RES_IS_LOCKED:
+            return "IS_LOCKED";
+            break; 
+        case RES_NOT_LOCKED:
+            return "NOT_LOCKED";
+            break; 
+        case RES_TOO_BIG:
+            return "TOO_BIG";
+            break;
+        case RES_NULL:
+            return "RES_NULL";
+            break;     
+        default:
+            return "IDK";
+            break;
+    }
+}
+
+void print_msg(api_msg* msg){
+    printf("___________ Message ___________ \n"\
+            " - OP_CODE: %s\n"\
+            " - FLAG: %s\n"\
+            " - RESPONSE: %s\n"\
+            " - DATA: %s\n"\
+,print_operation(msg->operation), print_flag(msg->flags), print_res(msg->response), msg->response);
+
+}

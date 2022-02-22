@@ -1,5 +1,4 @@
-22-02-2022 16:39:10 | INFO  | [SIG-HANDLER] Started signal handler thread.
-22-02-2022 16:39:10 | INFO  | Open server with these options:
+22-02-2022 18:42:37 | INFO  | Open server with these options:
  - WORKERS: 8
  - MAX_FILES: 10
  - SOCK_PATH: /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
@@ -7,30 +6,7 @@
  - POLICY: MFU
  - MAX_SPACE: 32MB
 
-22-02-2022 16:39:10 | INFO  | Server inizialized, i'm listening....
-22-02-2022 16:39:12 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:39:12 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:40:25 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:40:25 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:40:55 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:40:55 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:40:56 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:40:56 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:41:42 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:41:42 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:42:38 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:42:38 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:55:44 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:55:44 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:56:05 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:56:05 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:57:30 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:57:30 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:58:50 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:58:50 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 16:59:46 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 16:59:46 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 17:01:29 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 17:01:29 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
-22-02-2022 17:01:37 | STATS | [CLIENT-NEW] New connection! File descriptor: 22. (Attualmente connessi: 1)
-22-02-2022 17:01:37 | STATS | [CLOSE-CONN] Closed connection with client 22. (Attualmente connessi: 0)
+22-02-2022 18:42:37 | INFO  | Server inizialized, i'm listening....
+22-02-2022 18:42:37 | INFO  | [SIG-HANDLER] Started signal handler thread.
+22-02-2022 18:42:39 | STATS | [CLIENT-NEW] New connection! File descriptor: 23. (Attualmente connessi: 1)
+22-02-2022 18:42:41 | STATS | [THREAD 0] [NEW_REQ] Accepted request from client 23.
