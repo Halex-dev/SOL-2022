@@ -32,14 +32,6 @@
     }
 
 
-    
-typedef struct SocketConnection{
-    int fd;
-    char* name;
-    int failed;
-    int success;
-} SocketConnection;
-
 // _____________________________________ PROJECT FUNCTION  _____________________________________ //
 /**
  * Takes a socket name, a time in milliseconds and an absolute time.
@@ -128,8 +120,106 @@ int unlockFile(const char* pathname);
 
 //extern Dict* socket_m;
 
-// _____________________________________ AUXILIARY FUNCTION  _____________________________________ //
+// _____________________________________ SOCKET FUNCTION  _____________________________________ //
 
-void cleanSocket();
+typedef struct SocketConnection{
+    int fd;
+    char* name;
+    int failed;
+    int success;
+} SocketConnection;
 
+extern SocketConnection* current_socket; //for operation
+extern Dict* socket_m;
+
+/**
+ * Given a socket and reset it.
+ */
+void resetSocket(SocketConnection* socket);
+
+/**
+ * Given a socket return if it is connected.
+ * Return true if connected, false otherwise
+ */
+bool isConnect(SocketConnection* socket);
+
+/**
+ * Given a socketname add it for future operations.
+ * Return the create SocketConnection, on error return NULL
+ */
+SocketConnection* addSocket(char* key);
+
+/**
+ * Given a socketname add it for future operations.
+ * Return the SocketConnection if exist, NULL otherwise
+ */
+SocketConnection* getSocket(char* key);
+
+/**
+ * Remove socket if not connected.
+ */
+bool removeSocket(char* key);
+
+/**
+ * Function to set the actual socket for operation.
+ */
+void setCurrent(char* key);
+
+// _____________________________________ COMMUNICATION FUNCTION  _____________________________________ //
+
+typedef enum {
+    /**
+     * REQUEST CLIENT 30-50
+    */
+    REQ_OPEN_FILE = 30,
+    REQ_CLOSE_FILE = 31,
+    REQ_READ_FILE = 32,
+    REQ_WRITE_FILE = 33,
+    REQ_READ_N_FILES = 34,
+    REQ_LOCK_FILE = 35,
+    REQ_UNLOCK_FILE = 36,
+    REQ_REMOVE_FILE = 37,
+    REQ_APPEND_TO_FILE = 38,
+
+    /**
+     *  GENERIC RESPONSE SERVER -9 - 0
+     */
+    RES_SUCCESS = 0,
+    RES_ERROR = -1,
+    RES_CLOSE = -2,
+
+    /**
+     *  OPEN/CREATING RESPONSE SERVER -19 - -10
+     */
+    RES_EXIST = -10,
+    RES_NOT_EXIST = -11,
+    RES_NOT_OPEN = -12,
+
+    /**
+     *  LOCK/UNLOCK RESPONSE SERVER -29 - -20
+     */
+    RES_IS_LOCKED = -20,
+    RES_NOT_LOCKED = -21,
+
+    /**
+     *  FILE RESPONSE SERVER -39 - -30
+     */
+    RES_TOO_BIG = -31
+} api_op;
+
+typedef enum {
+    O_CREATE,
+    O_LOCK
+} api_flags;
+
+typedef struct {
+    int data_length;
+    void* data;
+    api_op  action;
+    api_flags flags;
+} api_msg;
+
+int send_msg(int fd, api_msg* msg);
+
+int read_msg(int fd, api_msg* msg);
 #endif

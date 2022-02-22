@@ -101,4 +101,25 @@ void pipe_init(int pipe[]);
  * initializes a struct timespec with the given time.
  */
 int nsleep(int us);
+
+// _______________________________ FUNCION _______________________________ //
+/**
+ * Like the system call read, but avoids partial reads.
+ * Returns:
+ *      - the number of bytes read (> 0) on success;
+ *      - -1 on error (and sets errno).
+ */
+ssize_t readn(int fd, void *vptr, size_t n);
+
+/**
+ * Like the system call write, but avoids partial writings.
+ * Returns:
+ *      - 1 on success;
+ *      - 0 when write returns 0;
+ *      - -1 on error (and sets errno).
+ */
+ssize_t writen(int fd, const void *vptr, size_t n);
+
+
+char * absolute_path(const char* str);
 #endif

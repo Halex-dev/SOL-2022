@@ -133,7 +133,7 @@ void* List_get(LinkedList *list, void* key) {
     if(List_isEmpty(list))
         return NULL;
 
-    Node* node = NULL;
+    Node* node = list->head;
 
     while(node != NULL){
 
@@ -144,6 +144,15 @@ void* List_get(LinkedList *list, void* key) {
         node = node->next;
     }
     return NULL;
+}
+
+void* List_getHead(LinkedList *list) {
+    if (list == NULL){
+        errno = EINVAL;
+        return NULL;
+    }
+
+    return list->head;
 }
 
 /**

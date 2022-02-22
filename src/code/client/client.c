@@ -1,5 +1,7 @@
 #include "client.h"
 
+#define SOCKETNAME  "./system/bin/SOL-SOCKET.sk"
+
 int main(int argc, char* argv[]){ 
     
     /**if(argc < 2) {
@@ -12,15 +14,19 @@ int main(int argc, char* argv[]){
     struct timespec abstime;
     clock_gettime(CLOCK_REALTIME, &abstime);
 
-    if(openConnection("./system/bin/SOL-SOCKET.sk", TIME_BETWEEN_CONN, abstime) == -1){
+    if(openConnection(SOCKETNAME, TIME_BETWEEN_CONN, abstime) == -1){
         perror("Connection failed");
         return -1;
     } 
 
+    //setCurrent(SOCKETNAME);
+
+    //openFile("test", O_CREATE);
+
     usleep(5000);
 
     // ------- CLOSING CONNECTION ------ //
-    if(closeConnection("./system/bin/SOL-SOCKET.sk") == -1){
+    if(closeConnection(SOCKETNAME) == -1){
         perror("Couldn't close connection");
         return -1;
     }

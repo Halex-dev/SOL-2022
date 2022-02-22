@@ -116,3 +116,65 @@ int nsleep(int us){
     wait.tv_nsec = (us % (1000 * 1000)) * 1000;
     return nanosleep(&wait, NULL);
 }
+
+
+// _______________________________ READ AND WRITE _______________________________ //
+
+//https://www.informit.com/articles/article.aspx?p=169505&seqNum=9
+ssize_t readn(int fd, void *vptr, size_t n){
+    size_t  nleft;
+    ssize_t nread;
+    char   *ptr;
+
+    ptr = vptr;
+    nleft = n;
+     while (nleft > 0) {
+        if ( (nread = read(fd, ptr, nleft)) < 0) {
+             if (errno == EINTR)
+                 nread = 0;      /* and call read() again */
+            else
+                return (-1);
+         } else if (nread == 0)
+            break;              /* EOF */
+
+        nleft -= nread;
+        ptr += nread;
+    }
+    return (n - nleft);         /* return >= 0 */
+}
+
+ssize_t writen(int fd, const void *vptr, size_t n){
+    size_t nleft;
+    ssize_t nwritten;
+    const char *ptr;
+
+    ptr = vptr;
+    nleft = n;
+    while (nleft > 0) {
+        
+        if ( (nwritten = write(fd, ptr, nleft)) <= 0) {
+            if (nwritten < 0 && errno == EINTR)
+                 nwritten = 0;   /* and call write() again */
+            else
+                return (-1);    /* error */
+        }
+
+        nleft -= nwritten;
+        ptr += nwritten;
+    }
+    return (n);
+}
+
+char * absolute_path(const char* str){
+    char * key;
+    //Get absolute path
+    if((key = realpath(str, NULL)) == NULL){
+        perror("Error in converting relative path into an absolute one (Maybe not exist the socket)");
+        return NULL;
+    }
+
+    char* path = safe_calloc(strlen(key) + 1,sizeof(char));
+    strcpy(path, key);
+    free(key);
+    return path;
+}

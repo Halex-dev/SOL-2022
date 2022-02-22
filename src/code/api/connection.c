@@ -1,65 +1,5 @@
 #include "api.h"
 
-Dict* socket_m = NULL;
-
-void resetSocket(SocketConnection* socket){
-    socket->fd = -1;
-    socket->failed = 0;
-    socket->success = 0;
-}
-
-bool isConnect(SocketConnection* socket){
-    return socket->fd != -1;
-}
-
-SocketConnection* addSocket(const char* sockname){
-    if(socket_m == NULL)
-        socket_m = dict_init();
-    
-    char * key;
-    //Get absolute path
-    if((key = realpath(sockname, NULL)) == NULL){
-        log_error("Error in converting relative path into an absolute one");
-        return NULL;
-    }
-
-    SocketConnection* socket_c = safe_calloc(1, sizeof(SocketConnection));
-    resetSocket(socket_c);
-    dict_insert(socket_m, key, (void*)socket_c);
-    return socket_c;
-}
-
-SocketConnection* getSocket(const char* sockname){
-    if(socket_m == NULL)
-        socket_m = dict_init();
-
-    char * key;
-    //Get absolute path
-    if((key = realpath(sockname, NULL)) == NULL){
-        log_error("Error in converting relative path into an absolute one");
-        return NULL;
-    }
-
-    SocketConnection* socket_c = dict_get(socket_m, key);
-    free(key);
-    return socket_c;
-}
-
-void removeSocket(const char* sockname){
-    if(socket_m == NULL)
-        socket_m = dict_init();
-    
-    char * key;
-    //Get absolute path
-    if( (key = realpath(sockname, NULL)) == NULL){
-        log_error("Error in converting relative path into an absolute one");
-        return;
-    }
-
-    dict_del(socket_m, key);
-    free(key);
-}
-
 int openConnection(const char* sockname, int msec, const struct timespec abstime){
 
     if(sockname == NULL || msec < 0) { // invalid arguments
@@ -67,13 +7,27 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
         return -1;
     }
 
+    char * pathname;
+
+    if((pathname = absolute_path(sockname)) == NULL){
+        errno = EINVAL;
+        return -1 ;
+    }
+
     SocketConnection* socket_c;
 
-    if((socket_c = getSocket(sockname)) == NULL)
-        socket_c = addSocket(sockname);
+    if((socket_c = getSocket(pathname)) == NULL)
+        socket_c = addSocket(pathname);
+
+    if(socket_c == NULL){
+        errno = EINVAL;
+        free(pathname);
+        return -1;
+    }
 
     if(isConnect(socket_c)){
         log_error("The socket %s is already connect", sockname);
+        free(pathname);
         return -1;
     }
 
@@ -82,7 +36,7 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
     struct sockaddr_un sock_addr; // setting socket address
     memset(&sock_addr, '0', sizeof(sock_addr));
     sock_addr.sun_family = AF_UNIX;
-    strncpy(sock_addr.sun_path, sockname, strlen(sockname) + sizeof(char));
+    strncpy(sock_addr.sun_path, pathname, strlen(pathname) + sizeof(char));
 
     struct timespec curr_time; // setting current time
 
@@ -124,29 +78,40 @@ int closeConnection(const char* sockname) {
         return -1;
     }
 
-    dict_print(socket_m);
-
     if(socket_m == NULL || dict_size(socket_m) == 0){
         log_error("There must be at least one connection open for it to be closed"); 
         return -1;
     }
-        
+    
+    char * pathname;
+
+    if((pathname = absolute_path(sockname)) == NULL){
+        errno = EINVAL;
+        return -1 ;
+    }
+
     SocketConnection* socket_c;
 
-    if((socket_c = getSocket(sockname)) == NULL){
-        log_error("Error to close with %s", sockname); 
+    if((socket_c = getSocket(pathname)) == NULL){
+        log_error("Error to close with %s (Maybe not exist)", pathname); 
+        free(pathname);
         return -1;
     }
-        
+
+    if(!isConnect(socket_c)){
+        log_error("The socket %s must be connected before you can close it", pathname);
+        free(pathname);
+        return -1;
+    }
+
     close(socket_c->fd);
     resetSocket(socket_c);
-    removeSocket(sockname);
+    removeSocket(pathname);
 
     if(dict_size(socket_m) == 0)
         dict_free(socket_m);
         
-
+    free(pathname);
     log_info("Connected closed to %s", sockname); 
-    
     return 0;
 }

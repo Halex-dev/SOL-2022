@@ -22,4 +22,5 @@ void List_destroy(LinkedList *list, int mode);
 void List_delel(LinkedList *list, void* key, int mode);
 void List_print(LinkedList *list);
 void* List_get(LinkedList *list, void* key);
+void* List_getHead(LinkedList *list);
 #endif

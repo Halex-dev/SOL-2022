@@ -118,6 +118,7 @@ void del_storage(char* key){
     if(server.storage == HASH){
         int len = strlen(key);
         hashmap_remove(hash, key, len);
+        //hashmap_remove_free(dict->hash, key, len, free_data, NULL);
     }
     else if(server.storage == RBT){
         Node node;
