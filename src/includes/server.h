@@ -12,6 +12,8 @@
 #include "util/data/node.h"
 #include "util/data/dict.h"
 
+#define MAX_BUFF_DATA 254
+
 #define SYSTEM_CALL0_EXIT(sys_call, str) if(sys_call != 0) {\
         log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
         exit(EXIT_FAILURE); \
@@ -267,16 +269,43 @@ typedef struct {
 
 void worker(void* arg);
 
-/**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
+// ______________________________________________________ FILES ______________________________________________________ //
+/**
+ * A file in the server filesystem.
+ */
+typedef struct {
+    /** data of the file. */
+    void* data;
+    /** Size of the contents of the file. */
+    size_t size;
+    /** File descriptor of the client who has locked this file.
+     * -1 if no client is currently locking this file.
+     */
+    long fd_lock;
+    /** How much file used for LFU AND MFU replacement algorithm. */
+    long used;
+    /** Mutex to regulate access to this file. */
+    pthread_mutex_t order_mtx;
+    /** Mutex to modify this file. */
+    pthread_mutex_t file_mtx;
+    /** Conditional variable to gain access to this file. */
+    pthread_cond_t access_cond;
+    /** Conditional variable to gain access to this file. */
+    pthread_cond_t lock_cond;
+    /** Number of readers who are now using this file. */
+    unsigned int n_readers;
+    /** Number of writers who are now using this file. */
+    unsigned int n_writers;
+    /** Time of creation to implement FIFO replacement algorithm. */
+    struct timespec creation_time;
+    /** Time of last use to implement LRU replacement algorithm. */
+    struct timespec last_use;
+    /** Bool to decide if file currently can or cannot be expelled
+     * by the LRU algorithm.
+     */ 
+    bool can_expelled;
+} File;
 
-extern server_config server;
-extern tpool_t *tm;
-
-extern int* sig_handler_pipe;
-extern pthread_t sig_handler_tid;
-
-/** Current server state. */
-extern server_state curr_state;
 /**____________________________________________________  STORAGE FUNCTION  ____________________________________________________ **/
 
 char* getPolicy();
@@ -286,6 +315,25 @@ void storage_init();
 
 void insert_storage(char* key, void* data);
 void* search_storage(char* key);
+bool storage_contains(char* key);
+
+/**
+ * Create new file in memory
+ */
+int storage_file_create(File* file, char* pathname, long flags, long fd_client);
+
+/** Locks a file to allow reading operations. */
+void storage_reader_lock(File* file);
+/** Locks a file to allow reading operations without increment used file. */
+void operation_reader_lock(File* file);
+/** Unlocks a file previously locked in reading mode. */
+void storage_reader_unlock(File* file);
+/** Locks a file to allow reading and writing operations. */
+void storage_writer_lock(File* file);
+/** Locks a file to allow reading and writing operations without increment used file. */
+void operation_writer_lock(File* file);
+/** Unlocks a file previously locked in writing mode. */
+void storage_writer_unlock(File* file);
 
 /**____________________________________________________  SIGNAL HANDLER  ____________________________________________________ **/
 int init_sig_handler();
@@ -301,4 +349,23 @@ void clean_memory();
 void close_server();
 void close_connection(long fd_client);
 
+/**____________________________________________________  STATE FUNCTION   ____________________________________________________ **/
+
+void state_increment_file();
+
+/**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
+void open_file(int worker_no, long fd_client, api_msg* msg);
+
+/**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
+
+extern server_config server;
+extern tpool_t *tm;
+
+extern int* sig_handler_pipe;
+extern pthread_t sig_handler_tid;
+
+/** Current server state. */
+extern server_state curr_state;
+/** Mutex to access the current server state. */
+extern pthread_mutex_t curr_state_mtx;
 #endif

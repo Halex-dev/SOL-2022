@@ -25,5 +25,7 @@ server_state curr_state ={
     .max_space = 0
 };
 
+pthread_mutex_t curr_state_mtx = PTHREAD_MUTEX_INITIALIZER;
+
 // ___________________ Thread pool ___________________ //
 tpool_t *tm = NULL;

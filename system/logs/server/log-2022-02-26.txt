@@ -1,0 +1,18 @@
+26-02-2022 17:36:55 | INFO  | [SIG-HANDLER] Started signal handler thread.
+26-02-2022 17:36:55 | INFO  | Open server with these options:
+ - WORKERS: 8
+ - MAX_FILES: 10
+ - SOCK_PATH: /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
+ - LOG_PATH: /home/halex/Desktop/Repository/SOL-2022/system/logs/server
+ - POLICY: MFU
+ - MAX_SPACE: 32MB
+
+26-02-2022 17:36:55 | INFO  | Server inizialized, i'm listening....
+26-02-2022 17:36:57 | STATS | [CLIENT-NEW] New connection! File descriptor: 23. (Attualmente connessi: 1)
+26-02-2022 17:36:57 | STATS | [THREAD 0] [NEW_REQ] Accepted request from client 23.
+26-02-2022 17:36:57 | STATS | [THREAD 0] [OPEN_FILE] Request from client 23 is OPEN_FILE.
+26-02-2022 17:36:57 | STATS | [CURRENT_FILES] 1 files are currently stored.
+26-02-2022 17:36:57 | INFO  | ---- PRINT ALL FILES -----
+
+26-02-2022 17:37:40 | INFO  | Received signal to force close server.
+26-02-2022 17:37:40 | INFO  | Clean memory and closing server....

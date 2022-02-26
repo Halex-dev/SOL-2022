@@ -38,3 +38,29 @@ void close_connection(long fd_client){
     curr_state.conn--;
     log_stats("[CLOSE-CONN] Closed connection with client %ld. (Attualmente connessi: %d)", fd_client, curr_state.conn);
 }
+
+/**____________________________________________________  STATE FUNCTION   ____________________________________________________ **/
+
+void state_increment_file(){
+    safe_pthread_mutex_lock(&curr_state_mtx);
+
+        curr_state.files++;
+
+        if(curr_state.files > curr_state.max_files) 
+            curr_state.max_files = curr_state.files;
+                    
+        log_stats("[CURRENT_FILES] %u files are currently stored.", curr_state.files);
+    safe_pthread_mutex_unlock(&curr_state_mtx);
+}
+
+void state_file_modificated(File* file){
+    safe_pthread_mutex_lock(&curr_state_mtx);
+
+        curr_state.space += file->size;
+
+        if(curr_state.space > curr_state.max_space) 
+            curr_state.max_space = curr_state.space;
+                    
+        log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
+    safe_pthread_mutex_unlock(&curr_state_mtx);
+}

@@ -16,21 +16,23 @@ void worker(void* arg){
     long fd_client = w_arg->fd_client;
 
     // do something with client
-    worker_res result;
+    worker_res res;
     // memsetting otherwise valgrind will complain
-    memset(&result, 0, sizeof(worker_res));
-    result.fd_client = fd_client;
+    memset(&res, 0, sizeof(worker_res));
+    res.fd_client = fd_client;
 
     log_stats("[THREAD %d] [NEW_REQ] Accepted request from client %ld.", worker_no, fd_client);
 
-    api_msg msg_c;
-    int size_r;
+    api_msg* msg_c = safe_calloc(1, sizeof(api_msg));
+    memset(msg_c, 0, sizeof(api_msg));
 
-    if( (size_r = read_msg(fd_client, &msg_c)) == -1){ // error in reading
-        result.code = FATAL_ERROR;
+    int r_bytes;
+
+    if((r_bytes = read_msg(fd_client, msg_c)) == -1){ // error in reading
+        res.code = FATAL_ERROR;
         log_fatal("[THREAD %d] [FATALERROR] Fatal error in reading client request.", worker_no);
 
-        if( writen(pipe[WEND], &result, sizeof(worker_res)) == -1){
+        if( writen(pipe[WEND], &res, sizeof(worker_res)) == -1){
             perror("Error write to main thread");
             fprintf(stderr, "Aborting server.\n");
             exit(EXIT_FAILURE);
@@ -39,10 +41,10 @@ void worker(void* arg){
         return;
     }
 
-    if( size_r == 0 ){ // closed connection!
-        result.code = CLOSE;
+    if(r_bytes == 0 ){ // closed connection!
+        res.code = CLOSE;
         log_stats("[THREAD %d] [CLOSE_CONN] Closing connection with client %ld.", worker_no, fd_client);
-        if( writen(pipe[WEND], &result, sizeof(worker_res)) == -1){
+        if( writen(pipe[WEND], &res, sizeof(worker_res)) == -1){
             perror("Error write to main thread");
             fprintf(stderr, "Aborting server.\n");
             exit(EXIT_FAILURE);
@@ -50,14 +52,47 @@ void worker(void* arg){
         free(w_arg);
         return;
     }
-    
-    print_msg(&msg_c);
 
-    if( writen(pipe[WEND], &result, sizeof(worker_res)) == -1){
+    print_msg(msg_c);
+
+    switch (msg_c->operation) {
+        case REQ_OPEN_FILE: {
+
+            log_stats("[THREAD %d] [OPEN_FILE] Request from client %ld is OPEN_FILE.", worker_no, fd_client);
+
+            open_file(worker_no, fd_client, msg_c);
+
+            if( writen(fd_client, &msg_c, sizeof(int)) == -1){
+                perror("Error in writing to client");
+                res.code = FATAL_ERROR;
+                break;
+            }
+
+            // setting result code for main thread
+            if(msg_c->response == RES_SUCCESS){
+                res.code = SUCCESS;      
+            }
+            else if(msg_c->response == RES_CLOSE || msg_c->response == RES_ERROR) {
+                log_stats("[THREAD %d] [OPEN_FILE_FAIL] Fatal error in OPEN_FILE request from client %ld.", worker_no, fd_client);
+                res.code = FATAL_ERROR;
+            } 
+            else {
+                log_stats("[THREAD %d] [OPEN_FILE_FAIL] Non-fatal error in OPEN_FILE request from client %ld: %s.", worker_no, fd_client);
+                res.code = NOT_FATAL;
+            }
+
+            break;
+        }
+        default:
+            break;
+    }
+
+    if( writen(pipe[WEND], &res, sizeof(worker_res)) == -1){
         perror("Error write to main thread");
         fprintf(stderr, "Aborting server.\n");
         exit(EXIT_FAILURE);
     }
 
+    print_storage();
     free(w_arg);
 }

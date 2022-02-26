@@ -11,9 +11,21 @@ char* getPolicy(){
 // define our callback with the correct parameters
 void print_entry(void* key, size_t ksize, void* value, void* usr)
 {
-	// prints the entry's key and value
+    File* file = (File *) value;
+
+    char time_create[MAX_BUFF_DATA];
+    strftime(time_create, sizeof time_create, "%D %T", gmtime(&file->creation_time.tv_sec));
+
+    char time_use[MAX_BUFF_DATA];
+    strftime(time_use, sizeof time_use, "%D %T", gmtime(&file->last_use.tv_sec));
+
+    // prints the entry's key and value
 	// assumes the key is a null-terminated string
-	printf("Entry \"%s\": %s\n", (char *)key, (char *)value);
+    
+    fprintf(stdout,"- Pathname: \"%s\" lock: %ld size: %ld creation: %s last_use: %s \n",\
+    (char *)key, file->fd_lock, file->size, time_create, time_use);
+
+    //fprintf(stdout,"%lld.%.9ld", (long long)file->creation_time.tv_sec, file->creation_time.tv_nsec);    
 }
 
 /* ________________________________ RBT data management side __________________________________________________ */
@@ -72,6 +84,7 @@ void storage_init(){
 void print_storage(){
     safe_pthread_mutex_lock(&storage_thread_mtx);
 
+    log_info("---- PRINT ALL FILES -----\n");
     if(server.storage == HASH){
         hashmap_iterate(hash, print_entry, NULL);
     }
@@ -152,4 +165,135 @@ void* search_storage(char* key){
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 
     return out;
+}
+
+bool storage_contains(char* key){
+
+    void* out = NULL;
+
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+
+    if(server.storage == HASH){
+        int len = strlen(key);
+        hashmap_get(hash, key, len, &out);
+    }
+    else if(server.storage == RBT){
+        Node node;
+
+        node.key = key;
+        out = rb_find(rbt, &node);
+    }
+
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
+
+    if(out != NULL){
+        return true;
+    }
+
+    return false;
+}
+
+int storage_file_create(File* file, char* pathname, long flags, long fd_client){
+
+    // general attrs
+    file->data = NULL;
+    file->size = 0;
+    file->used = -3; //-3 because when you write to the server you will add 3 uses, one for opening, one for closing and one for writing.
+    file->can_expelled = false;
+
+    // init mutex/cond
+    pthread_mutex_init(&(file->file_mtx), NULL);
+    pthread_mutex_init(&(file->order_mtx), NULL);
+    pthread_cond_init(&(file->access_cond), NULL);
+    pthread_cond_init(&(file->lock_cond), NULL);
+    file->n_readers = 0;
+    file->n_writers = 0;
+    
+    // current thread gets mutex control
+    storage_writer_lock(file);
+
+    // updating time of creation
+    if(clock_gettime(CLOCK_REALTIME, &(file->creation_time)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.");
+        exit(EXIT_FAILURE);
+    }
+    // updating time of last use
+    if(clock_gettime(CLOCK_REALTIME, &(file->last_use)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+void storage_reader_lock(File* file){
+    safe_pthread_mutex_lock(&(file->order_mtx));
+    safe_pthread_mutex_lock(&(file->file_mtx));
+
+    while(file->n_writers > 0)
+        safe_pthread_cond_wait(&(file->access_cond), &(file->file_mtx));
+
+    file->n_readers++;
+    file->used++;
+    safe_pthread_mutex_unlock(&(file->order_mtx));
+    safe_pthread_mutex_unlock(&(file->file_mtx));
+}
+
+void operation_reader_lock(File* file){
+    safe_pthread_mutex_lock(&(file->order_mtx));
+    safe_pthread_mutex_lock(&(file->file_mtx));
+
+    while(file->n_writers > 0)
+        safe_pthread_cond_wait(&(file->access_cond), &(file->file_mtx));
+
+    file->n_readers++;
+    safe_pthread_mutex_unlock(&(file->order_mtx));
+    safe_pthread_mutex_unlock(&(file->file_mtx));
+}
+
+void storage_reader_unlock(File* file){
+    safe_pthread_mutex_lock(&(file->file_mtx));
+
+    file->n_readers--;
+    if(file->n_readers == 0)
+        safe_pthread_cond_signal(&(file->access_cond));
+    
+    safe_pthread_mutex_unlock(&(file->file_mtx));
+}
+
+void storage_writer_lock(File* file){
+    safe_pthread_mutex_lock(&(file->order_mtx));
+    safe_pthread_mutex_lock(&(file->file_mtx));
+    while(file->n_writers > 0 || file->n_readers > 0)
+        safe_pthread_cond_wait(&(file->access_cond), &(file->file_mtx));
+    
+
+    file->n_writers++;
+    file->used++;
+    safe_pthread_mutex_unlock(&(file->order_mtx));
+    safe_pthread_mutex_unlock(&(file->file_mtx));
+}
+
+void operation_writer_lock(File* file){
+    safe_pthread_mutex_lock(&(file->order_mtx));
+    safe_pthread_mutex_lock(&(file->file_mtx));
+    while(file->n_writers > 0 || file->n_readers > 0)
+        safe_pthread_cond_wait(&(file->access_cond), &(file->file_mtx));
+    
+
+    file->n_writers++;
+    safe_pthread_mutex_unlock(&(file->order_mtx));
+    safe_pthread_mutex_unlock(&(file->file_mtx));
+}
+
+
+void storage_writer_unlock(File* file){
+    safe_pthread_mutex_lock(&(file->file_mtx));
+
+    file->n_writers--;
+    safe_pthread_cond_signal(&(file->access_cond));
+    
+    safe_pthread_mutex_unlock(&(file->file_mtx));
 }

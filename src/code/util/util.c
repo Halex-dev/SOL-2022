@@ -117,6 +117,22 @@ int nsleep(int us){
     return nanosleep(&wait, NULL);
 }
 
+// _______________________________ FUNCTION _______________________________ //
+
+char * absolute_path(const char* str){
+    char * key;
+    //Get absolute path
+    if((key = realpath(str, NULL)) == NULL){
+        perror("Error in converting relative path into an absolute one (Maybe not exist the socket)");
+        return NULL;
+    }
+
+    char* path = safe_calloc(strlen(key) + 1,sizeof(char));
+    strcpy(path, key);
+    free(key);
+    return path;
+}
+
 
 // _______________________________ READ AND WRITE _______________________________ //
 
@@ -165,22 +181,6 @@ ssize_t writen(int fd, const void *vptr, size_t n){
     return (n);
 }
 
-char * absolute_path(const char* str){
-    char * key;
-    //Get absolute path
-    if((key = realpath(str, NULL)) == NULL){
-        perror("Error in converting relative path into an absolute one (Maybe not exist the socket)");
-        return NULL;
-    }
-
-    char* path = safe_calloc(strlen(key) + 1,sizeof(char));
-    strcpy(path, key);
-    free(key);
-    return path;
-}
-
-
-
 // _______________________________ COMMUNICATION _______________________________ //
 
 int send_msg(int fd, api_msg* msg){
@@ -190,7 +190,14 @@ int send_msg(int fd, api_msg* msg){
         return -1;
     }
 
-    return writen(fd,msg, sizeof(api_msg));
+    //First send the header
+    if(write(fd, msg, sizeof(api_msg)) != sizeof(api_msg))
+        return -1;
+
+    //Now i can send the data
+    int err = writen(fd, msg->data, msg->data_length);
+
+    return err;
 }
 
 int read_msg(int fd, api_msg* msg){
@@ -200,21 +207,36 @@ int read_msg(int fd, api_msg* msg){
         return -1;
     }
 
-    return readn(fd, msg,sizeof(api_msg));
+    //First read the header
+    if(read(fd, msg, sizeof(api_msg)) != sizeof(api_msg))
+        return -1;
+
+    //Now i can read the data
+    msg->data = safe_malloc(msg->data_length+1);
+    memset(msg->data , 0, msg->data_length);
+
+    return readn(fd, msg->data, msg->data_length);;
 }
 
 char * print_flag(api_flags flag){
 
     switch (flag){
-        case O_CREATE:
+        case O_CREATE: {
             return "O_CREATE";
             break;
-        case O_LOCK:
+        }    
+        case O_LOCK:{
             return "O_LOCK";
             break;
-        default:
+        }    
+        case O_ALL:{
+            return "O_LOCK";
+            break;
+        }
+        default:{
             return "IDK";
             break;
+        } 
     }
 }
 
@@ -296,12 +318,21 @@ char * print_res(api_res res){
     }
 }
 
+//FOR DEBUG
 void print_msg(api_msg* msg){
     printf("___________ Message ___________ \n"\
             " - OP_CODE: %s\n"\
             " - FLAG: %s\n"\
             " - RESPONSE: %s\n"\
-            " - DATA: %s\n"\
-,print_operation(msg->operation), print_flag(msg->flags), print_res(msg->response), msg->response);
+            " - DATA_L: %d\n"\
+            ,print_operation(msg->operation), print_flag(msg->flags), print_res(msg->response), msg->data_length);
 
+}
+
+void reset_msg(api_msg* msg){
+    msg->data = NULL;
+    msg->data_length = 0;
+    msg->flags = O_NULL;
+    msg->operation = REQ_NULL;
+    msg->response = RES_NULL;
 }

@@ -26,6 +26,7 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <syscall.h>
+#include <stdint.h>
 
 #include "api-communication.h"
 // _______________________________ STRING _______________________________ //
@@ -132,5 +133,6 @@ char * print_flag(api_flags flag);
 char * print_operation(api_op flag);
 char * print_res(api_res res);
 void print_msg(api_msg* msg);
+void reset_msg(api_msg* msg);
 
 #endif

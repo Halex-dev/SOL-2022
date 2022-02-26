@@ -46,9 +46,16 @@ typedef enum {
 } api_res;
 
 typedef enum {
-    O_CREATE,
-    O_LOCK
+    O_CREATE = 1,
+    O_LOCK = 2,
+    O_ALL = 3, //Maybe not
+    O_NULL = 0 
 } api_flags;
+
+#define FLAG(sys_call, str) if(sys_call != 0) {\
+        log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
+        return -1; \
+    }
 
 typedef struct {
     int data_length;

@@ -21,10 +21,10 @@ int main(int argc, char* argv[]){
 
     setCurrent(SOCKETNAME);
 
-    nsleep(2000);
+    //nsleep(2000);
 
     log_info("Invio messaggio con test");
-    openFile("test", O_CREATE);
+    openFile("home/test/ciaone", O_CREATE);
 
     nsleep(2000);
 
