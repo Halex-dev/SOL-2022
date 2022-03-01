@@ -183,6 +183,13 @@ ssize_t writen(int fd, const void *vptr, size_t n){
 
 // _______________________________ COMMUNICATION _______________________________ //
 
+/**
+ * @brief Send the message to server.
+ * 
+ * @param fd 
+ * @param msg 
+ * @return 1 on success, -1 on error, 0 when write returns 0
+ */
 int send_msg(int fd, api_msg* msg){
 
     if(msg == NULL || fd == -1){
@@ -200,8 +207,16 @@ int send_msg(int fd, api_msg* msg){
     return err;
 }
 
+/**
+ * @brief Send the message to server.
+ * 
+ * @param fd 
+ * @param msg 
+ * @return n of byte read on success, -1 on error
+ */
 int read_msg(int fd, api_msg* msg){
 
+    
     if(msg == NULL || fd == -1){
         errno = EINVAL;
         return -1;
@@ -213,9 +228,10 @@ int read_msg(int fd, api_msg* msg){
 
     //Now i can read the data
     msg->data = safe_malloc(msg->data_length+1);
-    memset(msg->data , 0, msg->data_length);
+    // memsetting otherwise valgrind will complain
+    memset(msg->data , 0, msg->data_length+1);
 
-    return readn(fd, msg->data, msg->data_length);;
+    return readn(fd, msg->data, msg->data_length);
 }
 
 char * print_flag(api_flags flag){
@@ -230,7 +246,7 @@ char * print_flag(api_flags flag){
             break;
         }    
         case O_ALL:{
-            return "O_LOCK";
+            return "O_CREATE and O_LOCK";
             break;
         }
         default:{
@@ -330,9 +346,43 @@ void print_msg(api_msg* msg){
 }
 
 void reset_msg(api_msg* msg){
+
+    if(msg->data != NULL){
+        free(msg->data);
+    }
+    
     msg->data = NULL;
     msg->data_length = 0;
     msg->flags = O_NULL;
     msg->operation = REQ_NULL;
     msg->response = RES_NULL;
+}
+
+void reset_data_msg(api_msg* msg){
+
+    if(msg->data != NULL){
+        free(msg->data);
+        msg->data = NULL;
+    }
+    
+    msg->data_length = 0; 
+}
+
+void free_msg(api_msg* msg){
+
+    if(msg->data != NULL)
+        free(msg->data);
+        
+    free(msg);
+}
+
+char * long_to_string(long num, int max_size){
+    
+    char* str = safe_calloc(max_size, sizeof(char));
+    if(sprintf(str, "%ld", num) == -1){
+        free(str);
+        return NULL;
+    }
+    
+    return str;
 }

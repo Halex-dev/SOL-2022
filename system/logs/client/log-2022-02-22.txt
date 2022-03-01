@@ -1,3 +1,0 @@
-22-02-2022 18:42:39 | INFO  | Connected to ./system/bin/SOL-SOCKET.sk
-22-02-2022 18:42:41 | INFO  | Invio messaggio con test
-22-02-2022 18:42:43 | INFO  | Connected closed to ./system/bin/SOL-SOCKET.sk

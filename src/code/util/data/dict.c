@@ -1,7 +1,8 @@
 #include <util/data/dict.h>
 
-void print_entry(void* key, size_t ksize, void* value, void* usr){
-	printf("- Key %s\n", (char *)key);
+void print_key(void* key, size_t ksize, void* value, void* usr){
+	printf("-- DICT --\n");
+    printf("- Key %s\n", (char *)key);
 }
 
 void free_data(void* key, size_t ksize, void* data, void* usr){
@@ -29,7 +30,17 @@ void dict_print(Dict* dict){
         return;
     }
 
-    hashmap_iterate(dict->hash, print_entry, NULL);
+    hashmap_iterate(dict->hash, print_key, NULL);
+}
+
+void dict_clean(Dict* dict){
+    if (dict == NULL){
+        errno = EINVAL;
+        return;
+    }
+
+    hashmap_iterate(dict->hash, free_data, NULL);
+    dict->elem--;
 }
 
 void dict_free(Dict* dict){
@@ -38,6 +49,7 @@ void dict_free(Dict* dict){
         return;
     }
 
+    hashmap_iterate(dict->hash, free_data, NULL);
     hashmap_free(dict->hash);
     free(dict);
 }

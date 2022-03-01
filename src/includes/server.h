@@ -8,9 +8,9 @@
 #include "util/data/rbt.h"
 #include "util/data/hashmap.h"
 
+#include "util/data/dict.h"
 #include "util/data/LinkedList.h"
 #include "util/data/node.h"
-#include "util/data/dict.h"
 
 #define MAX_BUFF_DATA 254
 
@@ -304,6 +304,10 @@ typedef struct {
      * by the LRU algorithm.
      */ 
     bool can_expelled;
+    /**
+     * 
+     */
+    Dict* opened;
 } File;
 
 /**____________________________________________________  STORAGE FUNCTION  ____________________________________________________ **/
@@ -315,7 +319,7 @@ void storage_init();
 
 void insert_storage(char* key, void* data);
 void* search_storage(char* key);
-bool storage_contains(char* key);
+bool storage_contains(const char* key);
 
 /**
  * Create new file in memory

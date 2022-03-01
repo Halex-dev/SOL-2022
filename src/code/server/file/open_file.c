@@ -2,14 +2,17 @@
 
 void open_file(int worker_no, long fd_client, api_msg* msg){
 
-    char* pathname = msg->data;
+    int len_path = strlen(msg->data);
+    char* pathname = safe_calloc(len_path+1,sizeof(char));
+    strcpy(pathname, msg->data);
 
-    //reset_msg(msg);
+    reset_data_msg(msg);
 
     if(msg->flags == O_ALL){
 
         if(storage_contains(pathname)){
             msg->response = RES_EXIST;
+            free(pathname);
             return;
         }
 
@@ -29,6 +32,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
 
         if(storage_contains(pathname)){
             msg->response = RES_EXIST;
+            free(pathname);
             return;
         }
 
@@ -45,6 +49,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
 
         if(!storage_contains(pathname)){
             msg->response = RES_NOT_EXIST;
+            free(pathname);
             return;
         }
 
@@ -56,6 +61,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
         if(file->fd_lock != -1 && file->fd_lock != fd_client){ 
             storage_writer_unlock(file);
             msg->response = RES_IS_LOCKED;
+            free(pathname);
             return;
         }
         else{

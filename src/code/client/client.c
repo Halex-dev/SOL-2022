@@ -20,13 +20,12 @@ int main(int argc, char* argv[]){
     } 
 
     setCurrent(SOCKETNAME);
-
+    
     //nsleep(2000);
 
-    log_info("Invio messaggio con test");
-    openFile("home/test/ciaone", O_CREATE);
+    openFile("home/test/ciaone", O_ALL);
 
-    nsleep(2000);
+    //nsleep(2000);
 
     // ------- CLOSING CONNECTION ------ //
     if(closeConnection(SOCKETNAME) == -1){

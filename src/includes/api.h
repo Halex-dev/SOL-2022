@@ -164,4 +164,10 @@ bool removeSocket(char* key);
  * Function to set the actual socket for operation.
  */
 void setCurrent(char* key);
+
+/**
+ * Function to get message error and convert to errno with message.
+ */
+int api_errno(int res);
+
 #endif

@@ -16,4 +16,5 @@ int dict_size(Dict* dict);
 void* dict_get(Dict* dict, char* key);
 void dict_insert(Dict* dict, char* key, void* data);
 void dict_del(Dict* dict, char* key);
+void dict_clean(Dict* dict);
 #endif

@@ -94,15 +94,15 @@ void cleen_handler(shutdown_mode_t flags){
                 close(sig_handler_pipe[j]);
         }
 
-        if(sig_handler_pipe != NULL) {
-            free(sig_handler_pipe);
-            sig_handler_pipe = NULL;
-        }     
-
         if(sig_handler_tid != -1){
             SYSTEM_CALL_EXIT(pthread_join(sig_handler_tid, NULL), "Error to create signal thread");
             sig_handler_tid = -1;
         }
+
+        if(sig_handler_pipe != NULL) {
+            free(sig_handler_pipe);
+            sig_handler_pipe = NULL;
+        }    
     }
     
 }

@@ -125,6 +125,7 @@ ssize_t writen(int fd, const void *vptr, size_t n);
 
 char * absolute_path(const char* str);
 
+char * long_to_string(long num, int max_size);
 // _______________________________ COMMUNICATION _______________________________ //
 
 int send_msg(int fd, api_msg* msg);
@@ -134,5 +135,6 @@ char * print_operation(api_op flag);
 char * print_res(api_res res);
 void print_msg(api_msg* msg);
 void reset_msg(api_msg* msg);
-
+void free_msg(api_msg* msg);
+void reset_data_msg(api_msg* msg);
 #endif

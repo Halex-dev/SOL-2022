@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
         FD_SET(tm->worker_pipes[i][REND], &set);
 
     log_info("Server inizialized, i'm listening....");
-
+    
     while(server.socket.mode == ACCEPT_CONN){
         tmpset = set;
 

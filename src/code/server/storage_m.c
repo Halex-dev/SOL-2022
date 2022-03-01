@@ -25,12 +25,12 @@ void print_entry(void* key, size_t ksize, void* value, void* usr)
     fprintf(stdout,"- Pathname: \"%s\" lock: %ld size: %ld creation: %s last_use: %s \n",\
     (char *)key, file->fd_lock, file->size, time_create, time_use);
 
-    //fprintf(stdout,"%lld.%.9ld", (long long)file->creation_time.tv_sec, file->creation_time.tv_nsec);    
+    //ONLY DEBUG
+    dict_print(file->opened); 
 }
 
 /* ________________________________ RBT data management side __________________________________________________ */
-int compare_func(const void *d1, const void *d2)
-{
+int compare_func(const void *d1, const void *d2){
 	Node *p1, *p2;
 	
 	assert(d1 != NULL);
@@ -42,8 +42,7 @@ int compare_func(const void *d1, const void *d2)
 	return strcmp(p1->key, p2->key);
 }
 
-void destroy_func(void *d)
-{
+void destroy_func(void *d){
 	Node *p;
 	
 	assert(d != NULL);
@@ -52,8 +51,7 @@ void destroy_func(void *d)
     delete_node_full(p);
 }
 
-void print_func(void *d)
-{
+void print_func(void *d){
 	Node *p;
 	
 	assert(d != NULL);
@@ -62,7 +60,22 @@ void print_func(void *d)
 	printf("- [%s]", p->key);
 }
 
+void free_file(void* key, size_t ksize, void* value, void* usr){
 
+    File* file = (File *) value;
+
+    free(key);
+
+    if(file == NULL) return;
+
+    if(file->data != NULL)
+        free(file->data);
+
+    if(file->opened != NULL)
+        dict_free(file->opened);
+
+    free(file);
+}
 /* ________________________________ STORAGE __________________________________________________ */
 
 void storage_init(){
@@ -97,6 +110,7 @@ void print_storage(){
 
 void clean_storage(){
     if(server.storage == HASH){
+        hashmap_iterate(hash, free_file, NULL);
         hashmap_free(hash);
     }
     else if(server.storage == RBT){
@@ -167,7 +181,7 @@ void* search_storage(char* key){
     return out;
 }
 
-bool storage_contains(char* key){
+bool storage_contains(const char* key){
 
     void* out = NULL;
 
@@ -175,12 +189,12 @@ bool storage_contains(char* key){
 
     if(server.storage == HASH){
         int len = strlen(key);
-        hashmap_get(hash, key, len, &out);
+        hashmap_get(hash, (void*)key, len, &out);
     }
     else if(server.storage == RBT){
         Node node;
 
-        node.key = key;
+        node.key = (char*)key;
         out = rb_find(rbt, &node);
     }
 
@@ -200,6 +214,7 @@ int storage_file_create(File* file, char* pathname, long flags, long fd_client){
     file->size = 0;
     file->used = -3; //-3 because when you write to the server you will add 3 uses, one for opening, one for closing and one for writing.
     file->can_expelled = false;
+    file->fd_lock = -1;
 
     // init mutex/cond
     pthread_mutex_init(&(file->file_mtx), NULL);
@@ -209,6 +224,16 @@ int storage_file_create(File* file, char* pathname, long flags, long fd_client){
     file->n_readers = 0;
     file->n_writers = 0;
     
+    //Convert fd_client to string and add to dict
+    char* num = long_to_string(fd_client, server.socket.fd_max);
+
+    if(num == NULL)
+        return -1;
+
+    //Inizialize dictionary
+    file->opened = dict_init();
+    dict_insert(file->opened, num, NULL);
+
     // current thread gets mutex control
     storage_writer_lock(file);
 

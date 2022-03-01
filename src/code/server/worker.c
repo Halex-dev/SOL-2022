@@ -23,12 +23,12 @@ void worker(void* arg){
 
     log_stats("[THREAD %d] [NEW_REQ] Accepted request from client %ld.", worker_no, fd_client);
 
-    api_msg* msg_c = safe_calloc(1, sizeof(api_msg));
-    memset(msg_c, 0, sizeof(api_msg));
+    api_msg msg_c;
+    memset(&msg_c, 0, sizeof(api_msg));
 
     int r_bytes;
 
-    if((r_bytes = read_msg(fd_client, msg_c)) == -1){ // error in reading
+    if((r_bytes = read_msg(fd_client, &msg_c)) == -1){ // error in reading
         res.code = FATAL_ERROR;
         log_fatal("[THREAD %d] [FATALERROR] Fatal error in reading client request.", worker_no);
 
@@ -53,31 +53,33 @@ void worker(void* arg){
         return;
     }
 
-    print_msg(msg_c);
+    print_msg(&msg_c);
 
-    switch (msg_c->operation) {
+    switch (msg_c.operation) {
         case REQ_OPEN_FILE: {
 
             log_stats("[THREAD %d] [OPEN_FILE] Request from client %ld is OPEN_FILE.", worker_no, fd_client);
 
-            open_file(worker_no, fd_client, msg_c);
+            open_file(worker_no, fd_client, &msg_c);
 
-            if( writen(fd_client, &msg_c, sizeof(int)) == -1){
-                perror("Error in writing to client");
+            if(send_msg(fd_client, &msg_c) == -1){
+                log_error("Error in writing to client");
                 res.code = FATAL_ERROR;
                 break;
             }
 
+            print_msg(&msg_c);
+
             // setting result code for main thread
-            if(msg_c->response == RES_SUCCESS){
+            if(msg_c.response == RES_SUCCESS){
                 res.code = SUCCESS;      
             }
-            else if(msg_c->response == RES_CLOSE || msg_c->response == RES_ERROR) {
+            else if(msg_c.response == RES_CLOSE || msg_c.response == RES_ERROR) {
                 log_stats("[THREAD %d] [OPEN_FILE_FAIL] Fatal error in OPEN_FILE request from client %ld.", worker_no, fd_client);
                 res.code = FATAL_ERROR;
             } 
             else {
-                log_stats("[THREAD %d] [OPEN_FILE_FAIL] Non-fatal error in OPEN_FILE request from client %ld: %s.", worker_no, fd_client);
+                log_stats("[THREAD %d] [OPEN_FILE_FAIL] Non-fatal error in OPEN_FILE request from client %ld.", worker_no, fd_client);
                 res.code = NOT_FATAL;
             }
 
@@ -93,6 +95,7 @@ void worker(void* arg){
         exit(EXIT_FAILURE);
     }
 
+    reset_data_msg(&msg_c);
     print_storage();
     free(w_arg);
 }

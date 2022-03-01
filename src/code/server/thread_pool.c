@@ -113,7 +113,7 @@ tpool_t *threadpool_create(int thread_count, int queue_size, int flags)
     /* Create a specified number of threads to start running */
     for(i = 0; i < thread_count; i++) {
         if(pthread_create(&(pool->threads[i]), NULL, tpool_thread, (void*)pool) != 0) {
-            threadpool_destroy(pool, 0);
+            threadpool_destroy(pool, graceful_shutdown);
             return NULL;
         }
         pool->started++;
