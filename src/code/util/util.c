@@ -249,6 +249,10 @@ char * print_flag(api_flags flag){
             return "O_CREATE and O_LOCK";
             break;
         }
+        case O_NULL:{
+            return "NOT";
+            break;
+        } 
         default:{
             return "IDK";
             break;
@@ -376,9 +380,9 @@ void free_msg(api_msg* msg){
     free(msg);
 }
 
-char * long_to_string(long num, int max_size){
+char * long_to_string(long num){
     
-    char* str = safe_calloc(max_size, sizeof(char));
+    char* str = safe_calloc(MAX_STR_FD, sizeof(char));
     if(sprintf(str, "%ld", num) == -1){
         free(str);
         return NULL;

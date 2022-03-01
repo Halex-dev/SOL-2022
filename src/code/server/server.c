@@ -124,6 +124,39 @@ int main(int argc, char* argv[]){
                 // found the right pipe!
                 is_client_request = false;
                 // reading the result from thread
+
+                worker_res result;
+                if( readn(tm->worker_pipes[j][REND], &result, sizeof(worker_res)) == -1){
+                    perror("Error while reading result from thread");
+                    return -1;
+                }
+                
+                switch (result.code){
+                    case NOT_FATAL: 
+                        log_warn("There has been a non-fatal error.");
+                    case SUCCESS: 
+                        // adding fd_client back to listening set
+                        FD_SET(result.fd_client, &set);
+                        if(result.fd_client > server.socket.fd_max) 
+                            server.socket.fd_max = result.fd_client;
+                        print_storage();
+                        break;
+
+                    case CLOSE: // closing connection
+                        close_connection(result.fd_client);
+                        //hashmap_printFile(&files);
+                        break;
+
+                    case FATAL_ERROR:
+                        log_fatal("Fatal error in connection with client %ld. Closing connection.", result.fd_client);
+                        close_connection(result.fd_client);
+                        break;
+                    
+                    default: // ?? unknown ??
+                        log_error("Unknown option returned by worker thread. Closing.");
+                        return -1;
+                        break;
+                }
             }
             if(!is_client_request) continue;
 

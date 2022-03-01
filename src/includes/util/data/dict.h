@@ -17,4 +17,5 @@ void* dict_get(Dict* dict, char* key);
 void dict_insert(Dict* dict, char* key, void* data);
 void dict_del(Dict* dict, char* key);
 void dict_clean(Dict* dict);
+bool dict_contain(Dict* dict, char* key);
 #endif

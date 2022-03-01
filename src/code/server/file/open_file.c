@@ -69,6 +69,9 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
         }
         storage_writer_unlock(file);
     }
+    else{
+        msg->response = RES_ERROR;
+    }
 
     msg->response = RES_SUCCESS;
 }

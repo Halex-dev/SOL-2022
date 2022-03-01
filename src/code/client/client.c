@@ -27,6 +27,8 @@ int main(int argc, char* argv[]){
 
     //nsleep(2000);
 
+    closeFile("home/test/ciaone");
+
     // ------- CLOSING CONNECTION ------ //
     if(closeConnection(SOCKETNAME) == -1){
         perror("Couldn't close connection");

@@ -29,6 +29,9 @@
 #include <stdint.h>
 
 #include "api-communication.h"
+
+#define MAX_STR_FD 100
+
 // _______________________________ STRING _______________________________ //
 
 void UpperCase(char *str);
@@ -125,7 +128,7 @@ ssize_t writen(int fd, const void *vptr, size_t n);
 
 char * absolute_path(const char* str);
 
-char * long_to_string(long num, int max_size);
+char * long_to_string(long num);
 // _______________________________ COMMUNICATION _______________________________ //
 
 int send_msg(int fd, api_msg* msg);

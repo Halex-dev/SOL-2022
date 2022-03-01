@@ -97,14 +97,15 @@ void storage_init(){
 void print_storage(){
     safe_pthread_mutex_lock(&storage_thread_mtx);
 
-    log_info("---- PRINT ALL FILES -----\n");
+    fprintf(stdout,"--------------------- PRINT ALL FILES ------------------------\n");
     if(server.storage == HASH){
         hashmap_iterate(hash, print_entry, NULL);
     }
     else if(server.storage == RBT){
         rb_print(rbt, print_func);
     }
-    
+    fprintf(stdout,"--------------------------------------------------------\n");
+
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
@@ -225,14 +226,16 @@ int storage_file_create(File* file, char* pathname, long flags, long fd_client){
     file->n_writers = 0;
     
     //Convert fd_client to string and add to dict
-    char* num = long_to_string(fd_client, server.socket.fd_max);
+    char* num = long_to_string(fd_client);
 
     if(num == NULL)
         return -1;
 
+    fd_data* data = safe_calloc(1, sizeof(fd_data));
+
     //Inizialize dictionary
     file->opened = dict_init();
-    dict_insert(file->opened, num, NULL);
+    dict_insert(file->opened, num, data);
 
     // current thread gets mutex control
     storage_writer_lock(file);

@@ -1,13 +1,15 @@
 #include <util/data/dict.h>
 
 void print_key(void* key, size_t ksize, void* value, void* usr){
-	printf("-- DICT --\n");
-    printf("- Key %s\n", (char *)key);
+    printf("    - Key %s\n", (char *)key);
 }
 
 void free_data(void* key, size_t ksize, void* data, void* usr){
-	free(key);
-    free(data);
+    if(key != NULL)
+	    free(key);
+        
+    if(data != NULL)
+        free(data);
 }
 
 Dict* dict_init(){
@@ -83,6 +85,19 @@ int dict_size(Dict* dict){
     }
 
     return dict->elem;
+}
+
+bool dict_contain(Dict* dict, char* key){
+
+    if (dict == NULL){
+        errno = EINVAL;
+        return NULL;
+    }
+
+    void* out = NULL;
+    int len = strlen(key);
+    hashmap_get(dict->hash, key, len, &out);
+    return out != NULL;
 }
 
 void* dict_get(Dict* dict, char* key){

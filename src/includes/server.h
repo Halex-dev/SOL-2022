@@ -312,13 +312,42 @@ typedef struct {
 
 /**____________________________________________________  STORAGE FUNCTION  ____________________________________________________ **/
 
+/** data of fd. */
+typedef struct {
+    char* name;
+} fd_data;
+
+/** Return string of policy used. */
 char* getPolicy();
+/** Function to print all storage files. */
 void print_storage();
+/** Function to clean all storage. */
 void clean_storage();
+/** Function to inizialize storage data struct. */
 void storage_init();
 
+/**
+ * @brief Insert key and data on storage (Does not make a copy of the data)
+ * 
+ * @param key 
+ * @param data 
+ */
 void insert_storage(char* key, void* data);
+
+/**
+ * @brief Search the key in the storage and return the data.
+ * @return return the data if key exist, NULL otherwise
+ * 
+ * @param key 
+ */
 void* search_storage(char* key);
+
+/**
+ * @brief Search if the key exist in storage/
+ * 
+ * @param key 
+ * @return true if the key exist, flase otherwise 
+ */
 bool storage_contains(const char* key);
 
 /**
@@ -340,26 +369,97 @@ void operation_writer_lock(File* file);
 void storage_writer_unlock(File* file);
 
 /**____________________________________________________  SIGNAL HANDLER  ____________________________________________________ **/
+
+/**
+ * @brief Init the signal handler
+ * 
+ * @return 0 on success, otherwise stop the program. 
+ */
 int init_sig_handler();
+
+/**
+ * @brief Function to close pipe and join the thread of signla handler
+ */
 void cleen_handler(shutdown_mode_t flags);
 
 /**____________________________________________________  CONFIG   ____________________________________________________ **/
+
+/**
+ * @brief Function to read all file config
+ * 
+ * @param path path of file config.
+ * @return true on success, false otherwise
+ */
 bool read_config(const char * path);
+
+/**
+ * @brief Function to print all option config readed
+ */
 void print_config();
 
 /**____________________________________________________  FUNCTION   ____________________________________________________ **/
+
+/**
+ * @brief Function to unlink the server socket
+ */
 void unlink_socket();
+
+/**
+ * @brief Function to start "freeing" the server heap
+ */
 void clean_memory();
+
+/**
+ * @brief Function to start server shutdown
+ */
 void close_server();
+
+/**
+ * @brief Close connection with client
+ * 
+ * @param fd_client 
+ */
 void close_connection(long fd_client);
 
 /**____________________________________________________  STATE FUNCTION   ____________________________________________________ **/
 
+/**
+ * @brief Function to change state of server. Increase files maintained on the server
+ * 
+ * @param fd_client 
+ */
 void state_increment_file();
 
 /**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
+
+/**
+ * @brief Deals with an openFile request from the API.
+ * Can set the RES of msg:
+ *      RES_SUCCESS  in case of success;
+ *      RES_EXIST   if the client is trying to create an already existing file
+ *      RES_NOT_EXIST  if the client is trying to open a non-existing file
+ *      RES_IS_LOCKED  if the client is trying to lock an already locked file
+ *      RES_ERROR  if the client not set the flag (or given invalid flag)
+ * 
+ * @param worker_no 
+ * @param fd_client 
+ * @param msg 
+ */
 void open_file(int worker_no, long fd_client, api_msg* msg);
 
+/**
+ * @brief Deals with an openFile request from the API.
+ * Can set the RES of msg:
+ *      RES_SUCCESS  in case of success;
+ *      RES_EXIST   if the client is trying to create an already existing file
+ *      RES_NOT_EXIST  if the client is trying to open a non-existing file
+ *      RES_IS_LOCKED  if the client is trying to lock an already locked file
+ * 
+ * @param worker_no 
+ * @param fd_client 
+ * @param msg 
+ */
+void close_file(int worker_no, long fd_client, api_msg* msg);
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
 extern server_config server;
