@@ -70,6 +70,12 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
     file->data = msg->data;
     file->size = msg->data_length;
 
+    if(clock_gettime(CLOCK_REALTIME, &(file->last_use)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.\n");
+        exit(EXIT_FAILURE);
+    }
+
     state_add_space(file);
 
     //TODO TOGGLE

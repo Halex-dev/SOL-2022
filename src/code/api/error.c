@@ -44,6 +44,14 @@ int api_errno(int res){
             log_error("[API_ERROR] The file has already been written");
             return EAGAIN;
         }
+        case RES_NOT_YOU_LOCKED:{
+            log_error("[API_ERROR] File is locked by another client.");
+            return EAGAIN;
+        }
+        case RES_YOU_LOCKED:{
+            log_error("[API_ERROR] File is already locked by you.");
+            return EAGAIN;
+        }
         default:{
             return ENOTRECOVERABLE;
         }

@@ -39,6 +39,8 @@ typedef enum {
      */
     RES_IS_LOCKED = -20,
     RES_NOT_LOCKED = -21,
+    RES_NOT_YOU_LOCKED = -22,
+    RES_YOU_LOCKED = -23, //Maybe not use
 
     /**
      *  FILE RESPONSE SERVER -39 - -30

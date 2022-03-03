@@ -451,7 +451,7 @@ void printState();
 void open_file(int worker_no, long fd_client, api_msg* msg);
 
 /**
- * @brief Deals with an openFile request from the API.
+ * @brief Deals with an closeFile request from the API.
  * Can set the RES of msg:
  *      RES_SUCCESS  in case of success;
  *      RES_NOT_EXIST  if the client is trying to open a non-existing file
@@ -464,11 +464,12 @@ void open_file(int worker_no, long fd_client, api_msg* msg);
 void close_file(int worker_no, long fd_client, api_msg* msg);
 
 /**
- * @brief Deals with an openFile request from the API.
+ * @brief Deals with an writeFile request from the API.
  * Can set the RES of msg:
  *      RES_SUCCESS  in case of success;
  *      RES_NOT_EXIST  if the client is trying to open a non-existing file
  *      RES_NOT_OPEN  if the client doesn't open the file
+ *      RES_ERROR_DATA if the client can't send the data of file
  * 
  * @param worker_no 
  * @param fd_client 
@@ -476,6 +477,33 @@ void close_file(int worker_no, long fd_client, api_msg* msg);
  */
 void write_file(int worker_no, long fd_client, api_msg* msg);
 
+/**
+ * @brief Deals with an lock and unlock request from the API.
+ * Can set the RES of msg:
+ *      RES_SUCCESS  in case of success;
+ *      RES_NOT_EXIST  if the client is trying to open a non-existing file
+ *      RES_NOT_OPEN  if the client doesn't open the file
+ *      RES_ERROR_DATA if the client can't send the data of file
+ * 
+ * @param worker_no 
+ * @param fd_client 
+ * @param msg 
+ */
+int locks_file(int worker_no, long fd_client, api_msg* msg);
+
+/**
+ * @brief Deals with an lock and unlock request from the API.
+ * Can set the RES of msg:
+ *      RES_SUCCESS  in case of success;
+ *      RES_NOT_EXIST  if the client is trying to open a non-existing file
+ *      RES_NOT_OPEN  if the client doesn't open the file
+ *      RES_ERROR_DATA if the client can't send the data of file
+ * 
+ * @param worker_no 
+ * @param fd_client 
+ * @param msg 
+ */
+int unlocks_file(int worker_no, long fd_client, api_msg* msg);
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
 extern server_config server;
