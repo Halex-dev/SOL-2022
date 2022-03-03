@@ -23,11 +23,13 @@ int main(int argc, char* argv[]){
     
     //nsleep(2000);
 
-    openFile("home/test/ciaone", O_ALL);
+    openFile("./test.txt", O_ALL);
+
+    writeFile("./test.txt", NULL);
 
     //nsleep(2000);
 
-    closeFile("home/test/ciaone");
+    closeFile("./test.txt");
 
     // ------- CLOSING CONNECTION ------ //
     if(closeConnection(SOCKETNAME) == -1){

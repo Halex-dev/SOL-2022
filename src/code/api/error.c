@@ -24,7 +24,7 @@ int api_errno(int res){
             log_error("[API_ERROR] File is already locked");
             return EBUSY;
         }
-        case RES_NOT_LOCKED:{ //Maybe not use
+        case RES_NOT_LOCKED:{
             log_error("[API_ERROR] File is not locked");
             return EPERM;
         }
@@ -39,6 +39,10 @@ int api_errno(int res){
         case RES_NULL:{
             log_error("[API_ERROR] An error as occurred to communicate. Try again.");
             return ECOMM;
+        }
+        case RES_NOT_EMPTY:{
+            log_error("[API_ERROR] The file has already been written");
+            return EAGAIN;
         }
         default:{
             return ENOTRECOVERABLE;

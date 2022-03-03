@@ -53,7 +53,7 @@ void state_increment_file(){
     safe_pthread_mutex_unlock(&curr_state_mtx);
 }
 
-void state_file_modificated(File* file){
+void state_add_space(File* file){
     safe_pthread_mutex_lock(&curr_state_mtx);
 
         curr_state.space += file->size;
@@ -62,5 +62,22 @@ void state_file_modificated(File* file){
             curr_state.max_space = curr_state.space;
                     
         log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
+    safe_pthread_mutex_unlock(&curr_state_mtx);
+}
+
+void printState(){
+    safe_pthread_mutex_lock(&curr_state_mtx);
+        // printing summary of stats
+    printf("\t\033[0;32mPrinting summary of server statistics.\033[0m\n");
+    printf("Maximum number of stored files:     %15u\n", curr_state.max_files);
+    printf("Maximum space occupied in bytes:    %15lu\n", curr_state.max_space);
+    printf("Maximum number of connected clients:%15u\n", curr_state.max_conn);
+    printf("Number of file expulsion by Policy: %15u\n", curr_state.n_policy);
+    printf("Number of file in this moment:      %15u\n", curr_state.files);
+    printf("Number of connection in this moment:%15u\n", curr_state.conn);
+    printf("Number of space at this moment:     %15zu\n", curr_state.space);
+    printf("File in storage:    \n");
+    print_storage();
+    printf("\n");
     safe_pthread_mutex_unlock(&curr_state_mtx);
 }

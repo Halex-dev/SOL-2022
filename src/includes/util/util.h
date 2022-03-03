@@ -127,8 +127,11 @@ ssize_t writen(int fd, const void *vptr, size_t n);
 
 
 char * absolute_path(const char* str);
-
+int file_size(FILE* file);
+void* read_file(const char* pathname);
 char * long_to_string(long num);
+int file_size_path(const char* pathname);
+
 // _______________________________ COMMUNICATION _______________________________ //
 
 int send_msg(int fd, api_msg* msg);
@@ -140,4 +143,5 @@ void print_msg(api_msg* msg);
 void reset_msg(api_msg* msg);
 void free_msg(api_msg* msg);
 void reset_data_msg(api_msg* msg);
+void reset_msg_free(api_msg* msg);
 #endif

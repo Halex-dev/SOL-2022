@@ -139,7 +139,6 @@ int main(int argc, char* argv[]){
                         FD_SET(result.fd_client, &set);
                         if(result.fd_client > server.socket.fd_max) 
                             server.socket.fd_max = result.fd_client;
-                        print_storage();
                         break;
 
                     case CLOSE: // closing connection

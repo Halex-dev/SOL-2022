@@ -430,6 +430,9 @@ void close_connection(long fd_client);
  */
 void state_increment_file();
 
+void state_add_space(File* file);
+
+void printState();
 /**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
 
 /**
@@ -451,15 +454,28 @@ void open_file(int worker_no, long fd_client, api_msg* msg);
  * @brief Deals with an openFile request from the API.
  * Can set the RES of msg:
  *      RES_SUCCESS  in case of success;
- *      RES_EXIST   if the client is trying to create an already existing file
  *      RES_NOT_EXIST  if the client is trying to open a non-existing file
- *      RES_IS_LOCKED  if the client is trying to lock an already locked file
+ *      RES_NOT_OPEN  if the client doesn't open the file
  * 
  * @param worker_no 
  * @param fd_client 
  * @param msg 
  */
 void close_file(int worker_no, long fd_client, api_msg* msg);
+
+/**
+ * @brief Deals with an openFile request from the API.
+ * Can set the RES of msg:
+ *      RES_SUCCESS  in case of success;
+ *      RES_NOT_EXIST  if the client is trying to open a non-existing file
+ *      RES_NOT_OPEN  if the client doesn't open the file
+ * 
+ * @param worker_no 
+ * @param fd_client 
+ * @param msg 
+ */
+void write_file(int worker_no, long fd_client, api_msg* msg);
+
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
 extern server_config server;

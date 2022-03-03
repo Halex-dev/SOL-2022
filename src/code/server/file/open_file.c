@@ -67,6 +67,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
         else{
             file->fd_lock = fd_client;
         }
+        free(pathname);
         storage_writer_unlock(file);
     }
     else{

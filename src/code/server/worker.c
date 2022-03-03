@@ -97,6 +97,33 @@ void worker(void* arg){
 
             break;
         }
+        case REQ_WRITE_FILE: {
+
+            log_stats("[THREAD %d] [WRITE_FILE] Request from client %ld is OPEN_FILE.", worker_no, fd_client);
+
+            write_file(worker_no, fd_client, &msg_c);
+
+            if(send_msg(fd_client, &msg_c) == -1){
+                log_error("Error in writing to client");
+                res.code = FATAL_ERROR;
+                break;
+            }
+
+            // setting result code for main thread
+            if(msg_c.response == RES_SUCCESS){
+                res.code = SUCCESS;      
+            }
+            else if(msg_c.response == RES_CLOSE || msg_c.response == RES_ERROR || msg_c.response == RES_ERROR_DATA) {
+                log_stats("[THREAD %d] [WRITE_FILE_FAIL] Fatal error in CLOSE_FILE request from client %ld.", worker_no, fd_client);
+                res.code = FATAL_ERROR;
+            } 
+            else {
+                log_stats("[THREAD %d] [WRITE_FILE_FAIL] Non-fatal error in CLOSE_FILE request from client %ld.", worker_no, fd_client);
+                res.code = NOT_FATAL;
+            }
+
+            break;
+        }
         default:
             break;
     }

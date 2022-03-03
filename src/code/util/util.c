@@ -133,6 +133,82 @@ char * absolute_path(const char* str){
     return path;
 }
 
+int file_size(FILE* file){
+    int fd = fileno(file);
+    struct stat st;
+    fstat(fd, &st);
+    return st.st_size;
+}
+
+int file_size_path(const char* pathname){
+    struct stat st;
+    stat(pathname, &st);
+    return st.st_size;
+}
+
+void* read_file(const char* pathname){
+
+    FILE* file;
+
+    if((file = fopen(pathname, "rb")) == NULL ){
+        errno = EIO;
+        return NULL;
+    }
+
+    // getting file size
+    int size = file_size(file);
+
+    if(size == -1){
+        fclose(file);
+        errno = EIO;
+        return NULL;
+    }
+
+    void* buffer = safe_malloc(size);
+    if (fread(buffer, 1, size, file) < size){
+        if(ferror(file)){
+            free(buffer);
+            fclose(file);
+            return NULL;
+        }
+    }
+
+    fclose(file);
+
+    return buffer;
+}
+
+void* write_file(const char* pathname){
+
+    FILE* file;
+
+    if((file = fopen(pathname, "rb")) == NULL ){
+        errno = EIO;
+        return NULL;
+    }
+
+    // getting file size
+    int size = file_size(file);
+
+    if(size == -1){
+        fclose(file);
+        errno = EIO;
+        return NULL;
+    }
+
+    void* buffer = safe_malloc(size);
+    if (fread(buffer, 1, size, file) < size){
+        if(ferror(file)){
+            free(buffer);
+            fclose(file);
+            return NULL;
+        }
+    }
+
+    fclose(file);
+
+    return buffer;
+}
 
 // _______________________________ READ AND WRITE _______________________________ //
 
@@ -225,7 +301,7 @@ int read_msg(int fd, api_msg* msg){
     //First read the header
     if(read(fd, msg, sizeof(api_msg)) != sizeof(api_msg))
         return -1;
-
+        
     //Now i can read the data
     msg->data = safe_malloc(msg->data_length+1);
     // memsetting otherwise valgrind will complain
@@ -350,6 +426,15 @@ void print_msg(api_msg* msg){
 }
 
 void reset_msg(api_msg* msg){
+    msg->data = NULL;
+    msg->data_length = 0;
+    msg->flags = O_NULL;
+    msg->operation = REQ_NULL;
+    msg->response = RES_NULL;
+}
+
+
+void reset_msg_free(api_msg* msg){
 
     if(msg->data != NULL){
         free(msg->data);
@@ -379,6 +464,8 @@ void free_msg(api_msg* msg){
         
     free(msg);
 }
+
+// _______________________________ CONVERTION _______________________________ //
 
 char * long_to_string(long num){
     

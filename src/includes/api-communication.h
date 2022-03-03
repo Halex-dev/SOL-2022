@@ -1,10 +1,10 @@
 // _____________________________________ COMMUNICATION FUNCTION  _____________________________________ //
 
 /**
-* REQUEST CLIENT 30-50
+* REQUEST CLIENT 20-50
 */
 typedef enum {
-    
+    REQ_DATA = 20,
     REQ_OPEN_FILE = 30,
     REQ_CLOSE_FILE = 31,
     REQ_READ_FILE = 32,
@@ -25,6 +25,7 @@ typedef enum {
     RES_ERROR = -1,
     RES_CLOSE = -2,
     RES_NULL = -3,
+    RES_ERROR_DATA = -4,
 
     /**
      *  OPEN/CREATING RESPONSE SERVER -19 - -10
@@ -42,7 +43,8 @@ typedef enum {
     /**
      *  FILE RESPONSE SERVER -39 - -30
      */
-    RES_TOO_BIG = -31
+    RES_TOO_BIG = -31,
+    RES_NOT_EMPTY = -32
 } api_res;
 
 typedef enum {
