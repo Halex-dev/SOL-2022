@@ -40,6 +40,7 @@ int lockFile(const char* pathname){
 
     reset_msg_free(&msg);
     errno = 0;
+    return errno;
 }
 
 int unlockFile(const char* pathname){
@@ -79,4 +80,8 @@ int unlockFile(const char* pathname){
         reset_msg_free(&msg);
         return -1;
     }
+
+    reset_msg_free(&msg);
+    errno = 0;
+    return errno;
 }

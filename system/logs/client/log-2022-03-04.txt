@@ -1,2 +1,0 @@
-[04-03-2022 16:43:49] [INFO] Connected to ./system/bin/SOL-SOCKET.sk
-[04-03-2022 16:43:49] [INFO] Connected closed to ./system/bin/SOL-SOCKET.sk

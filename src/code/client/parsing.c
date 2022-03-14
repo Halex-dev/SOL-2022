@@ -42,101 +42,101 @@ int parsing(int argc, char *argv[]){
          case 'w':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_WRITE_DIR;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            LinkedList* act = convert_absolute_path(*action, optarg);
+            List_add(operation, action, (void*) act);
             break;
          }
          case 'W':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_WRITE;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            LinkedList* act = convert_absolute_path(*action, optarg);
+            List_add(operation, action, (void*) act);
             break;
          }
          case 'r':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_READ;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            LinkedList* act = convert_absolute_path(*action, optarg);
+            List_add(operation, action, (void*) act);
             break;
          }
          case 'R':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_READ_N;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
-            break;
-         }
-         case 't':{
-            action_c* action = safe_calloc(1, sizeof(action_c));
-            *action = ACT_TIME;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
+            long* n = safe_calloc(1, sizeof(long));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            if(optarg != NULL) {
+               *n = atoi(optarg);
+            }
+
+            List_add(operation, action, (void*) n);
             break;
          }
          case 'l':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_LOCK;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            LinkedList* act = convert_absolute_path(*action, optarg);
+            List_add(operation, action, (void*) act);
             break;
          }
          case 'u':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_UNLOCK;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            LinkedList* act = convert_absolute_path(*action, optarg);
+            List_add(operation, action, (void*) act);
             break;
          }
          case 'c':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_REMOVE;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            LinkedList* act = convert_absolute_path(*action, optarg);
+            List_add(operation, action, (void*) act);
             break;
          }
          case 'D':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_D;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            char * dirPath = absolute_path(optarg);
+            if(dirPath == NULL){
+               log_error("Error to convert path '%s' into absolute", optarg);
+               exit(EXIT_FAILURE);
+            }
+
+            List_add(operation, action, (void*) dirPath);
             break;
          }
          case 'd':{
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_d;
-            int size = strlen(optarg);
-            char* str = safe_calloc(size, sizeof(char));
 
-            strcpy(str,optarg);
-            List_add(operation, action, str);
+            char * dirPath = absolute_path(optarg);
+            if(dirPath == NULL){
+               log_error("Error to convert path '%s' into absolute", optarg);
+               exit(EXIT_FAILURE);
+            }
+
+            List_add(operation, action, (void*) dirPath);
+            break;
+         }
+         case 't':{
+            action_c* action = safe_calloc(1, sizeof(action_c));
+            *action = ACT_TIME;
+
+            long* files = safe_calloc(1, sizeof(long));
+            if(optarg != NULL && (sscanf(optarg, "%ld", files) == EOF || *files < 0)){
+               log_error("Error in parsing option -t: couldn't read number of files.\n");
+               exit(EXIT_FAILURE);
+            }
+
+            List_add(operation, action, (void*) files);
             break;
          }
          case '?':
@@ -147,18 +147,14 @@ int parsing(int argc, char *argv[]){
       }
    }
 
-   //Check if d or D is setted right
+   //Check socket
    if(opt_c.sock == NULL){
       log_error("You must set a valid socket with -f <sock>");
       List_destroy(operation,FULL);
       return -1;
    }
 
-   if(convert_absolute_path() == -1){
-      List_destroy(operation,FULL);
-      return -1;
-   }
-
+   //Check if d or D is setted right
    if (check_everything_right() != EXIT_SUCCESS) {
       log_error("You have used unconsciously the option -d or -D. Do -h to help");
       List_destroy(operation,FULL);
@@ -169,7 +165,186 @@ int parsing(int argc, char *argv[]){
 }
 
 
-int convert_absolute_path(){
+LinkedList* convert_absolute_path(action_c action, char* parameters){
+
+   char* p;
+   LinkedList* act = create_List();
+
+   switch(action) {
+      case ACT_WRITE_DIR: { //-w
+
+         DIR* folder;
+         char* dirPath;
+         long* files;
+
+         //Take dir and get absolute
+         dirPath = strtok_r(parameters, ",", &p);
+         dirPath = absolute_path(dirPath);
+
+         if((folder = opendir(dirPath)) == NULL) {
+            log_error("Cartella specificata '%s' inesistente.", dirPath); 
+            closedir(folder);
+            free(dirPath);
+            List_destroy(act,FULL);
+            return NULL;
+         }
+         closedir(folder);
+         
+         parsing_o* par = safe_calloc(1, sizeof(parsing_o));
+         *par = DIREC;
+         List_add(act, par, dirPath);
+
+         files = safe_calloc(1, sizeof(long));
+         char* num = strtok_r(NULL, ",", &p);
+         if(num != NULL && (sscanf(num, "%ld", files) == EOF || *files < 0)){
+            log_error("Error in parsing option -w: couldn't read number of files.\n");
+            List_destroy(act,FULL);
+            return NULL;
+         }
+
+         parsing_o* par2 = safe_calloc(1, sizeof(parsing_o));
+         *par2 = N_WRITE;
+
+         List_add(act, par2, files);
+         return act;
+         break;
+      }
+      case ACT_WRITE: { //-W
+
+         char* token = strtok_r(parameters, ",", &p);
+
+         if(token == NULL){
+            List_destroy(act,FULL);
+            return NULL;
+         }
+            
+         while(token) {
+            char* filePath = absolute_path(token);
+            // converting token into absolute path if necessary
+            if(filePath == NULL){
+               log_error("Error to convert path '%s' into absolute", token);
+               exit(EXIT_FAILURE);
+            }
+
+            parsing_o* par = safe_calloc(1, sizeof(action_c));
+            *par = FILES;
+
+            List_add(act,par,filePath);
+            token = strtok_r(NULL, ",", &p);
+         }
+
+         return act;
+         break;
+      }
+      case ACT_READ: { //r
+         char* token = strtok_r(parameters, ",", &p);
+
+         if(token == NULL){
+            List_destroy(act,FULL);
+            return NULL;
+         }
+            
+         while(token) {
+            char* filePath = absolute_path(token);
+            // converting token into absolute path if necessary
+            if(filePath == NULL){
+               log_error("Error to convert path '%s' into absolute", token);
+               exit(EXIT_FAILURE);
+            }
+
+            parsing_o* par = safe_calloc(1, sizeof(action_c));
+            *par = FILES;
+
+            List_add(act,par,filePath);
+            token = strtok_r(NULL, ",", &p);
+         }
+
+         return act;
+         break;
+      }
+      case ACT_LOCK: { //l
+         char* token = strtok_r(parameters, ",", &p);
+
+         if(token == NULL){
+            List_destroy(act,FULL);
+            return NULL;
+         }
+            
+         while(token) {
+            char* filePath = absolute_path(token);
+            // converting token into absolute path if necessary
+            if(filePath == NULL){
+               log_error("Error to convert path '%s' into absolute", token);
+               exit(EXIT_FAILURE);
+            }
+
+            parsing_o* par = safe_calloc(1, sizeof(action_c));
+            *par = FILES;
+
+            List_add(act,par,filePath);
+            token = strtok_r(NULL, ",", &p);
+         }
+
+         return act;
+         break;
+      }
+      case ACT_UNLOCK: { //u
+         char* token = strtok_r(parameters, ",", &p);
+
+         if(token == NULL){
+            List_destroy(act,FULL);
+            return NULL;
+         }
+            
+         while(token) {
+            char* filePath = absolute_path(token);
+            // converting token into absolute path if necessary
+            if(filePath == NULL){
+               log_error("Error to convert path '%s' into absolute", token);
+               exit(EXIT_FAILURE);
+            }
+
+            parsing_o* par = safe_calloc(1, sizeof(action_c));
+            *par = FILES;
+
+            List_add(act,par,filePath);
+            token = strtok_r(NULL, ",", &p);
+         }
+
+         return act;
+         break;
+      }
+      case ACT_REMOVE: { //c
+         char* token = strtok_r(parameters, ",", &p);
+
+         if(token == NULL){
+            List_destroy(act,FULL);
+            return NULL;
+         }
+            
+         while(token) {
+            char* filePath = absolute_path(token);
+            // converting token into absolute path if necessary
+            if(filePath == NULL){
+               log_error("Error to convert path '%s' into absolute", token);
+               exit(EXIT_FAILURE);
+            }
+
+            parsing_o* par = safe_calloc(1, sizeof(action_c));
+            *par = FILES;
+
+            List_add(act,par,filePath);
+            token = strtok_r(NULL, ",", &p);
+         }
+
+         return act;
+         break;
+      }
+      default: {
+         return NULL;
+         break;
+      }
+   }
    return 0;
 }
 

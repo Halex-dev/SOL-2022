@@ -17,16 +17,23 @@
 
 typedef enum {
     ACT_TIME,
-    ACT_WRITE_DIR,
-    ACT_WRITE,
-    ACT_READ,
-    ACT_READ_N,
-    ACT_LOCK,
-    ACT_UNLOCK,
-    ACT_REMOVE,
+    ACT_WRITE_DIR, //-w
+    ACT_WRITE, //-W
+    ACT_READ, //r
+    ACT_READ_N, //R
+    ACT_LOCK, //l
+    ACT_UNLOCK, //u
+    ACT_REMOVE, //c
     ACT_D,
     ACT_d
 } action_c;
+
+typedef enum {
+    DIREC,
+    N_WRITE,
+    N_READ,
+    FILES,
+} parsing_o;
 //**____________________________________________________  PARSING FUNCTION  ____________________________________________________ **//
 
 typedef struct {
@@ -40,7 +47,7 @@ extern LinkedList* operation;
 
 int parsing(int argc, char *argv[]);
 int check_everything_right();
-int convert_absolute_path();
+LinkedList* convert_absolute_path(action_c action, char* parameters);
 
 #define TIME_BETWEEN_CONN 500
 #endif
