@@ -86,7 +86,7 @@ void List_destroy(LinkedList *list, int mode) {
             delete_node_nodata(tmp);
         if(mode == DATA)
             delete_node_nokey(tmp);
-        if(mode == NODE)
+        if(mode == DEFAULT)
             delete_node(tmp);
     }
         
@@ -114,7 +114,7 @@ void List_delel(LinkedList *list, void* key, int mode) {
                 delete_node_nodata(tmp);
             if(mode == DATA)
                 delete_node_nokey(tmp);
-            if(mode == NODE)
+            if(mode == DEFAULT)
                 delete_node(tmp);
 
         }

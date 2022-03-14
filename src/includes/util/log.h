@@ -77,8 +77,28 @@ void close_logger();
  */
 void log_threadsafe(bool value);
 
+/**
+ * @brief Set a determinate color of one level
+ * 
+ * @param level level of log
+ * @param color color what do u want
+ */
 void log_setColor(int level, const char* color);
+
+/**
+ * @brief Set if the level can write on stdout or not
+ * 
+ * @param level level of log
+ * @param cond true if write, false otherwise
+ */
 void log_setConsole(int level, bool cond);
+
+/**
+ * @brief Set if the level write the line code where it was called
+ * 
+ * @param level 
+ * @param cond 
+ */
 void log_setWriteLine(int level, bool cond);
 
 /**

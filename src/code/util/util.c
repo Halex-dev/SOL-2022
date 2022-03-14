@@ -123,7 +123,7 @@ char * absolute_path(const char* str){
     char * key;
     //Get absolute path
     if((key = realpath(str, NULL)) == NULL){
-        perror("Error in converting relative path into an absolute one (Maybe not exist the socket)");
+        perror("Error in converting relative path into an absolute one");
         return NULL;
     }
 

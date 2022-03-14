@@ -161,9 +161,9 @@ static void stdout_callback(log_event *ev, int level) {
     //ON TERMINAL BUT WHIT COLOR
     if(level_console[level]){
         if(level_line[level])
-            fprintf(ev->udata, "%s | %s:%d: | %s%-5s\x1b[0m | ",buf, ev->file, ev->line, level_colors[level], level_strings[level]);
+            fprintf(ev->udata, "[%s%s\x1b[0m] [%s] [%s:%d:] ",level_colors[level],level_strings[level], buf, ev->file, ev->line);
         else
-            fprintf(ev->udata, "%s | %s%-5s\x1b[0m | ",buf, level_colors[level], level_strings[level]);
+            fprintf(ev->udata, "[%s%s\x1b[0m] [%s] ",level_colors[level],level_strings[level], buf);
     }
 
     #else
@@ -171,9 +171,9 @@ static void stdout_callback(log_event *ev, int level) {
     //ON TERMINAL
     if(level_console[level]){
         if(level_line[level])
-            fprintf(ev->udata, "%s | %s:%d: | %-5s | ",buf, ev->file, ev->line, level_strings[level]);
+            fprintf(ev->udata, "[%s] [%s] [%s:%d:] ",level_strings[level], buf, ev->file, ev->line);
         else
-            fprintf(ev->udata, "%s | %-5s | ",buf, level_strings[level]);
+            fprintf(ev->udata, "[%s] [%s] ",level_strings[level], buf);
     }
 
     #endif
@@ -182,9 +182,9 @@ static void stdout_callback(log_event *ev, int level) {
     //ON FILE
     if(config.file){
         if(level_line[level])
-            fprintf(log_file, "%s | %s:%d: | %-5s | ",buf, ev->file, ev->line, level_strings[level]);
+            fprintf(log_file, "[%s] [%s] [%s:%d:] ",level_strings[level], buf, ev->file, ev->line);
         else
-            fprintf(log_file, "%s | %-5s | ",buf, level_strings[level]);
+            fprintf(log_file, "[%s] [%s] ",level_strings[level], buf);
     }
 
     va_list aq;

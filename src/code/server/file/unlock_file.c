@@ -1,6 +1,6 @@
 #include "server.h"
 
-int unlocks_file(int worker_no, long fd_client, api_msg* msg){
+void unlocks_file(int worker_no, long fd_client, api_msg* msg){
     int len_path = strlen(msg->data);
     char* pathname = safe_calloc(len_path+1,sizeof(char));
     strcpy(pathname, msg->data);

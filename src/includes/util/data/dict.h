@@ -1,5 +1,5 @@
-#ifndef LIST_H
-#define LIST_H
+#ifndef DICT_H
+#define DICT_H
 
 #include <util/util.h>
 #include <util/data/hashmap.h>

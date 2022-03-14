@@ -124,7 +124,7 @@ void worker(void* arg){
 
             break;
         }
-        case RES_IS_LOCKED: {
+        case REQ_LOCK_FILE: {
             log_stats("[THREAD %d] [LOCK_FILE] Request from client %ld is LOCK_FILE.\n", worker_no, fd_client);
             
             locks_file(worker_no, fd_client, &msg_c);
@@ -150,7 +150,7 @@ void worker(void* arg){
 
             break;
         }
-        case RES_NOT_LOCKED: {
+        case REQ_UNLOCK_FILE: {
             log_stats("[THREAD %d] [UNLOCK_FILE] Request from client %ld is UNLOCK_FILE.\n", worker_no, fd_client);
             
             locks_file(worker_no, fd_client, &msg_c);

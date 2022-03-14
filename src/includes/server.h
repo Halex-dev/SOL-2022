@@ -483,13 +483,13 @@ void write_file(int worker_no, long fd_client, api_msg* msg);
  *      RES_SUCCESS  in case of success;
  *      RES_NOT_EXIST  if the client is trying to open a non-existing file
  *      RES_NOT_OPEN  if the client doesn't open the file
- *      RES_ERROR_DATA if the client can't send the data of file
+ *      RES_NOT_LOCKED if the client can't send the data of file
  * 
  * @param worker_no 
  * @param fd_client 
  * @param msg 
  */
-int locks_file(int worker_no, long fd_client, api_msg* msg);
+void locks_file(int worker_no, long fd_client, api_msg* msg);
 
 /**
  * @brief Deals with an lock and unlock request from the API.
@@ -503,7 +503,7 @@ int locks_file(int worker_no, long fd_client, api_msg* msg);
  * @param fd_client 
  * @param msg 
  */
-int unlocks_file(int worker_no, long fd_client, api_msg* msg);
+void unlocks_file(int worker_no, long fd_client, api_msg* msg);
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
 extern server_config server;
