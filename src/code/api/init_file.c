@@ -43,6 +43,7 @@ int openFile(const char* pathname, int flags){
         reset_msg_free(&msg);
         return -1;
     }
+    
 
     reset_msg_free(&msg);
     errno = 0;

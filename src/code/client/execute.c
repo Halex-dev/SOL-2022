@@ -59,10 +59,11 @@ int execute(){
                 break;
             }
             case ACT_WRITE:{
-
-                log_debug("WRITE");
                 char* exp_dir = NULL;
-                action_c* opt_d = (action_c*) curr->next->key;
+                action_c* opt_d = NULL;
+
+                if(curr->next != NULL)
+                    opt_d = (action_c*) curr->next->key;
 
                 //Get expelled dir if exist
                 if(curr->next != NULL && *opt_d == ACT_D){
@@ -76,33 +77,48 @@ int execute(){
 
                 while(files != NULL){
                     
-                    char * file = curr->data;
-                    parsing_o* prs = (parsing_o *) curr->key;
+                    parsing_o* prs = (parsing_o *) files->key;
+                    char* file = files->data;
 
                     if(*prs != FILES)
                         log_error("This was not supposed to happen. Contact a programmer.");
 
-                    if(openFile(file, O_LOCK) == -1){
-                        log_warn("Go to next file");
+
+                    //TODO APPEND CON errno
+
+                    if(openFile(file, O_ALL) == -1){
+                        log_warn("\t\\-----> Go to next file");
                         files=files->next;
                         continue;
                     }
 
                     if(writeFile(file, exp_dir) == -1){
-                        log_warn("Go to next file");
+                        log_warn("\t\\-----> Go to next file");
                         files=files->next;
                         continue;
                     } 
 
                     if(closeFile(file) == -1){
-                        log_warn("Go to next file");
+                        log_warn("\t\\-----> Go to next file");
                         files=files->next;
                         continue;
-                    } 
+                    }
+
+                    files = files->next;
                 }
 
+                List_destroy(list, FULL);
                 NEXT;
                 break;
+            }
+            case ACT_REMOVE:{
+                log_debug("REMOVE");
+            }
+            case ACT_READ:{
+                log_debug("REMOVE");
+            }
+            case ACT_READ_N:{
+                log_debug("REMOVE");
             }
             default:{
                 break;
@@ -117,6 +133,7 @@ int execute(){
 int rec_write_dir(const char* dirname, int* numFiles, const char* exp_dir){
 
     int write = *numFiles;
+    int tot = write;
 
     if(write < -1)
         return -1;
@@ -169,11 +186,16 @@ int rec_write_dir(const char* dirname, int* numFiles, const char* exp_dir){
                 log_warn("\t\\-----> Go to next file");
                 continue;
             }
+
+            /** I don't count files with error
+             * if(write != -1)
+             *   write--;
+            */
             
         }
     }
 
     closedir(folder);
 
-    return write;
+    return tot-write;
 }

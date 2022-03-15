@@ -72,6 +72,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
     }
     else{
         msg->response = RES_ERROR;
+        return;
     }
 
     msg->response = RES_SUCCESS;

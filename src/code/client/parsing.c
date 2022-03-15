@@ -185,7 +185,6 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
    switch(action) {
       case ACT_WRITE_DIR: { //-w
 
-         DIR* folder;
          char* dirPath;
          long* files;
 
@@ -193,15 +192,25 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
          dirPath = strtok_r(parameters, ",", &p);
          dirPath = absolute_path(dirPath);
 
-         //Check if dir exist
-         if((folder = opendir(dirPath)) == NULL) {
-            log_error("Cartella specificata '%s' inesistente.", dirPath); 
-            closedir(folder);
-            free(dirPath);
-            List_destroy(act,FULL);
-            return NULL;
+         if(dirPath == NULL){
+            log_error("Error to convert path '%s' into absolute", optarg);
+            exit(EXIT_FAILURE);
          }
-         closedir(folder);
+
+         struct stat properties;
+
+         if(stat(dirPath, &properties) == -1){
+            perror("\tError in stat");
+            exit(EXIT_FAILURE);
+         }
+
+         //Check if dir exist
+         if(S_ISDIR(properties.st_mode)) {
+            log_error("Folder specified  '%s' does not exist.", dirPath); 
+            List_destroy(act,FULL);
+            exit(EXIT_FAILURE);
+         } 
+         
          
          parsing_o* par = safe_calloc(1, sizeof(parsing_o));
          *par = DIREC;
@@ -215,7 +224,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
          if(num != NULL && (sscanf(num, "%ld", files) == EOF || *files < 0)){
             log_error("Error in parsing option -w: couldn't read number of files.\n");
             List_destroy(act,FULL);
-            return NULL;
+            exit(EXIT_FAILURE);;
          }
 
          parsing_o* par2 = safe_calloc(1, sizeof(parsing_o));
@@ -244,6 +253,18 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
 
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
+
+            struct stat properties;
+
+            if(stat(filePath, &properties) == -1){
+               perror("\tError in stat");
+               exit(EXIT_FAILURE);
+            }
+
+            if(S_ISDIR(properties.st_mode)) {
+               log_error("You can only send files on option -W");
+               exit(EXIT_FAILURE);
+            } 
 
             List_add(act,par, (void*) filePath);
             token = strtok_r(NULL, ",", &p);

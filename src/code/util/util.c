@@ -119,11 +119,12 @@ int nsleep(int us){
 
 // _______________________________ FUNCTION _______________________________ //
 
-char * absolute_path(const char* str){
+char* absolute_path(const char* str){
     char * key;
     //Get absolute path
     if((key = realpath(str, NULL)) == NULL){
-        return NULL;
+        perror("\tError in convert ab");
+        exit(EXIT_FAILURE);
     }
     return key;
 }

@@ -1,0 +1,6 @@
+[INFO] [15-03-2022 18:19:23] Connected to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
+[ERROR] [15-03-2022 18:19:23] [API_ERROR] File already exists
+[WARN] [15-03-2022 18:19:23] 	\-----> Go to next file
+[ERROR] [15-03-2022 18:19:23] [API_ERROR] File already exists
+[WARN] [15-03-2022 18:19:23] 	\-----> Go to next file
+[INFO] [15-03-2022 18:19:23] Connected closed to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk

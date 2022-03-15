@@ -65,7 +65,7 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }
     
-    //TODO expell_file
+    //TODO expell_file DA FARE
 
     file->data = msg->data;
     file->size = msg->data_length;
@@ -77,20 +77,6 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
     }
 
     state_add_space(file);
-
-    //TODO TOGGLE
-    //DEBUG TEST 
-    FILE* to_write;
-    if( (to_write = fopen("test/dev/test.txt", "wb")) == NULL){ 
-        return;
-    }
-
-    int l;
-    if( file->size > 0 && (l = fwrite(file->data, 1, file->size, to_write)) < file->size){
-        fclose(to_write);
-        return;
-    }
-    fclose(to_write);
 
     msg->data_length = 0;
     msg->data = NULL;

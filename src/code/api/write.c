@@ -95,6 +95,7 @@ int writeFile(const char* pathname, const char* dirname){
     return 0;
 }
 
+//TODO DA FARE APPEND
 int appendToFile(const char* pathname, void* buf, size_t size, const char* dirname){
 
     return 0;

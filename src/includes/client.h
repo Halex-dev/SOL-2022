@@ -54,13 +54,64 @@ typedef struct {
 extern options_client opt_c;
 extern LinkedList* operation;
 
+/**
+ * @brief Function to parsing command-line options
+ * 
+ * @param argc 
+ * @param argv 
+ * @return -1 on error, 0 otherwise
+ */
 int parsing(int argc, char *argv[]);
+
+/**
+ * Check if d or D is setted right
+ * 
+ * @return -1 on error, 0 otherwise
+ */
 int check_everything_right();
+
+/**
+ * @brief Prepare the data to execute
+ * 
+ * @param action 
+ * @param parameters 
+ * @return LinkedList* List of operations that are valid, on error exits the program 
+ */
 LinkedList* convert_absolute_path(action_c action, char* parameters);
+
+/**
+ * @brief Execute all command in the order in which they were passed
+ * 
+ * @return 0 on success, on error exits the program 
+ */
 int execute();
+
+/**
+ * @brief Reads recursively the folder and writes N files
+ * 
+ * @param dirname 
+ * @param numFiles 
+ * @param exp_dir 
+ * @return number of files written
+ */
 int rec_write_dir(const char* dirname, int* numFiles, const char* exp_dir);
 
+/**
+ * @brief compare key and key2
+ * 
+ * @param key 
+ * @param key2 
+ * @return true is equal, false otherwise
+ */
 bool compare_action(void* key, void* key2);
+
+/**
+ * @brief compare key and key2
+ * 
+ * @param key 
+ * @param key2 
+ * @return true is equal, false otherwise
+ */
 bool compare_parsing(void* key, void* key2);
 
 //**____________________________________________________  DEBUG FUNCTION  ____________________________________________________ **//
