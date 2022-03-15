@@ -1,7 +1,5 @@
 #include "client.h"
 
-#define SOCKETNAME  "./system/bin/SOL-SOCKET.sk"
-
 LinkedList* operation = NULL;
 options_client opt_c = {
     .sock = NULL,
@@ -22,34 +20,25 @@ int main(int argc, char* argv[]){
 
     init_log_file(LOG_PATH, WRITE);
 
-    /*
     struct timespec abstime;
     clock_gettime(CLOCK_REALTIME, &abstime);
 
-    if(openConnection(SOCKETNAME, TIME_BETWEEN_CONN, abstime) == -1){
+    if(openConnection(opt_c.sock, TIME_BETWEEN_CONN, abstime) == -1){
         perror("Connection failed");
         return -1;
     } 
-
-    setCurrent(SOCKETNAME);
+    setCurrent(opt_c.sock);
     
-    //nsleep(2000);
-
-    openFile("./test.txt", O_ALL);
-
-    writeFile("./test.txt", NULL);
-
-    //nsleep(2000);
-
-    closeFile("./test.txt");
+    execute();
 
     // ------- CLOSING CONNECTION ------ //
-    if(closeConnection(SOCKETNAME) == -1){
+    if(closeConnection(opt_c.sock) == -1){
         perror("Couldn't close connection");
         return -1;
-    }*/
+    }
 
-    List_destroy(operation,FULL);
+    free(opt_c.sock);
+    List_destroy(operation,KEY);
 
     //LOG
     close_logger();

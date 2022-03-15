@@ -24,22 +24,34 @@ void usage(char *progname, int opt) {
 
 int parsing(int argc, char *argv[]){
    int opt;
+   bool socket = false;
 
    opterr = 0;
-   operation = create_List();
+   operation = create_List(compare_action);
    
    while ((opt = getopt(argc, argv, OPTSTR)) != EOF){
       switch(opt) {
-         case 'f':{
+         case 'f':{ //Socket
+
+            if(socket){
+               log_error("You can set one socket");
+               exit(EXIT_FAILURE);
+            }
+
             opt_c.sock = absolute_path(optarg);
+            if(opt_c.sock == NULL){
+               log_error("Error to convert path '%s' into absolute", optarg);
+               exit(EXIT_FAILURE);
+            }
+            socket = true;
             break;
          }
-         case 'p':{
+         case 'p':{ //Printable mode
             opt_c.print = true;
             log_setConsole(LOG_INFO, opt_c.print);
             break;
          }
-         case 'w':{
+         case 'w':{ // Dirname, n file
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_WRITE_DIR;
 
@@ -47,7 +59,7 @@ int parsing(int argc, char *argv[]){
             List_add(operation, action, (void*) act);
             break;
          }
-         case 'W':{
+         case 'W':{ //List of file
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_WRITE;
 
@@ -55,7 +67,7 @@ int parsing(int argc, char *argv[]){
             List_add(operation, action, (void*) act);
             break;
          }
-         case 'r':{
+         case 'r':{ //List of file
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_READ;
 
@@ -63,7 +75,7 @@ int parsing(int argc, char *argv[]){
             List_add(operation, action, (void*) act);
             break;
          }
-         case 'R':{
+         case 'R':{ //Num of read
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_READ_N;
 
@@ -76,7 +88,7 @@ int parsing(int argc, char *argv[]){
             List_add(operation, action, (void*) n);
             break;
          }
-         case 'l':{
+         case 'l':{ //List of file
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_LOCK;
 
@@ -84,7 +96,7 @@ int parsing(int argc, char *argv[]){
             List_add(operation, action, (void*) act);
             break;
          }
-         case 'u':{
+         case 'u':{ //List of file
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_UNLOCK;
 
@@ -92,7 +104,7 @@ int parsing(int argc, char *argv[]){
             List_add(operation, action, (void*) act);
             break;
          }
-         case 'c':{
+         case 'c':{ //List of file
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_REMOVE;
 
@@ -168,7 +180,7 @@ int parsing(int argc, char *argv[]){
 LinkedList* convert_absolute_path(action_c action, char* parameters){
 
    char* p;
-   LinkedList* act = create_List();
+   LinkedList* act = create_List(compare_parsing);
 
    switch(action) {
       case ACT_WRITE_DIR: { //-w
@@ -181,6 +193,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
          dirPath = strtok_r(parameters, ",", &p);
          dirPath = absolute_path(dirPath);
 
+         //Check if dir exist
          if((folder = opendir(dirPath)) == NULL) {
             log_error("Cartella specificata '%s' inesistente.", dirPath); 
             closedir(folder);
@@ -192,9 +205,12 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
          
          parsing_o* par = safe_calloc(1, sizeof(parsing_o));
          *par = DIREC;
-         List_add(act, par, dirPath);
+         List_add(act, par, (void*) dirPath);
 
+         //Check get number files
          files = safe_calloc(1, sizeof(long));
+         *files = 0;
+         
          char* num = strtok_r(NULL, ",", &p);
          if(num != NULL && (sscanf(num, "%ld", files) == EOF || *files < 0)){
             log_error("Error in parsing option -w: couldn't read number of files.\n");
@@ -205,7 +221,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
          parsing_o* par2 = safe_calloc(1, sizeof(parsing_o));
          *par2 = N_WRITE;
 
-         List_add(act, par2, files);
+         List_add(act, par2, (void*) files);
          return act;
          break;
       }
@@ -229,7 +245,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
 
-            List_add(act,par,filePath);
+            List_add(act,par, (void*) filePath);
             token = strtok_r(NULL, ",", &p);
          }
 
@@ -255,7 +271,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
 
-            List_add(act,par,filePath);
+            List_add(act,par, (void*) filePath);
             token = strtok_r(NULL, ",", &p);
          }
 
@@ -281,7 +297,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
 
-            List_add(act,par,filePath);
+            List_add(act,par, (void*) filePath);
             token = strtok_r(NULL, ",", &p);
          }
 
@@ -307,7 +323,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
 
-            List_add(act,par,filePath);
+            List_add(act,par, (void*) filePath);
             token = strtok_r(NULL, ",", &p);
          }
 
@@ -333,7 +349,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
 
-            List_add(act,par,filePath);
+            List_add(act,par, (void*)filePath);
             token = strtok_r(NULL, ",", &p);
          }
 

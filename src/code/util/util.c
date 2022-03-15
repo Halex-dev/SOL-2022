@@ -125,11 +125,7 @@ char * absolute_path(const char* str){
     if((key = realpath(str, NULL)) == NULL){
         return NULL;
     }
-
-    char* path = safe_calloc(strlen(key) + 1,sizeof(char));
-    strcpy(path, key);
-    free(key);
-    return path;
+    return key;
 }
 
 int file_size(FILE* file){

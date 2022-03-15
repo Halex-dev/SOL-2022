@@ -40,9 +40,8 @@ int main(int argc, char* argv[]){
 
     // --------------------------- STORAGE ----------------------------- //
     storage_init();
-
-    
     print_config();
+
     // ------------------------ SOCKET SERVER ------------------------- //
     unlink_socket();
     atexit(unlink_socket);
@@ -143,6 +142,7 @@ int main(int argc, char* argv[]){
 
                     case CLOSE: // closing connection
                         close_connection(result.fd_client);
+                        printState();
                         //hashmap_printFile(&files);
                         break;
 

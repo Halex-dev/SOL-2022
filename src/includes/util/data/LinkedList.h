@@ -9,6 +9,7 @@ typedef struct list {
     Node* head;
     Node* tail;
     int size;
+    bool (*compare) (void*,void*);
 } LinkedList;
 
 enum { DEFAULT, FULL, KEY, DATA};
@@ -16,9 +17,10 @@ enum { DEFAULT, FULL, KEY, DATA};
 /**
  * @brief Create a List object
  * 
+ * @param search compare function 
  * @return LinkedList* 
  */
-LinkedList* create_List();
+LinkedList* create_List(bool (*compare)(void*, void*));
 
 /**
  * @brief Add element on tail in list (Don't create a copy of data).
@@ -94,6 +96,24 @@ void List_print(LinkedList *list);
  * @return void* element
  */
 void* List_get(LinkedList *list, void* key);
+
+/**
+ * @brief Return the element of key at index if exist
+ * 
+ * @param list 
+ * @param key 
+ * @return void* element
+ */
+void* List_getIndex(LinkedList *list, int index); 
+
+/**
+ * @brief Return the element on the head and remove from list if exist (Don't do the free)
+ * 
+ * @param list 
+ * @param key 
+ * @return void* element
+ */
+void* List_removeHead(LinkedList *list);
 
 /**
  * @brief Return the first element in list

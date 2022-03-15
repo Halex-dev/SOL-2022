@@ -95,7 +95,7 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
     msg->data_length = 0;
     msg->data = NULL;
 
-    printState();
+    //printState();
     storage_writer_unlock(file);
     msg->response = RES_SUCCESS;
 }

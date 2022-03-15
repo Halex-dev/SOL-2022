@@ -98,6 +98,7 @@ void print_storage(){
     safe_pthread_mutex_lock(&storage_thread_mtx);
 
     fprintf(stdout,"--------------------- PRINT ALL FILES ------------------------\n");
+
     if(server.storage == HASH){
         hashmap_iterate(hash, print_entry, NULL);
     }

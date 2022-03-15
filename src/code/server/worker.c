@@ -72,7 +72,7 @@ void worker(void* arg){
         }
         case REQ_CLOSE_FILE: {
 
-            log_stats("[THREAD %d] [CLOSE_FILE] Request from client %ld is OPEN_FILE.", worker_no, fd_client);
+            log_stats("[THREAD %d] [CLOSE_FILE] Request from client %ld is CLOSE_FILE.", worker_no, fd_client);
 
             close_file(worker_no, fd_client, &msg_c);
 
@@ -99,7 +99,7 @@ void worker(void* arg){
         }
         case REQ_WRITE_FILE: {
 
-            log_stats("[THREAD %d] [WRITE_FILE] Request from client %ld is OPEN_FILE.", worker_no, fd_client);
+            log_stats("[THREAD %d] [WRITE_FILE] Request from client %ld is WRITE_FILE.", worker_no, fd_client);
 
             write_file(worker_no, fd_client, &msg_c);
 
@@ -114,11 +114,11 @@ void worker(void* arg){
                 res.code = SUCCESS;      
             }
             else if(msg_c.response == RES_CLOSE || msg_c.response == RES_ERROR || msg_c.response == RES_ERROR_DATA) {
-                log_stats("[THREAD %d] [WRITE_FILE_FAIL] Fatal error in CLOSE_FILE request from client %ld.", worker_no, fd_client);
+                log_stats("[THREAD %d] [WRITE_FILE_FAIL] Fatal error in WRITE_FILE request from client %ld.", worker_no, fd_client);
                 res.code = FATAL_ERROR;
             } 
             else {
-                log_stats("[THREAD %d] [WRITE_FILE_FAIL] Non-fatal error in CLOSE_FILE request from client %ld.", worker_no, fd_client);
+                log_stats("[THREAD %d] [WRITE_FILE_FAIL] Non-fatal error in WRITE_FILE request from client %ld.", worker_no, fd_client);
                 res.code = NOT_FATAL;
             }
 

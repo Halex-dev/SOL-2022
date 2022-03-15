@@ -37,7 +37,6 @@ int writeFile(const char* pathname, const char* dirname){
     if(send_msg(current_socket->fd, &msg) == -1){
         errno = api_errno(msg.response);
         free(buffer);
-        
         return -1;
     }
 
@@ -74,11 +73,12 @@ int writeFile(const char* pathname, const char* dirname){
 
     free(buffer);
 
-    if(!read_msg(current_socket->fd, &msg)){
+    if(read_msg(current_socket->fd, &msg) == -1){
         errno = api_errno(msg.response);
         reset_msg_free(&msg);
         return -1;
     }
+
 
     if(msg.response != RES_SUCCESS){
         errno = api_errno(msg.response);
