@@ -29,7 +29,14 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
     free(num);
     
     if(file->fd_lock != fd_client && file->fd_lock != -1){
-        //Client not do openFile(pathname, O_CREATE| O_LOCK).
+        //Client not do openFile(pathname, O_LOCK) or lockFile first
+        msg->response = RES_NOT_YOU_LOCKED;
+        storage_writer_unlock(file);
+        return;
+    }
+    
+    if(file->fd_lock == -1){
+        //Client not do openFile(pathname, O_LOCK) or lockFile
         msg->response = RES_NOT_LOCKED;
         storage_writer_unlock(file);
         return;

@@ -19,6 +19,9 @@ int main(int argc, char* argv[]){
     }
 
     init_log_file(LOG_PATH, WRITE);
+    log_setConsole(LOG_INFO, opt_c.print);
+    log_setConsole(LOG_ERROR, opt_c.print);
+    log_setConsole(LOG_WARN, opt_c.print);
 
     struct timespec abstime;
     clock_gettime(CLOCK_REALTIME, &abstime);

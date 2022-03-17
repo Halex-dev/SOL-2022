@@ -124,6 +124,32 @@ void worker(void* arg){
 
             break;
         }
+        case REQ_REMOVE_FILE: {
+            log_stats("[THREAD %d] [REMOVE_FILE] Request from client %ld is REMOVE_FILE.\n", worker_no, fd_client);
+            
+            remove_file(worker_no, fd_client, &msg_c);
+            
+            if(send_msg(fd_client, &msg_c) == -1){
+                log_error("Error in writing to client");
+                res.code = FATAL_ERROR;
+                break;
+            }
+
+            // setting result code for main thread
+            if(msg_c.response == RES_SUCCESS){
+                res.code = SUCCESS;      
+            }
+            else if(msg_c.response == RES_CLOSE || msg_c.response == RES_ERROR) {
+                log_stats("[THREAD %d] [LOCK_FILE_FAIL] Fatal error in REMOVE_FILE request from client %ld.", worker_no, fd_client);
+                res.code = FATAL_ERROR;
+            } 
+            else {
+                log_stats("[THREAD %d] [LOCK_FILE_FAIL] Non-fatal error in REMOVE_FILE request from client %ld.", worker_no, fd_client);
+                res.code = NOT_FATAL;
+            }
+
+            break;
+        }
         case REQ_LOCK_FILE: {
             log_stats("[THREAD %d] [LOCK_FILE] Request from client %ld is LOCK_FILE.\n", worker_no, fd_client);
             

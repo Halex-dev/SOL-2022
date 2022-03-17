@@ -1,4 +1,7 @@
 #include "server.h"
+#include <dlfcn.h>
+#include <dlfcn.h>
+#include <pthread.h>
 
 void unlink_socket(){
     if(server.socket_path != NULL)
@@ -12,10 +15,10 @@ void close_server(){
         server.socket.fd_listen = -1;
     }
 
-    clean_memory();
+    clean_memory(server.socket.mode);
 }
 
-void clean_memory(){
+void clean_memory(int flags){
 
     //THREAD
     cleen_handler(graceful_shutdown);
@@ -23,7 +26,7 @@ void clean_memory(){
 
     //STORAGE
     clean_storage();
-
+    
     //LOG
     close_logger();
 }
@@ -50,6 +53,25 @@ void state_increment_file(){
             curr_state.max_files = curr_state.files;
                     
         log_stats("[CURRENT_FILES] %u files are currently stored.", curr_state.files);
+    safe_pthread_mutex_unlock(&curr_state_mtx);
+}
+
+void state_dec_file(){
+    safe_pthread_mutex_lock(&curr_state_mtx);
+
+        curr_state.files--;
+                    
+        log_stats("[CURRENT_FILES] %u files are currently stored.", curr_state.files);
+    safe_pthread_mutex_unlock(&curr_state_mtx);
+}
+
+
+void state_remove_space(File* file){
+    safe_pthread_mutex_lock(&curr_state_mtx);
+
+        curr_state.space -= file->size;
+                    
+        log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
     safe_pthread_mutex_unlock(&curr_state_mtx);
 }
 

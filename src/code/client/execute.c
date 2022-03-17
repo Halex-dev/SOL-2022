@@ -2,7 +2,7 @@
 
 int execute(){
 
-    //List_print_act(operation);
+    List_print_act(operation);
     Node* curr = (Node*) List_getHead(operation);
 
     while(curr != NULL){
@@ -112,13 +112,49 @@ int execute(){
                 break;
             }
             case ACT_REMOVE:{
-                log_debug("REMOVE");
+                //log_debug("REMOVE");
+                char* exp_dir = NULL;
+
+                //Get dir for write and num file
+                LinkedList* list = curr->data;
+                Node* files = List_getHead(list);
+
+                while(files != NULL){
+                    
+                    parsing_o* prs = (parsing_o *) files->key;
+                    char* file = files->data;
+
+                    if(*prs != FILES)
+                        log_error("This was not supposed to happen. Contact a programmer.");
+
+                    if(openFile(file, O_LOCK) == -1){
+                        log_warn("\t\\-----> OPEN Go to next file");
+                        files=files->next;
+                        continue;
+                    }
+
+                    if(removeFile(file) == -1){
+                        log_warn("\t\\-----> REMOVE FAILED, close file");
+                        
+                        if(closeFile(file) == -1){
+                            files=files->next;
+                            continue;
+                        }        
+                        continue;
+                    } 
+
+                    files = files->next;
+                }
+
+                List_destroy(list, FULL);
+                NEXT;
+                break;
             }
             case ACT_READ:{
-                log_debug("REMOVE");
+                log_debug("READ");
             }
             case ACT_READ_N:{
-                log_debug("REMOVE");
+                log_debug("READ_N");
             }
             default:{
                 break;

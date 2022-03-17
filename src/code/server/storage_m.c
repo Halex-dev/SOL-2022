@@ -146,8 +146,8 @@ void del_storage(char* key){
 
     if(server.storage == HASH){
         int len = strlen(key);
-        hashmap_remove(hash, key, len);
-        //hashmap_remove_free(dict->hash, key, len, free_data, NULL);
+        //hashmap_remove(hash, key, len);
+        hashmap_remove_free(hash, key, len, free_file, NULL);
     }
     else if(server.storage == RBT){
         Node node;
@@ -209,7 +209,7 @@ bool storage_contains(const char* key){
     return false;
 }
 
-int storage_file_create(File* file, char* pathname, long flags, long fd_client){
+int storage_file_create(File* file, long flags, long fd_client){
 
     // general attrs
     file->data = NULL;

@@ -23,6 +23,12 @@
         else curr = curr->next->next;   \
     } while(0)
 
+#define NEXT do {                 \
+        if(exp_dir == NULL)             \
+            curr = curr->next;          \
+        else curr = curr->next->next;   \
+    } while(0)
+
 typedef enum {
     ACT_TIME,
     ACT_WRITE_DIR, //-w

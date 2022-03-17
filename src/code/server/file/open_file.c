@@ -17,7 +17,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
         }
 
         File* file = safe_calloc(1, sizeof(File));
-        storage_file_create(file, pathname, msg->flags, fd_client);
+        storage_file_create(file, msg->flags, fd_client);
 
         //O_LOCK
         file->fd_lock = fd_client;
@@ -37,7 +37,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
         }
 
         File* file = safe_calloc(1, sizeof(File));
-        storage_file_create(file, pathname, msg->flags, fd_client);
+        storage_file_create(file, msg->flags, fd_client);
 
         insert_storage(pathname, file);
         file->can_expelled = true;

@@ -85,24 +85,28 @@ int init_sig_handler(){
 void cleen_handler(shutdown_mode_t flags){
 
     if(flags == immediate_shutdown ){
-
+        if(sig_handler_tid != -1){
+            SYSTEM_CALL_EXIT(pthread_detach(sig_handler_tid), "Error to deatch thread");
+            sig_handler_tid = -1;
+        }  
     }
     else{
-        if(sig_handler_pipe != NULL) {
+        if(sig_handler_tid != -1){
+            SYSTEM_CALL_EXIT(pthread_join(sig_handler_tid, NULL), "Error to join thread");
+            sig_handler_tid = -1;
+        }  
+    }
+    
+    //Close pipe
+    if(sig_handler_pipe != NULL) {
         for(int j = 0; j < 2; j++)
             if(sig_handler_pipe[j] != -1)
                 close(sig_handler_pipe[j]);
-        }
-
-        if(sig_handler_tid != -1){
-            SYSTEM_CALL_EXIT(pthread_join(sig_handler_tid, NULL), "Error to create signal thread");
-            sig_handler_tid = -1;
-        }
-
-        if(sig_handler_pipe != NULL) {
-            free(sig_handler_pipe);
-            sig_handler_pipe = NULL;
-        }    
     }
+
+    if(sig_handler_pipe != NULL) {
+        free(sig_handler_pipe);
+        sig_handler_pipe = NULL;
+    }  
     
 }

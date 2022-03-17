@@ -351,9 +351,16 @@ void* search_storage(char* key);
 bool storage_contains(const char* key);
 
 /**
+ * @brief Search the key and delete the element.
+ * 
+ * @param key 
+ */
+void del_storage(char* key);
+
+/**
  * Create new file in memory
  */
-int storage_file_create(File* file, char* pathname, long flags, long fd_client);
+int storage_file_create(File* file, long flags, long fd_client);
 
 /** Locks a file to allow reading operations. */
 void storage_reader_lock(File* file);
@@ -431,6 +438,8 @@ void close_connection(long fd_client);
 void state_increment_file();
 
 void state_add_space(File* file);
+void state_remove_space(File* file);
+void state_dec_file();
 
 void printState();
 /**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
@@ -504,6 +513,20 @@ void locks_file(int worker_no, long fd_client, api_msg* msg);
  * @param msg 
  */
 void unlocks_file(int worker_no, long fd_client, api_msg* msg);
+
+/*
+ * @brief Deals with an lock and unlock request from the API.
+ * Can set the RES of msg:
+ *      RES_SUCCESS  in case of success;
+ *      RES_NOT_EXIST  if the client is trying to open a non-existing file
+ *      RES_NOT_OPEN  if the client doesn't open the file
+ *      RES_ERROR_DATA if the client can't send the data of file
+ * 
+ * @param worker_no 
+ * @param fd_client 
+ * @param msg 
+ */
+void remove_file(int worker_no, long fd_client, api_msg* msg);
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
 extern server_config server;

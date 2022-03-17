@@ -192,3 +192,7 @@ test2LRU: cleanTest2 cleanlog cleanStorage
 .PHONY: test3
 test3: cleanTest3 cleanlog cleanStorage
 	@bash $(SCRIPT_DIR)/test3.sh
+
+.PHONY: git
+git: clean
+	@bash $(SCRIPT_DIR)/git.sh $(ARGS)

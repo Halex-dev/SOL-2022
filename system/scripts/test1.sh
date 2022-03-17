@@ -1,0 +1,1 @@
+valgrind --leak-check=full --error-exitcode=1 ./system/bin/server

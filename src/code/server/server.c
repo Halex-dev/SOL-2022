@@ -192,18 +192,6 @@ int main(int argc, char* argv[]){
     }
     
     log_info("Clean memory and closing server....");
-    if(server.socket.fd_listen != -1){
-        close(server.socket.fd_listen);
-        server.socket.fd_listen = -1;
-    }
-    if(server.socket.fd_listen != -1){
-        close(server.socket.fd_listen);
-        server.socket.fd_listen = -1;
-    }
-    if(server.socket.fd_listen != -1){
-        close(server.socket.fd_listen);
-        server.socket.fd_listen = -1;
-    }
     close_server();
     return 0;
 }

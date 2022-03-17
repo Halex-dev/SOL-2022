@@ -48,7 +48,6 @@ int parsing(int argc, char *argv[]){
          }
          case 'p':{ //Printable mode
             opt_c.print = true;
-            log_setConsole(LOG_INFO, opt_c.print);
             break;
          }
          case 'w':{ // Dirname, n file
