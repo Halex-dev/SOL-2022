@@ -27,7 +27,9 @@
 #include <sys/un.h>
 #include <syscall.h>
 #include <stdint.h>
+#include <libgen.h>
 
+#include "util/log.h"
 #include "api-communication.h"
 
 #define MAX_STR_FD 100
@@ -128,7 +130,8 @@ ssize_t writen(int fd, const void *vptr, size_t n);
 
 char * absolute_path(const char* str);
 int file_size(FILE* file);
-void* read_file(const char* pathname);
+void* file_read(const char* pathname);
+int file_write(const char* pathname, void* data, size_t size);
 char * long_to_string(long num);
 int file_size_path(const char* pathname);
 
@@ -142,6 +145,11 @@ char * print_res(api_res res);
 void print_msg(api_msg* msg);
 void reset_msg(api_msg* msg);
 void free_msg(api_msg* msg);
+/**
+ * @brief Free data (if is != NULL) and set data lenght to zero.
+ * 
+ * @param msg 
+ */
 void reset_data_msg(api_msg* msg);
 void reset_msg_free(api_msg* msg);
 #endif

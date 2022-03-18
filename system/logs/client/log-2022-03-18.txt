@@ -1,0 +1,4 @@
+[INFO] [18-03-2022 10:46:30] Connected to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
+[INFO] [18-03-2022 10:46:30] Writing expelled files in folder /home/halex/Desktop/Repository/SOL-2022/test/dev (option -D was set).
+[INFO] [18-03-2022 10:46:30] Writing expelled files in folder /home/halex/Desktop/Repository/SOL-2022/test/dev (option -D was set).
+[INFO] [18-03-2022 10:46:30] Connected closed to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk

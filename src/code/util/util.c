@@ -5,7 +5,7 @@
 void* safe_malloc(size_t size){
     void* buf;
     if( (buf = malloc(size)) == NULL){
-        perror("Error in memory allocation (malloc)");
+        log_error("Error in memory allocation (malloc): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
     return buf;
@@ -14,7 +14,7 @@ void* safe_malloc(size_t size){
 void* safe_calloc(size_t nmemb, size_t size){
     void* buf;
     if( (buf = calloc(nmemb, size)) == NULL){
-        perror("Error in memory allocation (calloc)");
+        log_error("Error in memory allocation (calloc): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
     return buf;
@@ -23,7 +23,7 @@ void* safe_calloc(size_t nmemb, size_t size){
 void* safe_realloc(void* ptr, size_t size){
     void* buf;
     if( (buf = realloc(ptr, size)) == NULL){
-        perror("Error in memory allocation (realloc)");
+        log_error("Error in memory allocation (realloc): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
     return buf;
@@ -56,7 +56,7 @@ void safe_pthread_mutex_lock(pthread_mutex_t* mtx){
     int err;
     if( (err = pthread_mutex_lock(mtx)) != 0){
         errno = err;
-        perror("Error in pthread_mutex_lock");
+        log_error("Error in pthread_mutex_lock: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
 }
@@ -65,7 +65,7 @@ void safe_pthread_mutex_unlock(pthread_mutex_t* mtx){
     int err;
     if( (err = pthread_mutex_unlock(mtx)) != 0){
         errno = err;
-        perror("Error in pthread_mutex_unlock");
+        log_error("Error in pthread_mutex_unlock: %s", strerror(errno)); 
         exit(EXIT_FAILURE);
     }
 }
@@ -74,7 +74,7 @@ void safe_pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mtx){
     int err;
     if( (err = pthread_cond_wait(cond, mtx)) != 0){
         errno = err;
-        perror("Error in pthread_cond_wait");
+        log_error("Error in pthread_cond_wait: %s", strerror(errno)); 
         exit(EXIT_FAILURE);
     }
 }
@@ -83,7 +83,7 @@ void safe_pthread_cond_signal(pthread_cond_t* cond){
     int err;
     if( (err = pthread_cond_signal(cond)) != 0){
         errno = err;
-        perror("Error in pthread_cond_signal");
+        log_error("Error in pthread_cond_signal: %s", strerror(errno)); 
         exit(EXIT_FAILURE);
     }
 }
@@ -92,7 +92,7 @@ void safe_pthread_cond_broadcast(pthread_cond_t* cond){
     int err;
     if( (err = pthread_cond_broadcast(cond)) != 0){
         errno = err;
-        perror("Error in pthread_cond_broadcast");
+        log_error("Error in pthread_cond_broadcast");
         exit(EXIT_FAILURE);
     }
 }
@@ -123,7 +123,7 @@ char* absolute_path(const char* str){
     char * key;
     //Get absolute path
     if((key = realpath(str, NULL)) == NULL){
-        perror("\tError in convert ab");
+        log_error("\tError in convert absolute path: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
     return key;
@@ -142,7 +142,7 @@ int file_size_path(const char* pathname){
     return st.st_size;
 }
 
-void* read_file(const char* pathname){
+void* file_read(const char* pathname){
 
     FILE* file;
 
@@ -174,36 +174,28 @@ void* read_file(const char* pathname){
     return buffer;
 }
 
-void* write_file(const char* pathname){
+int file_write(const char* pathname, void* data, size_t size){
 
-    FILE* file;
-
-    if((file = fopen(pathname, "rb")) == NULL ){
-        errno = EIO;
-        return NULL;
+    if(size <= 0 || data == NULL){
+        errno = EINVAL;
+        return -1;
     }
 
-    // getting file size
-    int size = file_size(file);
-
-    if(size == -1){
-        fclose(file);
-        errno = EIO;
-        return NULL;
+    FILE* to_write;
+    if( (to_write = fopen(pathname, "wb")) == NULL){
+        log_error("Problem to write the file: %s", strerror(errno));
+        return -1;
     }
 
-    void* buffer = safe_malloc(size);
-    if (fread(buffer, 1, size, file) < size){
-        if(ferror(file)){
-            free(buffer);
-            fclose(file);
-            return NULL;
-        }
+    int l;
+    if(size > 0 && (l = fwrite(data, 1, size, to_write)) < size){
+        log_error("Error: %s", strerror(errno));
+        fclose(to_write);
+        return -1;
     }
 
-    fclose(file);
-
-    return buffer;
+    fclose(to_write);
+    return 0;
 }
 
 // _______________________________ READ AND WRITE _______________________________ //
@@ -305,6 +297,7 @@ int read_msg(int fd, api_msg* msg){
 
     return readn(fd, msg->data, msg->data_length);
 }
+
 
 char * print_flag(api_flags flag){
 

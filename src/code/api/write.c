@@ -20,7 +20,7 @@ int writeFile(const char* pathname, const char* dirname){
         return -1;
     }
 
-    if((buffer = read_file(pathname)) == NULL){
+    if((buffer = file_read(pathname)) == NULL){
         errno = EIO;
         return -1;
     }
@@ -61,7 +61,7 @@ int writeFile(const char* pathname, const char* dirname){
     msg.data_length = size;
     msg.data = buffer;
     msg.operation = REQ_WRITE_FILE;
-    msg.response = RES_NULL;
+    msg.response = RES_DATA;
     msg.flags = O_NULL;
 
     if(send_msg(current_socket->fd, &msg) == -1){
@@ -79,7 +79,6 @@ int writeFile(const char* pathname, const char* dirname){
         return -1;
     }
 
-
     if(msg.response != RES_SUCCESS){
         errno = api_errno(msg.response);
         reset_msg_free(&msg);
@@ -90,8 +89,6 @@ int writeFile(const char* pathname, const char* dirname){
 
     reset_msg_free(&msg);
     errno = 0;
-    return 0;
-
     return 0;
 }
 

@@ -2,9 +2,10 @@
 
 int execute(){
 
-    List_print_act(operation);
+    //List_print_act(operation);
     Node* curr = (Node*) List_getHead(operation);
 
+    //TODO aggiungere log_info per dire cosa sto facendo in ogni opzione
     while(curr != NULL){
         
         if(nsleep(opt_c.time) == -1){
@@ -54,6 +55,9 @@ int execute(){
                     log_error("Could not open directory %s: %s.", dirPath, strerror(errno));
                 }
                 
+                if(exp_dir != NULL)
+                    free(exp_dir);
+
                 List_destroy(list, FULL);
                 NEXT;
                 break;
@@ -87,19 +91,19 @@ int execute(){
                     //TODO APPEND CON errno
 
                     if(openFile(file, O_ALL) == -1){
-                        log_warn("\t\\-----> Go to next file");
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     }
 
                     if(writeFile(file, exp_dir) == -1){
-                        log_warn("\t\\-----> Go to next file");
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     } 
 
                     if(closeFile(file) == -1){
-                        log_warn("\t\\-----> Go to next file");
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     }
@@ -107,6 +111,10 @@ int execute(){
                     files = files->next;
                 }
 
+                //if -D exist delete exp_dir
+                if(exp_dir != NULL)
+                    free(exp_dir);
+                    
                 List_destroy(list, FULL);
                 NEXT;
                 break;
@@ -128,14 +136,14 @@ int execute(){
                         log_error("This was not supposed to happen. Contact a programmer.");
 
                     if(openFile(file, O_LOCK) == -1){
-                        log_warn("\t\\-----> OPEN Go to next file");
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     }
 
                     if(removeFile(file) == -1){
-                        log_warn("\t\\-----> REMOVE FAILED, close file");
-                        
+                        log_warn("\t\\-----> REMOVE FAILED, close file (%s)", strerror(errno));
+
                         if(closeFile(file) == -1){
                             files=files->next;
                             continue;
@@ -150,13 +158,214 @@ int execute(){
                 NEXT;
                 break;
             }
+            case ACT_LOCK:{
+                //log_debug("REMOVE");
+                char* exp_dir = NULL;
+
+                //Get dir for write and num file
+                LinkedList* list = curr->data;
+                Node* files = List_getHead(list);
+
+                while(files != NULL){
+                    
+                    parsing_o* prs = (parsing_o *) files->key;
+                    char* file = files->data;
+
+                    if(*prs != FILES)
+                        log_error("This was not supposed to happen. Contact a programmer.");
+
+                    if(lockFile(file) == -1){
+                        log_warn("\t\\-----> OPEN Go to next file (%s)", strerror(errno));
+                        files=files->next;
+                        continue;
+                    }
+
+                    files = files->next;
+                }
+
+                List_destroy(list, FULL);
+                NEXT;
+                break;
+            }
+            case ACT_UNLOCK:{
+                char* exp_dir = NULL;
+
+                //Get dir for write and num file
+                LinkedList* list = curr->data;
+                Node* files = List_getHead(list);
+
+                while(files != NULL){
+                    
+                    parsing_o* prs = (parsing_o *) files->key;
+                    char* file = files->data;
+
+                    if(*prs != FILES)
+                        log_error("This was not supposed to happen. Contact a programmer.");
+
+                    if(unlockFile(file) == -1){
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                        files=files->next;
+                        continue;
+                    }
+
+                    files = files->next;
+                }
+
+                List_destroy(list, FULL);
+                NEXT;
+                break;
+            }
             case ACT_READ:{
-                log_debug("READ");
+                //log_debug("READ");
+
+                char* exp_dir = NULL;
+                action_c* opt_d = NULL;
+
+                if(curr->next != NULL)
+                    opt_d = (action_c*) curr->next->key; 
+
+                //Get expelled dir if exist
+                if(opt_d != NULL && *opt_d == ACT_d){
+                    exp_dir = (char*)curr->next->data;
+                    log_info("Writing expelled files in folder %s (option -D was set).", exp_dir);
+                } 
+
+                //Get dir for read and num file
+                LinkedList* list = curr->data;
+                Node* files = List_getHead(list);
+
+                while(files != NULL){
+                    
+                    parsing_o* prs = (parsing_o *) files->key;
+                    char* file = files->data;
+
+                    if(*prs != FILES)
+                        log_error("This was not supposed to happen. Contact a programmer.");
+
+                    if(openFile(file, O_NULL) == -1){
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                        files=files->next;
+                        continue;
+                    }
+
+                    void* buff = NULL;
+                    size_t size;
+
+                    if(readFile(file, &buff, &size) == -1){
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                        files=files->next;
+                        continue;
+                    } 
+
+                    if(exp_dir != NULL){
+                        char* fileName = basename(file);
+                        int sizePath = strlen(exp_dir)+strlen(fileName)+2; //1 for /
+                        char* path = safe_calloc(sizePath,sizeof(char*));
+                        strcat(path, exp_dir);
+                        strcat(path, "/");
+                        strcat(path, fileName);
+
+                        if(file_write(path, buff, size) == -1){
+                            log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
+                        }
+                        
+                        free(path);
+                        free(exp_dir);
+                    }
+                    free(buff);
+
+                    if(closeFile(file) == -1){
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                        files=files->next;
+                        continue;
+                    }
+
+                    files = files->next;
+                }
+
+                List_destroy(list, FULL);
+                NEXT;
+                break;
             }
             case ACT_READ_N:{
                 log_debug("READ_N");
+
+                char* exp_dir = NULL;
+                action_c* opt_d = NULL;
+
+                if(curr->next != NULL)
+                    opt_d = (action_c*) curr->next->key; 
+
+                //Get expelled dir if exist
+                if(opt_d != NULL && *opt_d == ACT_d){
+                    exp_dir = (char*)curr->next->data;
+                    log_info("Writing expelled files in folder %s (option -D was set).", exp_dir);
+                } 
+
+                //Get num file
+                LinkedList* list = curr->data;
+                Node* files = List_getHead(list);
+
+                parsing_o* prs = (parsing_o *) files->key;
+                long* num = files->data;
+
+                if(*prs != N_READ)
+                    log_error("This was not supposed to happen. Contact a programmer.");
+
+                if(exp_dir != NULL){
+                    char* fileName = basename(file);
+                    int sizePath = strlen(exp_dir)+strlen(fileName)+2; //1 for /
+                    char* path = safe_calloc(sizePath,sizeof(char*));
+                    strcat(path, exp_dir);
+                    strcat(path, "/");
+                    strcat(path, fileName);
+
+                    if(file_write(path, buff, size) == -1){
+                        log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
+                    }
+                    
+                    free(path);
+                    free(exp_dir);
+                }
+                
+                while(files != NULL){
+                    
+                    
+
+                    if(openFile(file, O_NULL) == -1){
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                        files=files->next;
+                        continue;
+                    }
+
+                    void* buff = NULL;
+                    size_t size;
+
+                    if(readFile(file, &buff, &size) == -1){
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                        files=files->next;
+                        continue;
+                    } 
+
+                    
+                    free(buff);
+
+                    if(closeFile(file) == -1){
+                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                        files=files->next;
+                        continue;
+                    }
+
+                    files = files->next;
+                }
+
+                List_destroy(list, FULL);
+                NEXT;
+                break;
             }
             default:{
+                char* exp_dir = NULL;
+                NEXT;
                 break;
             }
         }

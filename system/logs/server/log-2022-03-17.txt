@@ -1,0 +1,51 @@
+[INFO] [17-03-2022 19:18:00] Open server with these options:
+ - WORKERS: 4
+ - MAX_FILES: 10
+ - SOCK_PATH: /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
+ - LOG_PATH: /home/halex/Desktop/Repository/SOL-2022/system/logs/server
+ - POLICY: MFU
+ - MAX_SPACE: 32MB
+
+[INFO] [17-03-2022 19:18:00] Server inizialized, i'm listening....
+[INFO] [17-03-2022 19:18:00] [SIG-HANDLER] Started signal handler thread.
+[STATS] [17-03-2022 19:18:04] [CLIENT-NEW] New connection! File descriptor: 15. (Attualmente connessi: 1)
+[STATS] [17-03-2022 19:18:04] [THREAD 0] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:04] [THREAD 0] [OPEN_FILE] Request from client 15 is OPEN_FILE.
+[STATS] [17-03-2022 19:18:04] [CURRENT_FILES] 1 files are currently stored.
+[STATS] [17-03-2022 19:18:04] [THREAD 1] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:04] [THREAD 1] [WRITE_FILE] Request from client 15 is WRITE_FILE.
+[STATS] [17-03-2022 19:18:04] [CURRENT_SPACE] 3640 bytes are currently occupied.
+[STATS] [17-03-2022 19:18:04] [THREAD 2] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:04] [THREAD 2] [CLOSE_FILE] Request from client 15 is CLOSE_FILE.
+[STATS] [17-03-2022 19:18:04] [THREAD 3] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:04] [THREAD 3] [OPEN_FILE] Request from client 15 is OPEN_FILE.
+[STATS] [17-03-2022 19:18:04] [CURRENT_FILES] 2 files are currently stored.
+[STATS] [17-03-2022 19:18:04] [THREAD 0] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:04] [THREAD 0] [WRITE_FILE] Request from client 15 is WRITE_FILE.
+[STATS] [17-03-2022 19:18:04] [CURRENT_SPACE] 3678 bytes are currently occupied.
+[STATS] [17-03-2022 19:18:04] [THREAD 1] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:04] [THREAD 1] [CLOSE_FILE] Request from client 15 is CLOSE_FILE.
+[STATS] [17-03-2022 19:18:04] [THREAD 2] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:04] [THREAD 2] [CLOSE_CONN] Closing connection with client 15.
+[STATS] [17-03-2022 19:18:04] [CLOSE-CONN] Closed connection with client 15. (Attualmente connessi: 0)
+[STATS] [17-03-2022 19:18:06] [CLIENT-NEW] New connection! File descriptor: 15. (Attualmente connessi: 1)
+[STATS] [17-03-2022 19:18:06] [THREAD 3] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:06] [THREAD 3] [OPEN_FILE] Request from client 15 is OPEN_FILE.
+[STATS] [17-03-2022 19:18:06] [THREAD 3] [OPEN_FILE_FAIL] Non-fatal error in OPEN_FILE request from client 15.
+[WARN] [17-03-2022 19:18:06] There has been a non-fatal error.
+[STATS] [17-03-2022 19:18:06] [THREAD 0] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:06] [THREAD 0] [OPEN_FILE] Request from client 15 is OPEN_FILE.
+[STATS] [17-03-2022 19:18:06] [THREAD 0] [OPEN_FILE_FAIL] Non-fatal error in OPEN_FILE request from client 15.
+[WARN] [17-03-2022 19:18:06] There has been a non-fatal error.
+[STATS] [17-03-2022 19:18:06] [THREAD 1] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:06] [THREAD 1] [OPEN_FILE] Request from client 15 is OPEN_FILE.
+[STATS] [17-03-2022 19:18:06] [THREAD 2] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:06] [THREAD 2] [READ_FILE] Request from client 15 is READ_FILE.
+
+[STATS] [17-03-2022 19:18:06] [THREAD 3] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:06] [THREAD 3] [CLOSE_FILE] Request from client 15 is CLOSE_FILE.
+[STATS] [17-03-2022 19:18:06] [THREAD 0] [NEW_REQ] Accepted request from client 15.
+[STATS] [17-03-2022 19:18:06] [THREAD 0] [CLOSE_CONN] Closing connection with client 15.
+[STATS] [17-03-2022 19:18:06] [CLOSE-CONN] Closed connection with client 15. (Attualmente connessi: 0)
+[INFO] [17-03-2022 19:18:07] Received signal to force close server.
+[INFO] [17-03-2022 19:18:07] Clean memory and closing server....

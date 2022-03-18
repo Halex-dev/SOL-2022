@@ -2,7 +2,6 @@
 #define _SERVER_H
 
 #include "util/util.h"
-#include "util/log.h"
 #include "util/config.h"
 
 #include "util/data/rbt.h"
@@ -444,6 +443,8 @@ void state_dec_file();
 void printState();
 /**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
 
+
+//TODO RIcontrollare tutto
 /**
  * @brief Deals with an openFile request from the API.
  * Can set the RES of msg:
@@ -487,7 +488,7 @@ void close_file(int worker_no, long fd_client, api_msg* msg);
 void write_file(int worker_no, long fd_client, api_msg* msg);
 
 /**
- * @brief Deals with an lock and unlock request from the API.
+ * @brief Deals with an lockFile request from the API.
  * Can set the RES of msg:
  *      RES_SUCCESS  in case of success;
  *      RES_NOT_EXIST  if the client is trying to open a non-existing file
@@ -501,7 +502,7 @@ void write_file(int worker_no, long fd_client, api_msg* msg);
 void locks_file(int worker_no, long fd_client, api_msg* msg);
 
 /**
- * @brief Deals with an lock and unlock request from the API.
+ * @brief Deals with an unlockFile request from the API.
  * Can set the RES of msg:
  *      RES_SUCCESS  in case of success;
  *      RES_NOT_EXIST  if the client is trying to open a non-existing file
@@ -514,8 +515,23 @@ void locks_file(int worker_no, long fd_client, api_msg* msg);
  */
 void unlocks_file(int worker_no, long fd_client, api_msg* msg);
 
-/*
- * @brief Deals with an lock and unlock request from the API.
+/**
+ * @brief Deals with an removeFile request from the API.
+ * Can set the RES of msg:
+ *      RES_SUCCESS  in case of success;
+ *      RES_NOT_EXIST  if the client is trying to open a non-existing file
+ *      RES_NOT_OPEN  if the client doesn't open the file
+ *      RES_NOT_YOU_LOCKED if the file isn't locked by client
+ *      RES_NOT_LOCKED if the file isn't locked
+ * 
+ * @param worker_no 
+ * @param fd_client 
+ * @param msg 
+ */
+void remove_file(int worker_no, long fd_client, api_msg* msg);
+
+/**
+ * @brief Deals with an readFile request from the API.
  * Can set the RES of msg:
  *      RES_SUCCESS  in case of success;
  *      RES_NOT_EXIST  if the client is trying to open a non-existing file
@@ -526,7 +542,9 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg);
  * @param fd_client 
  * @param msg 
  */
-void remove_file(int worker_no, long fd_client, api_msg* msg);
+void read_file(int worker_no, long fd_client, api_msg* msg);
+
+
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 
 extern server_config server;

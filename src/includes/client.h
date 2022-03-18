@@ -2,7 +2,6 @@
 #define _CLIENT_H
 
 #include "util/util.h"
-#include "util/log.h"
 
 #include "util/data/rbt.h"
 #include "util/data/LinkedList.h"
@@ -17,17 +16,10 @@
 
 #define TIME_BETWEEN_CONN 500
 
-#define NEXT do {                 \
+#define NEXT                            \
         if(exp_dir == NULL)             \
             curr = curr->next;          \
         else curr = curr->next->next;   \
-    } while(0)
-
-#define NEXT do {                 \
-        if(exp_dir == NULL)             \
-            curr = curr->next;          \
-        else curr = curr->next->next;   \
-    } while(0)
 
 typedef enum {
     ACT_TIME,

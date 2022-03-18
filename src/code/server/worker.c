@@ -179,7 +179,7 @@ void worker(void* arg){
         case REQ_UNLOCK_FILE: {
             log_stats("[THREAD %d] [UNLOCK_FILE] Request from client %ld is UNLOCK_FILE.\n", worker_no, fd_client);
             
-            locks_file(worker_no, fd_client, &msg_c);
+            unlocks_file(worker_no, fd_client, &msg_c);
             
             if(send_msg(fd_client, &msg_c) == -1){
                 log_error("Error in writing to client");
@@ -197,6 +197,32 @@ void worker(void* arg){
             } 
             else {
                 log_stats("[THREAD %d] [UNLOCK_FILE_FAIL] Non-fatal error in UNLOCK_FILE request from client %ld.", worker_no, fd_client);
+                res.code = NOT_FATAL;
+            }
+
+            break;
+        }
+        case REQ_READ_FILE: {
+            log_stats("[THREAD %d] [READ_FILE] Request from client %ld is READ_FILE.\n", worker_no, fd_client);
+            
+            read_file(worker_no, fd_client, &msg_c);
+            
+            if(send_msg(fd_client, &msg_c) == -1){
+                log_error("Error in writing to client");
+                res.code = FATAL_ERROR;
+                break;
+            }
+
+            // setting result code for main thread
+            if(msg_c.response == RES_SUCCESS){
+                res.code = SUCCESS;      
+            }
+            else if(msg_c.response == RES_CLOSE || msg_c.response == RES_ERROR) {
+                log_stats("[THREAD %d] [READ_FILE] Fatal error in READ_FILE request from client %ld.", worker_no, fd_client);
+                res.code = FATAL_ERROR;
+            } 
+            else {
+                log_stats("[THREAD %d] [READ_FILE] Non-fatal error in READ_FILE request from client %ld.", worker_no, fd_client);
                 res.code = NOT_FATAL;
             }
 

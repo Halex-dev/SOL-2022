@@ -195,3 +195,9 @@ int main(int argc, char* argv[]){
     close_server();
     return 0;
 }
+
+//TODO
+/**
+ * @brief Gli argomenti a linea di comando del client possono essere ripetuti più volte (ad eccezione di ‘-f’, ‘-h’, ‘-p’)
+ * 
+ */

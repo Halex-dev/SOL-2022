@@ -37,6 +37,9 @@ void close_connection(long fd_client){
     // closing connection
     close(fd_client);
 
+    //Remove lock and close all file opened by client
+    //TODO DA FARE --> per forza? DISPENDIOSO, CERCARE ALTRA SOLUZIONE
+
     // no need for mutex, only this thread deals with curr_state.conn/max_conn
     curr_state.conn--;
     log_stats("[CLOSE-CONN] Closed connection with client %ld. (Attualmente connessi: %d)", fd_client, curr_state.conn);
