@@ -312,6 +312,7 @@ int execute(){
                 if(*prs != N_READ)
                     log_error("This was not supposed to happen. Contact a programmer.");
 
+                /**
                 if(exp_dir != NULL){
                     char* fileName = basename(file);
                     int sizePath = strlen(exp_dir)+strlen(fileName)+2; //1 for /
@@ -357,7 +358,7 @@ int execute(){
                     }
 
                     files = files->next;
-                }
+                }*/
 
                 List_destroy(list, FULL);
                 NEXT;
