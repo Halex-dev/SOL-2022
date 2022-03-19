@@ -56,6 +56,8 @@ rbnode *rb_successor(rbtree *rbt, rbnode *node);
 int rb_apply_node(rbtree *rbt, rbnode *node, int (*func)(void *, void *), void *cookie, enum rbtraversal order);
 void rb_print(rbtree *rbt, void (*print_func)(void *));
 
+void rb_hitarate(rbtree *rbt, void (*function)(void *, void* read_data), void* read_data);
+
 rbnode *rb_insert(rbtree *rbt, void *data);
 void *rb_delete(rbtree *rbt, rbnode *node, int keep);
 

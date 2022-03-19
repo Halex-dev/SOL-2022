@@ -599,6 +599,30 @@ void print(rbtree *rbt, rbnode *n, void (*print_func)(void *), int depth, char *
 }
 
 /*
+ * print node recursively
+ */
+void hitarate(rbtree *rbt, rbnode *n, void (*function)(void *, void* read_data), int depth, char *label, void* read_data)
+{
+	if (n != RB_NIL(rbt)) {
+		hitarate(rbt, n->right, function, depth + 1, "R", read_data);
+
+		function(n->data, read_data);
+
+		hitarate(rbt, n->left, function, depth + 1, "L", read_data);
+	}
+}
+
+/*
+ * print tree
+ */
+void rb_hitarate(rbtree *rbt, void (*function)(void *, void* read_data), void* read_data)
+{
+	hitarate(rbt, RB_FIRST(rbt), function, 0, "T", read_data);
+}
+
+
+
+/*
  * destroy node recursively
  */
 void destroy(rbtree *rbt, rbnode *n)

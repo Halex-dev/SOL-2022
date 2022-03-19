@@ -2,7 +2,9 @@
 
 int execute(){
 
+    //debugging function for building functions, do not use or it blows up everything
     //List_print_act(operation);
+
     Node* curr = (Node*) List_getHead(operation);
 
     //TODO aggiungere log_info per dire cosa sto facendo in ogni opzione
@@ -303,64 +305,24 @@ int execute(){
                 } 
 
                 //Get num file
-                LinkedList* list = curr->data;
-                Node* files = List_getHead(list);
+                long files = *((long*)curr->data);
 
-                parsing_o* prs = (parsing_o *) files->key;
-                long* num = files->data;
+                //setting -1 to send all file
+                if(files <= 0)
+                    files = -1;
 
-                if(*prs != N_READ)
-                    log_error("This was not supposed to happen. Contact a programmer.");
+                int readed;
 
-                /**
-                if(exp_dir != NULL){
-                    char* fileName = basename(file);
-                    int sizePath = strlen(exp_dir)+strlen(fileName)+2; //1 for /
-                    char* path = safe_calloc(sizePath,sizeof(char*));
-                    strcat(path, exp_dir);
-                    strcat(path, "/");
-                    strcat(path, fileName);
-
-                    if(file_write(path, buff, size) == -1){
-                        log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
-                    }
-                    
-                    free(path);
-                    free(exp_dir);
+                if((readed = readNFiles(files, exp_dir)) == -1){
+                    log_error("Error on read %d files on server: %s.",&files, strerror(errno));
                 }
                 
-                while(files != NULL){
+                if(exp_dir != NULL)
+                    free(exp_dir);
+
+                if(curr->data != NULL)
+                    free(curr->data);
                     
-                    
-
-                    if(openFile(file, O_NULL) == -1){
-                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
-                        files=files->next;
-                        continue;
-                    }
-
-                    void* buff = NULL;
-                    size_t size;
-
-                    if(readFile(file, &buff, &size) == -1){
-                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
-                        files=files->next;
-                        continue;
-                    } 
-
-                    
-                    free(buff);
-
-                    if(closeFile(file) == -1){
-                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
-                        files=files->next;
-                        continue;
-                    }
-
-                    files = files->next;
-                }*/
-
-                List_destroy(list, FULL);
                 NEXT;
                 break;
             }

@@ -228,6 +228,32 @@ void worker(void* arg){
 
             break;
         }
+        case REQ_READ_N_FILES: {
+            log_stats("[THREAD %d] [READ_N_FILES] Request from client %ld is READ_N_FILES.\n", worker_no, fd_client);
+            
+            read_n_file(worker_no, fd_client, &msg_c);
+            
+            if(send_msg(fd_client, &msg_c) == -1){
+                log_error("Error in writing to client");
+                res.code = FATAL_ERROR;
+                break;
+            }
+
+            // setting result code for main thread
+            if(msg_c.response == RES_SUCCESS){
+                res.code = SUCCESS;      
+            }
+            else if(msg_c.response == RES_CLOSE || msg_c.response == RES_ERROR) {
+                log_stats("[THREAD %d] [READ_N_FILES] Fatal error in READ_N_FILES request from client %ld.", worker_no, fd_client);
+                res.code = FATAL_ERROR;
+            } 
+            else {
+                log_stats("[THREAD %d] [READ_N_FILES] Non-fatal error in READ_N_FILES request from client %ld.", worker_no, fd_client);
+                res.code = NOT_FATAL;
+            }
+
+            break;
+        }
         default:
             break;
     }

@@ -3,6 +3,7 @@
 rbtree *rbt = NULL;
 hashmap *hash = NULL;
 pthread_mutex_t storage_thread_mtx = PTHREAD_MUTEX_INITIALIZER;
+int sizeStorage = 0;
 
 char* getPolicy(){
     return ( server.policy == FIFO ? "FIFO" : (server.policy == LRU ? "LRU" : (server.policy == LFU ? "LFU" : "MFU")) );
@@ -110,6 +111,7 @@ void print_storage(){
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
+//No mutex, is the final step
 void clean_storage(){
     if(server.storage == HASH){
         hashmap_iterate(hash, free_file, NULL);
@@ -120,6 +122,21 @@ void clean_storage(){
     }
 }
 
+void storage_hash_readN(hashmap_callback func, void* read_data){
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+
+    hashmap_iterate(hash, func, read_data);
+
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
+}
+
+void storage_rbt_readN(void (*func)(void *, void* read_data), void* read_data){
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+
+    rb_hitarate(rbt, func, read_data);
+
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
+}
 
 void insert_storage(char* key, void* data){
 
@@ -137,7 +154,19 @@ void insert_storage(char* key, void* data){
 			free(data);
 		}
     }
+    sizeStorage++;
     safe_pthread_mutex_unlock(&storage_thread_mtx);
+}
+
+int storage_size(){
+    int size = 0;
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+
+    size = sizeStorage;
+
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
+
+    return size;
 }
 
 void del_storage(char* key){
@@ -158,6 +187,7 @@ void del_storage(char* key){
 		    rb_delete(rbt, out, 0);
     }
 
+    sizeStorage--;
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 

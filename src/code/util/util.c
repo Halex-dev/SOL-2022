@@ -466,3 +466,18 @@ char * long_to_string(long num){
     
     return str;
 }
+
+char* int_to_string(int num){
+    
+    char* str = safe_calloc(MAX_STR_FD, sizeof(char));
+    if(sprintf(str, "%d", num) == -1){
+        free(str);
+        return NULL;
+    }
+    
+    return str;
+}
+
+int string_to_int(char* str){    
+    return atoi(str);
+}

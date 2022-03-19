@@ -33,7 +33,6 @@
 #include "api-communication.h"
 
 #define MAX_STR_FD 100
-
 // _______________________________ STRING _______________________________ //
 
 void UpperCase(char *str);
@@ -152,4 +151,7 @@ void free_msg(api_msg* msg);
  */
 void reset_data_msg(api_msg* msg);
 void reset_msg_free(api_msg* msg);
+
+int string_to_int(char* str);
+char* int_to_string(int num);
 #endif

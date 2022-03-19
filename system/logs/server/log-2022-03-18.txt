@@ -1,5 +1,4 @@
-[INFO] [18-03-2022 10:46:28] [SIG-HANDLER] Started signal handler thread.
-[INFO] [18-03-2022 10:46:28] Open server with these options:
+[INFO] [18-03-2022 16:52:15] Open server with these options:
  - WORKERS: 4
  - MAX_FILES: 10
  - SOCK_PATH: /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
@@ -7,31 +6,7 @@
  - POLICY: MFU
  - MAX_SPACE: 32MB
 
-[INFO] [18-03-2022 10:46:28] Server inizialized, i'm listening....
-[STATS] [18-03-2022 10:46:30] [CLIENT-NEW] New connection! File descriptor: 15. (Attualmente connessi: 1)
-[STATS] [18-03-2022 10:46:30] [THREAD 0] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 0] [OPEN_FILE] Request from client 15 is OPEN_FILE.
-[STATS] [18-03-2022 10:46:30] [CURRENT_FILES] 1 files are currently stored.
-[STATS] [18-03-2022 10:46:30] [THREAD 1] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 1] [WRITE_FILE] Request from client 15 is WRITE_FILE.
-[STATS] [18-03-2022 10:46:30] [CURRENT_SPACE] 3640 bytes are currently occupied.
-[STATS] [18-03-2022 10:46:30] [THREAD 2] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 2] [CLOSE_FILE] Request from client 15 is CLOSE_FILE.
-[STATS] [18-03-2022 10:46:30] [THREAD 3] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 3] [OPEN_FILE] Request from client 15 is OPEN_FILE.
-[STATS] [18-03-2022 10:46:30] [CURRENT_FILES] 2 files are currently stored.
-[STATS] [18-03-2022 10:46:30] [THREAD 0] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 0] [WRITE_FILE] Request from client 15 is WRITE_FILE.
-[STATS] [18-03-2022 10:46:30] [CURRENT_SPACE] 3678 bytes are currently occupied.
-[STATS] [18-03-2022 10:46:30] [THREAD 1] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 1] [CLOSE_FILE] Request from client 15 is CLOSE_FILE.
-[STATS] [18-03-2022 10:46:30] [THREAD 2] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 2] [OPEN_FILE] Request from client 15 is OPEN_FILE.
-[STATS] [18-03-2022 10:46:30] [THREAD 3] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 3] [READ_FILE] Request from client 15 is READ_FILE.
-
-[STATS] [18-03-2022 10:46:30] [THREAD 0] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 0] [CLOSE_FILE] Request from client 15 is CLOSE_FILE.
-[STATS] [18-03-2022 10:46:30] [THREAD 1] [NEW_REQ] Accepted request from client 15.
-[STATS] [18-03-2022 10:46:30] [THREAD 1] [CLOSE_CONN] Closing connection with client 15.
-[STATS] [18-03-2022 10:46:30] [CLOSE-CONN] Closed connection with client 15. (Attualmente connessi: 0)
+[INFO] [18-03-2022 16:52:15] Server inizialized, i'm listening....
+[INFO] [18-03-2022 16:52:15] [SIG-HANDLER] Started signal handler thread.
+[INFO] [18-03-2022 16:53:55] Received signal to force close server.
+[INFO] [18-03-2022 16:53:55] Clean memory and closing server....
