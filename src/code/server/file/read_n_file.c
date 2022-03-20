@@ -1,26 +1,6 @@
 #include "server.h"
 
-/**
-    
-    
-
-    
-
-    reset_data_msg(msg);
-
-    msg->data_length = file->size;
-    msg->data = file->data;*/
-
-    /**
-    //Confirm it's ok --Maybe is senseless
-    if(read_msg(fd_client, msg) == -1){
-        msg->response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
-        return;
-    }*/
-
-
-
+//TODO da fare
 void read_rbt(void *d, void* read_data){
 	Node *p;
 	
@@ -36,7 +16,7 @@ void read_rbt(void *d, void* read_data){
 
     if(data->N == 0) return;
 
-    storage_reader_lock(file);
+    operation_reader_lock(file);
 
     //char* fileName = basename(p->key);
 
@@ -56,11 +36,11 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
 
     if(*(data->N) == -1) *(data->N) = -1;
 
-    storage_reader_lock(file);
+    operation_reader_lock(file);
 
     char* fileName = basename(key);
 
-    log_error("Controllo %s, name %s", key, fileName);
+    //log_error("Controllo %s, name %s", key, fileName);
     api_msg msg;
 
     msg.data_length = strlen(fileName);
@@ -102,13 +82,10 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg){
     int file_n = string_to_int(msg->data);
     int size = storage_size();
 
-    log_error("Il client vuole leggere %d su %d file", file_n, size);
-
     if(file_n > size || file_n == -1)
         file_n = size;
 
     reset_data_msg(msg);
-    log_error("Il client vuole leggere %d su %d file", file_n, size);
     char* str = int_to_string(file_n);
 
     msg->data_length = strlen(str);
@@ -124,10 +101,10 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg){
     reset_data_msg(msg);
 
     if(server.storage == HASH){
-        storage_hash_readN(read_hash, &tmp);
+        storage_hash_hiterate(read_hash, (void *)&tmp);
     }
     else if(server.storage == RBT){
-        storage_rbt_readN(read_rbt, &tmp);
+        storage_rbt_hiterate(read_rbt, (void *)&tmp);
     }
 
     msg->response = RES_SUCCESS;

@@ -198,6 +198,6 @@ int main(int argc, char* argv[]){
 
 //TODO
 /**
- * @brief Gli argomenti a linea di comando del client possono essere ripetuti più volte (ad eccezione di ‘-f’, ‘-h’, ‘-p’)
- * 
+ * Compressione file?
+ * Add log server to operetion on dir FILE
  */

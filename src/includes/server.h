@@ -374,9 +374,18 @@ void operation_writer_lock(File* file);
 /** Unlocks a file previously locked in writing mode. */
 void storage_writer_unlock(File* file);
 
+void storage_unlock();
+void storage_lock();
 int storage_size();
-void storage_rbt_readN(void (*func)(void *, void* read_data), void* read_data);
-void storage_hash_readN(hashmap_callback func, void* read_data);
+void storage_rbt_hiterate(void (*func)(void *, void* param), void* param);
+void storage_hash_hiterate(hashmap_callback func, void* param);
+
+/** data of fd. */
+typedef struct {
+    File* file;
+    int (*policy)(File*, File*);
+    char* pathname;
+} replace_data;
 
 /** data of fd. */
 typedef struct {
@@ -450,8 +459,10 @@ void state_increment_file();
 void state_add_space(File* file);
 void state_remove_space(File* file);
 void state_dec_file();
-
+int state_get_space();
 void printState();
+
+replace_data expell_file(size_t remove_space);
 /**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
 
 
@@ -559,8 +570,6 @@ void read_file(int worker_no, long fd_client, api_msg* msg);
  * @brief Deals with an readFile request from the API.
  * Can set the RES of msg:
  *      RES_SUCCESS  in case of success;
- *      RES_NOT_EXIST  if the client is trying to open a non-existing file
- *      RES_NOT_OPEN  if the client doesn't open the file
  *      RES_ERROR_DATA if the client can't send the data of file
  * 
  * @param worker_no 

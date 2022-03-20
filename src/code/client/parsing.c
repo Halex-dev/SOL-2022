@@ -47,6 +47,12 @@ int parsing(int argc, char *argv[]){
             break;
          }
          case 'p':{ //Printable mode
+
+            if(opt_c.print){
+               log_error("-p can be set only once.");
+               exit(EXIT_FAILURE);
+            }
+
             opt_c.print = true;
             break;
          }
@@ -204,7 +210,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
          }
 
          //Check if dir exist
-         if(S_ISDIR(properties.st_mode)) {
+         if(!S_ISDIR(properties.st_mode)) {
             log_error("Folder specified  '%s' does not exist.", dirPath); 
             List_destroy(act,FULL);
             exit(EXIT_FAILURE);
@@ -261,7 +267,7 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             }
 
             if(S_ISDIR(properties.st_mode)) {
-               log_error("You can only send files on option -W");
+               log_error("You can only send files with option -W");
                exit(EXIT_FAILURE);
             } 
 

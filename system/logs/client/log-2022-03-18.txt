@@ -1,7 +1,0 @@
-[INFO] [18-03-2022 16:52:07] Connected to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
-[DEBUG] [18-03-2022 16:52:07] [src/code/client/execute.c:293:] READ_N
-[INFO] [18-03-2022 16:52:07] Writing expelled files in folder /home/halex/Desktop/Repository/SOL-2022/test/dev (option -D was set).
-[ERROR] [18-03-2022 16:52:07] Numeri di file: 2
-[DEBUG] [18-03-2022 16:52:07] [src/code/api/read.c:128:] Path: /home/halex/Desktop/Repository/SOL-2022/test/dev/help2.txt
-[DEBUG] [18-03-2022 16:52:07] [src/code/api/read.c:128:] Path: /home/halex/Desktop/Repository/SOL-2022/test/dev/help.txt
-[INFO] [18-03-2022 16:52:07] Connected closed to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk

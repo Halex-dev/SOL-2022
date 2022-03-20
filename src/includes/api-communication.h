@@ -27,6 +27,7 @@ typedef enum {
     RES_NULL = -3,
     RES_DATA = -4,
     RES_ERROR_DATA = -5,
+    RES_NO_DATA = -6,
 
     /**
      *  OPEN/CREATING RESPONSE SERVER -19 - -10

@@ -20,9 +20,6 @@ void remove_file(int worker_no, long fd_client, api_msg* msg){
 
     storage_writer_lock(file);
 
-    log_debug("PRINT DICT");
-    dict_print(file->opened);
-
     //The client not opened the file
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;

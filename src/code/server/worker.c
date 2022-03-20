@@ -40,7 +40,8 @@ void worker(void* arg){
         return;
     }
 
-    print_msg(&msg_c);
+    //DEBUG
+    //print_msg(&msg_c);
 
     switch (msg_c.operation) {
         case REQ_OPEN_FILE: {

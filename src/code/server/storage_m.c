@@ -122,18 +122,18 @@ void clean_storage(){
     }
 }
 
-void storage_hash_readN(hashmap_callback func, void* read_data){
+void storage_hash_hiterate(hashmap_callback func, void* param){
     safe_pthread_mutex_lock(&storage_thread_mtx);
 
-    hashmap_iterate(hash, func, read_data);
+    hashmap_iterate(hash, func, param);
 
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
-void storage_rbt_readN(void (*func)(void *, void* read_data), void* read_data){
+void storage_rbt_hiterate(void (*func)(void *, void* param), void* param){
     safe_pthread_mutex_lock(&storage_thread_mtx);
 
-    rb_hitarate(rbt, func, read_data);
+    rb_hitarate(rbt, func, param);
 
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 }

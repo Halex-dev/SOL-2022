@@ -73,6 +73,48 @@ int writeFile(const char* pathname, const char* dirname){
 
     free(buffer);
 
+    while(msg.response != RES_NO_DATA && msg.response != RES_ERROR_DATA){
+
+        if(read_msg(current_socket->fd, &msg) == -1){
+            errno = api_errno(msg.response);
+            reset_msg_free(&msg);
+            return -1;
+        }
+
+        if(msg.response == RES_DATA){
+            char* fileName = basename(msg.data);
+
+            reset_data_msg(&msg);
+
+            if(read_msg(current_socket->fd, &msg) == -1){
+                errno = api_errno(msg.response);
+                free(fileName);
+                reset_msg_free(&msg);
+                return -1;
+            }
+
+            if(dirname != NULL){
+
+                int sizePath = strlen(dirname)+strlen(fileName)+2; //1 size for '/'
+                char* path = safe_calloc(sizePath,sizeof(char*));
+                strcat(path, dirname);
+                strcat(path, "/");
+                strcat(path, fileName);
+
+                if(file_write(path, msg.data, size) == -1){
+                    log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
+                }
+                
+                log_info("Write expelled file (%s) in %s", fileName, path);
+                free(path);
+            }
+
+            reset_msg_free(&msg);
+        }
+    }
+
+    reset_msg_free(&msg);
+
     if(read_msg(current_socket->fd, &msg) == -1){
         errno = api_errno(msg.response);
         reset_msg_free(&msg);
@@ -85,7 +127,6 @@ int writeFile(const char* pathname, const char* dirname){
         return -1;
     }
 
-    //TODO FILE CACCIATI
 
     reset_msg_free(&msg);
     errno = 0;

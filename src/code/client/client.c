@@ -47,10 +47,3 @@ int main(int argc, char* argv[]){
     close_logger();
     return 0;
 }
-
-//TODO LISTA BUG
-/**
- * - Fix dir not exist
- * - Check log info active
- * - Log info everywhere
- */

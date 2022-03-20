@@ -7,7 +7,6 @@ int execute(){
 
     Node* curr = (Node*) List_getHead(operation);
 
-    //TODO aggiungere log_info per dire cosa sto facendo in ogni opzione
     while(curr != NULL){
         
         if(nsleep(opt_c.time) == -1){
@@ -91,6 +90,7 @@ int execute(){
 
 
                     //TODO APPEND CON errno
+                    log_info("Write file %s on server", file);
 
                     if(openFile(file, O_ALL) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
@@ -109,6 +109,8 @@ int execute(){
                         files=files->next;
                         continue;
                     }
+
+                    log_info("File %s has been written to the server", file);
 
                     files = files->next;
                 }
@@ -137,6 +139,8 @@ int execute(){
                     if(*prs != FILES)
                         log_error("This was not supposed to happen. Contact a programmer.");
 
+                    log_info("Remove file %s on server", file);
+
                     if(openFile(file, O_LOCK) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
@@ -152,6 +156,8 @@ int execute(){
                         }        
                         continue;
                     } 
+
+                    log_info("File %s has been removed from the server ", file);
 
                     files = files->next;
                 }
@@ -176,11 +182,15 @@ int execute(){
                     if(*prs != FILES)
                         log_error("This was not supposed to happen. Contact a programmer.");
 
+                    log_info("Lock file %s on server", file);
+
                     if(lockFile(file) == -1){
                         log_warn("\t\\-----> OPEN Go to next file (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     }
+
+                    log_info("File %s has been locked from the server", file);
 
                     files = files->next;
                 }
@@ -204,11 +214,15 @@ int execute(){
                     if(*prs != FILES)
                         log_error("This was not supposed to happen. Contact a programmer.");
 
+                    log_info("Lock file %s on server", file);
+
                     if(unlockFile(file) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     }
+
+                    log_info("File %s has been unlocked from the server", file);
 
                     files = files->next;
                 }
@@ -244,6 +258,8 @@ int execute(){
                     if(*prs != FILES)
                         log_error("This was not supposed to happen. Contact a programmer.");
 
+                    log_info("Read file %s from server", file);
+
                     if(openFile(file, O_NULL) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
@@ -259,9 +275,11 @@ int execute(){
                         continue;
                     } 
 
+                    char* fileName = basename(file);
+
                     if(exp_dir != NULL){
-                        char* fileName = basename(file);
-                        int sizePath = strlen(exp_dir)+strlen(fileName)+2; //1 for /
+                       
+                        int sizePath = strlen(exp_dir)+strlen(fileName)+2; //1 size for '/'
                         char* path = safe_calloc(sizePath,sizeof(char*));
                         strcat(path, exp_dir);
                         strcat(path, "/");
@@ -273,8 +291,12 @@ int execute(){
                         
                         free(path);
                         free(exp_dir);
+
+                        log_info("Read file %s in the server and writed it in %s", fileName, path);
                     }
                     free(buff);
+
+                    log_info("Read file %s in the server", fileName);
 
                     if(closeFile(file) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
@@ -376,7 +398,9 @@ int rec_write_dir(const char* dirname, int* numFiles, const char* exp_dir){
             rec_write_dir(path, &write, exp_dir);
         } 
         else { // It's a file
-       
+
+            log_info("Write file %s on server", path);
+
             if(write != -1)
                 write--;
 
@@ -395,6 +419,7 @@ int rec_write_dir(const char* dirname, int* numFiles, const char* exp_dir){
                 continue;
             }
 
+            log_info("File %s has been written to the server", path);
             /** I don't count files with error
              * if(write != -1)
              *   write--;

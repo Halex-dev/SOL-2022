@@ -1,8 +1,0 @@
-[INFO] [17-03-2022 19:18:06] Connected to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk
-[INFO] [17-03-2022 19:18:06] Writing expelled files in folder /home/halex/Desktop/Repository/SOL-2022/test/dev (option -D was set).
-[ERROR] [17-03-2022 19:18:06] [API_ERROR] File already exists
-[WARN] [17-03-2022 19:18:06] 	\-----> Go to next file (File exists)
-[ERROR] [17-03-2022 19:18:06] [API_ERROR] File already exists
-[WARN] [17-03-2022 19:18:06] 	\-----> Go to next file (File exists)
-[INFO] [17-03-2022 19:18:06] Writing expelled files in folder /home/halex/Desktop/Repository/SOL-2022/test/dev (option -D was set).
-[INFO] [17-03-2022 19:18:06] Connected closed to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-SOCKET.sk

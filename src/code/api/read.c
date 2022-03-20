@@ -105,7 +105,7 @@ int readNFiles(int N, const char* dirname){
     int numFile = string_to_int(msg.data);
     int i = numFile;
 
-    log_error("Numeri di file: %d", numFile);
+    log_info("Number of files to read: %d", numFile);
     reset_data_msg(&msg);
 
     while (i > 0){
@@ -123,9 +123,9 @@ int readNFiles(int N, const char* dirname){
         strcat(path, "/");
         strcat(path, fileName);
 
-        reset_data_msg(&msg);
+        log_info("Read the file %s from server", fileName);
 
-        log_debug("Path: %s", path);
+        reset_data_msg(&msg);
 
         if(read_msg(current_socket->fd, &msg) == -1){
             errno = api_errno(msg.response);
@@ -136,6 +136,8 @@ int readNFiles(int N, const char* dirname){
         if(file_write(path, msg.data, msg.data_length) == -1){
             log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
         }
+
+        log_info("File %s written on", fileName, path);
 
         reset_data_msg(&msg);        
         free(path);
