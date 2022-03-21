@@ -391,7 +391,7 @@ typedef struct {
 typedef struct {
     int worker_no;
     long fd_client;
-    int* N;
+    int N;
 } read_n_data;
 
 /**____________________________________________________  SIGNAL HANDLER  ____________________________________________________ **/

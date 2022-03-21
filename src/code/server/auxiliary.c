@@ -67,6 +67,8 @@ void close_server(){
 
 void clean_memory(int flags){
 
+    printState();
+    
     //THREAD
     cleen_handler(graceful_shutdown);
     threadpool_destroy(tm, graceful_shutdown);
@@ -159,16 +161,17 @@ int state_get_space(){
 
 void printState(){
     safe_pthread_mutex_lock(&curr_state_mtx);
+     printf("\n\n");
         // printing summary of stats
-    printf("\t\033[0;32mPrinting summary of server statistics.\033[0m\n");
-    printf("Maximum number of stored files:     %15u\n", curr_state.max_files);
-    printf("Maximum space occupied in bytes:    %15lu\n", curr_state.max_space);
-    printf("Maximum number of connected clients:%15u\n", curr_state.max_conn);
-    printf("Number of file expulsion by Policy: %15u\n", curr_state.n_policy);
-    printf("Number of file in this moment:      %15u\n", curr_state.files);
-    printf("Number of connection in this moment:%15u\n", curr_state.conn);
-    printf("Number of space at this moment:     %15zu\n", curr_state.space);
-    printf("File in storage:    \n");
+    printf("\t\t\t\033[0;32mPrinting summary of server statistics.\033[0m\n");
+    printf("\tMaximum number of stored files:     %15u\n", curr_state.max_files);
+    printf("\tMaximum space occupied in bytes:    %15lu\n", curr_state.max_space);
+    printf("\tMaximum number of connected clients:%15u\n", curr_state.max_conn);
+    printf("\tNumber of file expulsion by Policy: %15u\n", curr_state.n_policy);
+    printf("\tNumber of file in this moment:      %15u\n", curr_state.files);
+    printf("\tNumber of connection in this moment:%15u\n", curr_state.conn);
+    printf("\tNumber of space at this moment:     %15zu\n", curr_state.space);
+    printf("\tFile in storage:    \n");
     print_storage();
     printf("\n");
     safe_pthread_mutex_unlock(&curr_state_mtx);
@@ -204,79 +207,6 @@ int MFU_policy(File* a, File* b){
     if(a->used > b->used) return -1;
     return 0;
 }
-
-/**
-void read_rbt(void *d, void* read_data){
-	Node *p;
-	
-	assert(d != NULL);
-	
-	p = (Node *) d;
-	printf("- [%s]", p->key);
-
-    File* file = (File*) p->data;
-    read_n_data* data = (read_n_data*) read_data;
-
-    if(file == NULL || data == NULL) return;
-
-    if(data->N == 0) return;
-
-    storage_reader_lock(file);
-
-    //char* fileName = basename(p->key);
-
-    storage_reader_unlock(file);
-
-    data->N--;
-}
-
-void read_hash(void* key, size_t ksize, void* value, void* usr){
-
-    File* file = (File *) value;
-    read_n_data* data = (read_n_data*) usr;
-
-    if(file == NULL || data == NULL) return;
-
-    if(data->N == 0) return;
-
-    if(*(data->N) == -1) *(data->N) = -1;
-
-    storage_reader_lock(file);
-
-    char* fileName = basename(key);
-
-    log_error("Controllo %s, name %s", key, fileName);
-    api_msg msg;
-
-    msg.data_length = strlen(fileName);
-    msg.data = fileName;
-    msg.operation = REQ_WRITE_FILE;
-    msg.response = RES_DATA;
-    msg.flags = O_NULL;
-
-    if(send_msg(data->fd_client, &msg) == -1){
-        msg.response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
-        return;
-    }
-
-    reset_data_msg(&msg);
-
-    msg.data_length = file->size;
-    msg.data = file->data;
-
-    if(send_msg(data->fd_client, &msg) == -1){
-        msg.response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
-        return;
-    }
-
-    *(data->N) = *(data->N) - 1;
-
-    storage_reader_unlock(file);
-}
-
-*/
 
 void file_remove_hash(void* key, size_t ksize, void* value, void* usr){
 
@@ -325,15 +255,12 @@ void file_remove_hash(void* key, size_t ksize, void* value, void* usr){
     storage_reader_unlock(file);
 }
 
-//TODO da fare
 void file_remove_rbt(void *d, void* usr){
     Node *p;
 	
 	assert(d != NULL);
 	
 	p = (Node *) d;
-	printf("- [%s]", p->key);
-
     File* file = (File*) p->data;
     replace_data* replace = (replace_data*) usr;
 
@@ -341,9 +268,39 @@ void file_remove_rbt(void *d, void* usr){
 
     if(file->size == 0) return;
 
-    storage_reader_lock(file);
+    operation_reader_lock(file);
 
-    //char* fileName = basename(p->key);
+    if(replace->file != NULL){
+        operation_reader_lock(replace->file);
+    }
+        
+    if(!file->can_expelled){
+        
+        if(replace->file != NULL){
+            storage_reader_unlock(replace->file);
+        }
+        
+        storage_reader_unlock(file);
+        return;
+    }
+
+    if(replace->file == NULL || replace->policy(file, replace->file) < 0){
+
+        //Unlock before change the file
+        if(replace->file != NULL) {
+            storage_reader_unlock(replace->file);
+        }
+            
+        // updating least_file
+        replace->file = file;
+        replace->pathname = p->key;
+    }
+    else{
+        //Unlock before change the file
+        if(replace->file != NULL) {
+            storage_reader_unlock(replace->file);
+        }
+    }
 
     storage_reader_unlock(file);
 }
@@ -365,7 +322,7 @@ replace_data expell_file(size_t remove_space){
 
     state_remove_policy(replace.file);
 
-    log_stats("[REPLACEMENT] [%s] File \"%s\" was removed from the server by the replacement algorithm.\n", getPolicy(), replace.pathname);
-    log_stats("[REPLACEMENT] [BF] %lu bytes freed.\n", replace.file->size);
+    log_stats("[REPLACEMENT] [%s] File \"%s\" was removed from the server by the replacement algorithm.", getPolicy(), replace.pathname);
+    log_stats("[REPLACEMENT] [BF] %lu bytes freed.", replace.file->size);
     return replace;
 }

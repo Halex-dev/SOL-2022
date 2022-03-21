@@ -8,6 +8,17 @@ int api_errno(int res){
         case RES_CLOSE:{
             return 0;
         }
+        case RES_DATA:{
+            return 0;
+        }
+        case RES_ERROR:{
+            log_error("[API_ERROR] An error as occurred. Try again.");
+            return EAGAIN;
+        }
+        case RES_ERROR_DATA:{
+            log_error("[API_ERROR] An error as occurred. Try again.");
+            return EAGAIN;
+        }
         case RES_EXIST:{
             log_error("[API_ERROR] File already exists");
             return EEXIST;
@@ -32,10 +43,6 @@ int api_errno(int res){
             log_error("[API_ERROR] File is too big for upload");
             return EFBIG;
         }
-        case RES_ERROR:{
-            log_error("[API_ERROR] An error as occurred. Try again.");
-            return EAGAIN;
-        }
         case RES_NULL:{
             log_error("[API_ERROR] An error as occurred to communicate. Try again.");
             return ECOMM;
@@ -43,6 +50,10 @@ int api_errno(int res){
         case RES_NOT_EMPTY:{
             log_error("[API_ERROR] The file has already been written");
             return EAGAIN;
+        }
+        case RES_SERVER_EMPTY:{
+            log_error("[API_ERROR] The server is empty");
+            return RES_SERVER_EMPTY;
         }
         case RES_NOT_YOU_LOCKED:{
             log_error("[API_ERROR] File is locked by another client.");

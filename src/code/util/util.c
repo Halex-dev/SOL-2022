@@ -183,13 +183,11 @@ int file_write(const char* pathname, void* data, size_t size){
 
     FILE* to_write;
     if( (to_write = fopen(pathname, "wb")) == NULL){
-        log_error("Problem to write the file: %s", strerror(errno));
         return -1;
     }
 
     int l;
     if(size > 0 && (l = fwrite(data, 1, size, to_write)) < size){
-        log_error("Error: %s", strerror(errno));
         fclose(to_write);
         return -1;
     }

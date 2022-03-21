@@ -22,8 +22,8 @@ typedef enum {
      *  GENERIC RESPONSE SERVER -9 - 0
      */
     RES_SUCCESS = 0,
-    RES_ERROR = -1,
-    RES_CLOSE = -2,
+    RES_CLOSE = -1,
+    RES_ERROR = -2,
     RES_NULL = -3,
     RES_DATA = -4,
     RES_ERROR_DATA = -5,
@@ -48,13 +48,18 @@ typedef enum {
      *  FILE RESPONSE SERVER -39 - -30
      */
     RES_TOO_BIG = -31,
-    RES_NOT_EMPTY = -32
+    RES_NOT_EMPTY = -32,
+
+    /**
+     *  SERVER COMMUNICATION -39
+     */
+    RES_SERVER_EMPTY = -40
 } api_res;
 
 typedef enum {
     O_CREATE = 1,
     O_LOCK = 2,
-    O_ALL = 3, //Maybe not
+    O_ALL = 3,
     O_NULL = 0 
 } api_flags;
 

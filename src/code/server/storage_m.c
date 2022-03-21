@@ -64,8 +64,9 @@ void print_func(void *d){
 void free_file(void* key, size_t ksize, void* value, void* usr){
 
     File* file = (File *) value;
-
-    free(key);
+    
+    if(key != NULL)
+        free(key);
 
     if(file == NULL) return;
 

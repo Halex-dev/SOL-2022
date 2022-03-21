@@ -22,8 +22,8 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
 
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;
-        free(pathname);
         free(num);
+        free(pathname);
         storage_writer_unlock(file);
         return;
     }
@@ -47,8 +47,8 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
 
     if(file->size != 0){
         //Client not do openFile(pathname, O_CREATE| O_LOCK).
-        storage_writer_unlock(file);
         free(pathname);
+        storage_writer_unlock(file);
         msg->response = RES_NOT_EMPTY;
     }
 
@@ -58,8 +58,8 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
 
     //Require data
     if(send_msg(fd_client, msg) == -1){
-        msg->response = RES_ERROR_DATA;
         free(pathname);
+        msg->response = RES_ERROR_DATA;
         storage_writer_unlock(file);
         return;
     }
@@ -81,7 +81,6 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
     }
 
     free(pathname);
-
     //Calculate if must remove one or more file
     int current_space = state_get_space();
     int newSize = msg->data_length + current_space;
@@ -89,7 +88,6 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
     file->data = msg->data;
     file->size = msg->data_length;
 
-    //TODO expell_file DA FARE
     if(newSize > server.max_space){
 
         //exclude the file updloaded
@@ -138,7 +136,7 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
             del_storage(replace.pathname);
         }
 
-        log_stats("[REPLACEMENT] In total %d (%ld) files were removed from the server.\n", file_removed, freed);
+        log_stats("[REPLACEMENT] In total %d (%ld) files were removed from the server.", file_removed, freed);
         operation_writer_lock(file);
     }
 
@@ -151,7 +149,6 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
 
     if(send_msg(fd_client, msg) == -1){
         msg->response = RES_ERROR_DATA;
-        free(pathname);
         storage_writer_unlock(file);
         return;
     }
@@ -164,7 +161,6 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
 
     state_add_space(file);
 
-    //printState();
     storage_writer_unlock(file);
     msg->response = RES_SUCCESS;
 }

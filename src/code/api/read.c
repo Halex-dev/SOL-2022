@@ -135,15 +135,38 @@ int readNFiles(int N, const char* dirname){
 
         if(file_write(path, msg.data, msg.data_length) == -1){
             log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
+            reset_data_msg(&msg);        
+            free(path);
+            i--;
+            break;
         }
 
-        log_info("File %s written on", fileName, path);
+        log_info("File %s written on %s", fileName, path);
 
         reset_data_msg(&msg);        
         free(path);
         i--;
     }
-    
+
     reset_msg_free(&msg);
+
+    if(read_msg(current_socket->fd, &msg) == -1){
+        errno = api_errno(msg.response);
+        return -1;
+    }
+
+    if(msg.response == RES_SERVER_EMPTY){
+        errno = api_errno(msg.response);
+        reset_msg_free(&msg);
+        return 0;
+    }
+    else if(msg.response != RES_SUCCESS){
+        errno = api_errno(msg.response);
+        reset_msg_free(&msg);
+        return -1;
+    }
+
+    reset_msg_free(&msg);
+    errno = 0;
     return 0;
 }

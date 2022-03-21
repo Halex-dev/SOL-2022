@@ -18,9 +18,12 @@ int execute(){
 
         switch (*act){
             case ACT_TIME:{
+                char* exp_dir = NULL;
                 long* num = curr->data;
                 opt_c.time = *num;
-                log_info("Change time execute to files to %d", opt_c.time);
+                log_info("Change time execute to %d", opt_c.time);
+                free(num);
+                NEXT;
                 break;
             }
             case ACT_WRITE_DIR:{ //w
@@ -270,7 +273,7 @@ int execute(){
                     size_t size;
 
                     if(readFile(file, &buff, &size) == -1){
-                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                        log_warn("\t\\-----> Go to next file read (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     } 
@@ -288,11 +291,10 @@ int execute(){
                         if(file_write(path, buff, size) == -1){
                             log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
                         }
-                        
-                        free(path);
-                        free(exp_dir);
 
                         log_info("Read file %s in the server and writed it in %s", fileName, path);
+                        free(path);
+                        free(exp_dir);
                     }
                     free(buff);
 
@@ -312,7 +314,7 @@ int execute(){
                 break;
             }
             case ACT_READ_N:{
-                log_debug("READ_N");
+                //log_debug("READ_N");
 
                 char* exp_dir = NULL;
                 action_c* opt_d = NULL;
@@ -336,9 +338,9 @@ int execute(){
                 int readed;
 
                 if((readed = readNFiles(files, exp_dir)) == -1){
-                    log_error("Error on read %d files on server: %s.",&files, strerror(errno));
+                    log_error("Error on read %d files on server: %s.",files, strerror(errno));
                 }
-                
+
                 if(exp_dir != NULL)
                     free(exp_dir);
 

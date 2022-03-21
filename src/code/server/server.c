@@ -28,6 +28,7 @@ int main(int argc, char* argv[]){
     init_log_file(server.log_path, WRITE);
     log_threadsafe(true);
     log_setConsole(LOG_INFO, server.debug);
+    log_setConsole(LOG_STATS, server.debug);
 
     // ------------------------- SIGNAL HANDLER --------------------- //
     init_sig_handler();
@@ -142,7 +143,7 @@ int main(int argc, char* argv[]){
 
                     case CLOSE: // closing connection
                         close_connection(result.fd_client);
-                        printState();
+                        //printState();
                         //hashmap_printFile(&files);
                         break;
 
@@ -200,4 +201,6 @@ int main(int argc, char* argv[]){
 /**
  * Compressione file?
  * Add log server to operetion on dir FILE
+ * CHECK RBT
+ * FILE LIMIT NUMBER
  */

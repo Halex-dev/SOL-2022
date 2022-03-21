@@ -1,13 +1,11 @@
 #include "server.h"
 
-//TODO da fare
 void read_rbt(void *d, void* read_data){
 	Node *p;
 	
 	assert(d != NULL);
 	
 	p = (Node *) d;
-	printf("- [%s]", p->key);
 
     File* file = (File*) p->data;
     read_n_data* data = (read_n_data*) read_data;
@@ -16,13 +14,40 @@ void read_rbt(void *d, void* read_data){
 
     if(data->N == 0) return;
 
+    if(data->N == -1) 
+        data->N = -1;
+
     operation_reader_lock(file);
 
-    //char* fileName = basename(p->key);
+    api_msg msg;
+    memset(&msg, 0, sizeof(api_msg));
+
+    msg.data_length = strlen(p->key);
+    msg.data = p->key;
+    msg.operation = REQ_WRITE_FILE;
+    msg.response = RES_DATA;
+    msg.flags = O_NULL;
+
+    if(send_msg(data->fd_client, &msg) == -1){
+        msg.response = RES_ERROR_DATA;
+        storage_reader_unlock(file);
+        return;
+    }
+
+    reset_msg(&msg);
+
+    msg.data_length = file->size;
+    msg.data = file->data;
+
+    if(send_msg(data->fd_client, &msg) == -1){
+        msg.response = RES_ERROR_DATA;
+        storage_reader_unlock(file);
+        return;
+    }
+
+    data->N -= 1;
 
     storage_reader_unlock(file);
-
-    data->N--;
 }
 
 void read_hash(void* key, size_t ksize, void* value, void* usr){
@@ -34,17 +59,16 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
 
     if(data->N == 0) return;
 
-    if(*(data->N) == -1) *(data->N) = -1;
+    if(data->N == -1) 
+        data->N = -1;
 
     operation_reader_lock(file);
 
-    char* fileName = basename(key);
-
-    //log_error("Controllo %s, name %s", key, fileName);
     api_msg msg;
+    memset(&msg, 0, sizeof(api_msg));
 
-    msg.data_length = strlen(fileName);
-    msg.data = fileName;
+    msg.data_length = strlen(key);
+    msg.data = key;
     msg.operation = REQ_WRITE_FILE;
     msg.response = RES_DATA;
     msg.flags = O_NULL;
@@ -55,7 +79,7 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
         return;
     }
 
-    reset_data_msg(&msg);
+    reset_msg(&msg);
 
     msg.data_length = file->size;
     msg.data = file->data;
@@ -66,24 +90,24 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
         return;
     }
 
-    *(data->N) = *(data->N) - 1;
+    data->N -= 1;
 
     storage_reader_unlock(file);
 }
 
 void read_n_file(int worker_no, long fd_client, api_msg* msg){
 
-    read_n_data tmp = {
-        .fd_client = fd_client,
-        .N = msg->data,
-        .worker_no = worker_no
-    };
-
     int file_n = string_to_int(msg->data);
     int size = storage_size();
-
+    
     if(file_n > size || file_n == -1)
         file_n = size;
+
+    read_n_data tmp = {
+        .fd_client = fd_client,
+        .N = file_n,
+        .worker_no = worker_no
+    };
 
     reset_data_msg(msg);
     char* str = int_to_string(file_n);
@@ -99,6 +123,11 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg){
     }
 
     reset_data_msg(msg);
+
+    if(file_n == 0){
+        msg->response = RES_SERVER_EMPTY;
+        return;
+    }
 
     if(server.storage == HASH){
         storage_hash_hiterate(read_hash, (void *)&tmp);

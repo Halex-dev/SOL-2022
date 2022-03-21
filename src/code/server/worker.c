@@ -126,7 +126,7 @@ void worker(void* arg){
             break;
         }
         case REQ_REMOVE_FILE: {
-            log_stats("[THREAD %d] [REMOVE_FILE] Request from client %ld is REMOVE_FILE.\n", worker_no, fd_client);
+            log_stats("[THREAD %d] [REMOVE_FILE] Request from client %ld is REMOVE_FILE.", worker_no, fd_client);
             
             remove_file(worker_no, fd_client, &msg_c);
             
@@ -230,7 +230,7 @@ void worker(void* arg){
             break;
         }
         case REQ_READ_N_FILES: {
-            log_stats("[THREAD %d] [READ_N_FILES] Request from client %ld is READ_N_FILES.\n", worker_no, fd_client);
+            log_stats("[THREAD %d] [READ_N_FILES] Request from client %ld is READ_N_FILES.", worker_no, fd_client);
             
             read_n_file(worker_no, fd_client, &msg_c);
             

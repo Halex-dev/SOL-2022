@@ -147,13 +147,13 @@ int parsing(int argc, char *argv[]){
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_TIME;
 
-            long* files = safe_calloc(1, sizeof(long));
-            if(optarg != NULL && (sscanf(optarg, "%ld", files) == EOF || *files < 0)){
+            long* time = safe_calloc(1, sizeof(long));
+            if(optarg != NULL && (sscanf(optarg, "%ld", time) == EOF || *time < 0)){
                log_error("Error in parsing option -t: couldn't read number of files.\n");
                exit(EXIT_FAILURE);
             }
 
-            List_add(operation, action, (void*) files);
+            List_add(operation, action, (void*) time);
             break;
          }
          case '?':

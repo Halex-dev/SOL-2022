@@ -39,7 +39,7 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }
 
-    reset_data_msg(msg);
+    reset_msg(msg);
 
     /**
     //Confirm it's ok --Maybe is senseless

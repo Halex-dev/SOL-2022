@@ -41,7 +41,7 @@ void* sig_handler_thread(void* arg){
             // blocking new connections
             case SIGHUP:
                 log_info("Received signal to refuse incoming connections");
-                server.socket.mode = CLOSE_SERVER; //CHANGE TO REFUSE_CONN
+                server.socket.mode = REFUSE_CONN; //CHANGE TO REFUSE_CONN
 
                 // signaling to main thread
                 close(pipe[WEND]);

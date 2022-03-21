@@ -27,6 +27,8 @@ void close_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }
 
+    dict_del(file->opened, num);
+
     free(num);
 
     // if file was locked by client, unlock it
