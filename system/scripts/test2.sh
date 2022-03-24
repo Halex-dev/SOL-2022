@@ -31,28 +31,28 @@ sleep 1 # just to make valgrind print stuff
 
 echo -e "${GREEN}\n\tCreating 8 file (max 36Kb)${NORMC}\n";
 
-for (( i=1; i < 9; i++ ))
+for (( i=1; i < 10; i++ ))
 do
-    dd if=/dev/zero of=./test/test2/WRITE/files/file${i}.txt  bs=1b  count=$((1 + $RANDOM % 70))
+    dd if=/dev/zero of=./test/test2/WRITE/files/file${i}.dat  bs=1b  count=$((1 + $RANDOM % 70))
 done
 
-FILES_WRITES="-W test/test2/WRITE/files/file1.txt"
-for (( i=2; i < 9; i++ ))
+FILES_WRITES="-W test/test2/WRITE/files/file1.dat"
+for (( i=2; i < 10; i++ ))
 do
-    FILES_WRITES="${FILES_WRITES} -W test/test2/WRITE/files/file${i}.txt"
+    FILES_WRITES="${FILES_WRITES} -W test/test2/WRITE/files/file${i}.dat"
 done
 
-echo -e "${GREEN}\n\t[CLIENT 1] Upload 8 files, one every second ${NORMC}\n";
+echo -e "${GREEN}\n\t[CLIENT 1] Upload 9 files, one every second ${NORMC}\n";
 ${CLIENT} -f ${SOCK_NAME} -p -t 1000 ${FILES_WRITES}
 
-echo -e "${GREEN}\n\t[CLIENT 1] READ 2 files (file1.txt and file2.txt) (for MFU or LFU)${NORMC}\n";
-${CLIENT} -f ${SOCK_NAME} -p -t 1000 -r test/test2/WRITE/files/file1.txt,test/test2/WRITE/files/file2.txt
+echo -e "${GREEN}\n\t[CLIENT 1] READ 2 files (file1.dat and file2.dat without writing) (for MFU or LFU)${NORMC}\n";
+${CLIENT} -f ${SOCK_NAME} -p -t 1000 -r test/test2/WRITE/files/file1.dat,test/test2/WRITE/files/file2.dat
 
 echo -e "${GREEN}\n\t[CLIENT 2] Upload 3 img expelled in test/test2/EXPELLED/NUMBER ${NORMC}\n";
-${CLIENT} -f ${SOCK_NAME} -p -t 200 -w test/test2/WRITE/img/ -D test/test2/EXPELLED/NUMBER
+${CLIENT} -f ${SOCK_NAME} -p -t 200 -w test/test2/WRITE/img/ -D test/test2/EXPELLED/NUMBER/
 
 echo -e "${GREEN}\n\t[CLIENT 3] Upload 0.8MB file.dat expelled in test/test2/EXPELLED/SIZE ${NORMC}\n";
-${CLIENT} -f ${SOCK_NAME} -p -t 200 -W test/test2/WRITE/mega/file.dat -D test/test2/EXPELLED/SIZE
+${CLIENT} -f ${SOCK_NAME} -p -t 200 -W test/test2/WRITE/mega/file.dat -D test/test2/EXPELLED/SIZE/
 
 sleep 1
 kill -SIGHUP ${SERVER_PID}

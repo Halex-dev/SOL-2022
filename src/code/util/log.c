@@ -199,7 +199,7 @@ static void stdout_callback(log_event *ev, int level) {
 
     //Write on file
     if(config.file){
-        vfprintf(log_file, ev->fmt, aq);
+        vfprintf(log_file, ev->fmt, aq); //write on file
         fprintf(log_file, "\n");
         fflush(log_file);
     }

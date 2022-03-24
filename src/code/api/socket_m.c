@@ -55,10 +55,7 @@ void setCurrent(char* key){
     if(socket_m == NULL)
         socket_m = dict_init();
     
-    char * socketpath;
-    
-    if((socketpath = absolute_path(key)) == NULL)
-        return;
+    char* socketpath = absolute_path(key);
 
     SocketConnection* socket_c = dict_get(socket_m, socketpath);
 

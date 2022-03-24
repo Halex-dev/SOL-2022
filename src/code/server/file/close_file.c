@@ -9,10 +9,11 @@ void close_file(int worker_no, long fd_client, api_msg* msg){
     reset_data_msg(msg);
 
     File* file = search_storage(pathname);
-    free(pathname);
+    
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
+        free(pathname);
         return;
     }
 
@@ -23,6 +24,7 @@ void close_file(int worker_no, long fd_client, api_msg* msg){
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;
         free(num);
+        free(pathname);
         storage_writer_unlock(file);
         return;
     }
@@ -35,7 +37,8 @@ void close_file(int worker_no, long fd_client, api_msg* msg){
     if(file->fd_lock == fd_client)
         file->fd_lock = -1;
 
+    log_stats("[THREAD %d] [CLOSE_FILE_SUCCESS] Successfully closed file \"%s\".", worker_no, pathname);
+    free(pathname);
     storage_writer_unlock(file);
-
     msg->response = RES_SUCCESS;
 }

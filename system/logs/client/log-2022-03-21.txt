@@ -1,8 +1,0 @@
-[INFO] [21-03-2022 14:36:55] Connected to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-2022.sk
-[INFO] [21-03-2022 14:36:55] Change time execute to 200
-[INFO] [21-03-2022 14:36:55] Lock file /home/halex/Desktop/Repository/SOL-2022/test/test1/WRITE/help.txt on server
-[INFO] [21-03-2022 14:36:59] File /home/halex/Desktop/Repository/SOL-2022/test/test1/WRITE/help.txt has been locked from the server
-[INFO] [21-03-2022 14:36:59] Lock file /home/halex/Desktop/Repository/SOL-2022/test/test1/WRITE/help.txt on server
-[INFO] [21-03-2022 14:36:59] File /home/halex/Desktop/Repository/SOL-2022/test/test1/WRITE/help.txt has been unlocked from the server
-[INFO] [21-03-2022 14:36:59] Connected closed to /home/halex/Desktop/Repository/SOL-2022/system/bin/SOL-2022.sk
-

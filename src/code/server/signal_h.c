@@ -86,7 +86,7 @@ void cleen_handler(shutdown_mode_t flags){
 
     if(flags == immediate_shutdown ){
         if(sig_handler_tid != -1){
-            SYSTEM_CALL_EXIT(pthread_detach(sig_handler_tid), "Error to deatch thread");
+            SYSTEM_CALL_EXIT(pthread_cancel(sig_handler_tid), "Error to deatch thread");
             sig_handler_tid = -1;
         }  
     }

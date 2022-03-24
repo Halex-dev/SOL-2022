@@ -577,7 +577,6 @@ int check_black_height(rbtree *rbt, rbnode *n)
  */
 void rb_print(rbtree *rbt, void (*print_func)(void *))
 {
-	printf("\n--\n");
 	print(rbt, RB_FIRST(rbt), print_func, 0, "T");
 	printf("\ncheck_black_height = %d\n", rb_check_black_height(rbt));
 }
@@ -619,8 +618,6 @@ void rb_hitarate(rbtree *rbt, void (*function)(void *, void* read_data), void* r
 {
 	hitarate(rbt, RB_FIRST(rbt), function, 0, "T", read_data);
 }
-
-
 
 /*
  * destroy node recursively

@@ -47,6 +47,9 @@ void read_rbt(void *d, void* read_data){
 
     data->N -= 1;
 
+    log_stats("[WRITE_TO_CLIENT][READ_N_FILES] Written file \"%s\" to client with fd %ld.", p->key, data->fd_client);
+    log_stats("[WRITE_TO_CLIENT][READ_N_FILES][WB] %lu bytes were sent to client.", file->size);
+
     storage_reader_unlock(file);
 }
 
@@ -92,6 +95,9 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
 
     data->N -= 1;
 
+    log_stats("[WRITE_TO_CLIENT][READ_N_FILES] Written file \"%s\" to client with fd %ld.", key, data->fd_client);
+    log_stats("[WRITE_TO_CLIENT][READ_N_FILES][WB] %lu bytes were sent to client.", file->size);
+
     storage_reader_unlock(file);
 }
 
@@ -135,6 +141,8 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg){
     else if(server.storage == RBT){
         storage_rbt_hiterate(read_rbt, (void *)&tmp);
     }
+
+    log_stats("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent file \"%d\" to client.", worker_no, (file_n - tmp.N));   
 
     msg->response = RES_SUCCESS;
 }

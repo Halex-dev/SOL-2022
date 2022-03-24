@@ -101,7 +101,7 @@ int writeFile(const char* pathname, const char* dirname){
                 strcat(path, "/");
                 strcat(path, fileName);
 
-                if(file_write(path, msg.data, size) == -1){
+                if(file_write(path, msg.data, msg.data_length) == -1){
                     log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
                 }
                 

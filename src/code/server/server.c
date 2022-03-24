@@ -27,8 +27,11 @@ int main(int argc, char* argv[]){
     // ------------------------ LOG ------------------------- //
     init_log_file(server.log_path, WRITE);
     log_threadsafe(true);
+    
     log_setConsole(LOG_INFO, server.debug);
+    log_setConsole(LOG_ERROR, server.debug);
     log_setConsole(LOG_STATS, server.debug);
+    log_setConsole(LOG_FATAL, server.debug);
 
     // ------------------------- SIGNAL HANDLER --------------------- //
     init_sig_handler();
@@ -133,22 +136,24 @@ int main(int argc, char* argv[]){
                 
                 switch (result.code){
                     case NOT_FATAL: 
-                        log_warn("There has been a non-fatal error.");
+                        //log_warn("There has been a non-fatal error.");
                     case SUCCESS: 
                         // adding fd_client back to listening set
                         FD_SET(result.fd_client, &set);
                         if(result.fd_client > server.socket.fd_max) 
                             server.socket.fd_max = result.fd_client;
+                        
+                        //print_storage();
                         break;
 
                     case CLOSE: // closing connection
                         close_connection(result.fd_client);
                         //printState();
-                        //hashmap_printFile(&files);
                         break;
 
                     case FATAL_ERROR:
                         log_fatal("Fatal error in connection with client %ld. Closing connection.", result.fd_client);
+                        remove_openlock(result.fd_client);
                         close_connection(result.fd_client);
                         break;
                     
@@ -200,7 +205,5 @@ int main(int argc, char* argv[]){
 //TODO
 /**
  * Compressione file?
- * Add log server to operetion on dir FILE
  * CHECK RBT
- * FILE LIMIT NUMBER
  */

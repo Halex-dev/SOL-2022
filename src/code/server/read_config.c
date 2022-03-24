@@ -150,13 +150,13 @@ bool read_config(const char * path){
             if(strcmp(el->data, "HASH") == 0)
                 server.storage = HASH;
             else if(strcmp(el->data, "RBT") == 0)
-                server.debug = RBT;
+                server.storage = RBT;
             else{
                 log_error("STORAGE must be a RBT or HASH");
                 exit(EXIT_FAILURE);
             }
 
-            debug = true;
+            storage = true;
             //log_debug("SOCK_PATH %d", server.debug);
         }
 
@@ -192,13 +192,15 @@ bool read_config(const char * path){
 
 void print_config(){
     log_info("Open server with these options:\n - WORKERS: %d\n - MAX_FILES: %d\n \
-- SOCK_PATH: %s\n - LOG_PATH: %s\n - POLICY: %s\n - MAX_SPACE: %dMB\n", 
+- SOCK_PATH: %s\n - LOG_PATH: %s\n - POLICY: %s\n - MAX_SPACE: %dMB\n- PRINT ALL: %s\n\
+- STORAGE: %s\n", 
         server.workers
         ,server.max_files
         ,server.socket_path
         ,server.log_path
         ,getPolicy()
         ,server.max_space/1048576
-        ,server.debug
+        ,getDebug()
+        ,getStorage()
     );
 }

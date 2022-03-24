@@ -318,6 +318,10 @@ typedef struct {
 
 /** Return string of policy used. */
 char* getPolicy();
+/** Return string of storage method used. */
+char* getStorage();
+/** Return string of enabled or not debug mode. */
+char* getDebug();
 /** Function to print all storage files. */
 void print_storage();
 /** Function to clean all storage. */
@@ -357,6 +361,13 @@ bool storage_contains(const char* key);
 void del_storage(char* key);
 
 /**
+ * @brief Search the key and delete the element without lock.
+ * 
+ * @param key 
+ */
+void del_storage_nolock(char* key);
+
+/**
  * Create new file in memory
  */
 int storage_file_create(File* file, long flags, long fd_client);
@@ -374,11 +385,14 @@ void operation_writer_lock(File* file);
 /** Unlocks a file previously locked in writing mode. */
 void storage_writer_unlock(File* file);
 
-void storage_unlock();
 void storage_lock();
+void storage_unlock();
 int storage_size();
 void storage_rbt_hiterate(void (*func)(void *, void* param), void* param);
 void storage_hash_hiterate(hashmap_callback func, void* param);
+void storage_rbt_hiterate_nolock(void (*func)(void *, void* param), void* param);
+void storage_hash_hiterate_nolock(hashmap_callback func, void* param);
+
 
 /** data of fd. */
 typedef struct {
@@ -447,6 +461,12 @@ void close_server();
  */
 void close_connection(long fd_client);
 
+/**
+ * @brief remove fd client by all file he have locked and open
+ * 
+ * @param fd_client 
+ */
+void remove_openlock(long fd_client);
 /**____________________________________________________  STATE FUNCTION   ____________________________________________________ **/
 
 /**
@@ -458,11 +478,16 @@ void state_increment_file();
 
 void state_add_space(File* file);
 void state_remove_space(File* file);
+void state_remove_policy(File* file);
 void state_dec_file();
 int state_get_space();
 void printState();
 
-replace_data expell_file(size_t remove_space);
+//Get file can remove and lock it.
+replace_data get_expell_file();
+
+void check_expell_file();
+
 /**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
 
 

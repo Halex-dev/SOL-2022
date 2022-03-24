@@ -31,12 +31,14 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg){
     if(file->fd_lock == -1){ // not locked
         msg->response = RES_NOT_LOCKED;
         free(pathname);
+        storage_writer_unlock(file);
         return;
     }
     
     if(file->fd_lock != -1 && file->fd_lock != fd_client){ // already locked by other client
         msg->response = RES_NOT_YOU_LOCKED;
         free(pathname);
+        storage_writer_unlock(file);
         return;
     }
     

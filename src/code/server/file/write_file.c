@@ -80,13 +80,9 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }
 
-    free(pathname);
     //Calculate if must remove one or more file
     int current_space = state_get_space();
     int newSize = msg->data_length + current_space;
-
-    file->data = msg->data;
-    file->size = msg->data_length;
 
     if(newSize > server.max_space){
 
@@ -94,10 +90,14 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
         file->can_expelled = false;
         storage_writer_unlock(file);
 
+        storage_lock();
+
         int remove_space = newSize - server.max_space;
 
         if(remove_space > current_space){// can't free more space than I currently have
             msg->response = RES_TOO_BIG;
+            storage_unlock();
+            free(pathname);
             return;
         } 
 
@@ -107,7 +107,9 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
 
         while(freed < remove_space){
 
-            replace_data replace = expell_file(remove_space);
+            replace_data replace = get_expell_file();
+
+            operation_writer_lock(replace.file);
 
             msg->response = RES_DATA;
             msg->data_length = strlen(replace.pathname);
@@ -116,6 +118,9 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
             //Send pathname
             if(send_msg(fd_client, msg) == -1){
                 msg->response = RES_ERROR_DATA;
+                storage_unlock();
+                storage_writer_unlock(replace.file);
+                free(pathname);
                 return;
             }
 
@@ -127,26 +132,44 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
             //Send File data
             if(send_msg(fd_client, msg) == -1){
                 msg->response = RES_ERROR_DATA;
+                storage_unlock();
+                storage_writer_unlock(replace.file);
+                free(pathname);
                 return;
             }
 
             freed = freed + replace.file->size;
             file_removed++;
 
-            del_storage(replace.pathname);
+            state_remove_policy(replace.file);
+
+            log_stats("[REPLACEMENT] [%s] File \"%s\" was removed from the server by the replacement algorithm.", getPolicy(), replace.pathname);
+            log_stats("[REPLACEMENT] [BF] %lu bytes freed.", replace.file->size);
+
+            del_storage_nolock(replace.pathname);
         }
 
         log_stats("[REPLACEMENT] In total %d (%ld) files were removed from the server.", file_removed, freed);
+
         operation_writer_lock(file);
+        storage_unlock();
     }
 
     //Exclusion done, now I can remove it if necessary
     file->can_expelled = true;
 
+    file->data = msg->data;
+    file->size = msg->data_length;
+
+    log_stats("[THREAD %d] [WRITE_FILE_SUCCESS] Successfully written file \"%s\" into server.", worker_no, pathname);
+    log_stats("[THREAD %d] [WRITE_FILE_SUCCESS][WB] %lu bytes were written.", worker_no, file->size);
+
     msg->data_length = 0;
     msg->data = NULL;
     msg->response = RES_NO_DATA;
 
+    free(pathname);
+    
     if(send_msg(fd_client, msg) == -1){
         msg->response = RES_ERROR_DATA;
         storage_writer_unlock(file);

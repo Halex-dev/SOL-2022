@@ -8,10 +8,10 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
     reset_data_msg(msg);
 
     File* file = search_storage(pathname);
-    free(pathname);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
+        free(pathname);
         return;
     }
 
@@ -23,6 +23,7 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
         msg->response = RES_NOT_OPEN;
         free(num);
         storage_reader_unlock(file);
+        free(pathname);
         return;
     }
     free(num);
@@ -36,6 +37,7 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
     if(send_msg(fd_client, msg) == -1){
         msg->response = RES_ERROR_DATA;
         storage_reader_unlock(file);
+        free(pathname);
         return;
     }
 
@@ -49,6 +51,9 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }*/
 
+    log_stats("[THREAD %d] [READ_FILE_SUCCESS] Successfully sent file \"%s\" to client.", worker_no, pathname); 
+    log_stats("[WRITE_TO_CLIENT][READ_FILE][WB] %lu bytes were sent to client.", file->size);
     storage_reader_unlock(file);
+    free(pathname);
     msg->response = RES_SUCCESS;
 }

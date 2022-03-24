@@ -204,7 +204,7 @@ void worker(void* arg){
             break;
         }
         case REQ_READ_FILE: {
-            log_stats("[THREAD %d] [READ_FILE] Request from client %ld is READ_FILE.\n", worker_no, fd_client);
+            log_stats("[THREAD %d] [READ_FILE] Request from client %ld is READ_FILE.", worker_no, fd_client);
             
             read_file(worker_no, fd_client, &msg_c);
             
@@ -255,8 +255,37 @@ void worker(void* arg){
 
             break;
         }
-        default:
+        case APPEND_TO_FILE: {
+            log_stats("[THREAD %d] [APPEND_TO_FILE] Request from client %ld is APPEND_TO_FILE.\n", worker_no, fd_client);
+            int res = append_file(worker_no, fd_client);
+
+            if( writen(fd_client, &res, sizeof(int)) == -1){
+                perror("Error in writing to client");
+                result.code = FATAL_ERROR;
+                break;
+            }
+
+            // setting result code for main thread
+            if(res == SUCCESS)
+                result.code = SUCCESS;
+            else if(res == RES_CLOSE || res == RES_ERROR){
+                log_stats("[THREAD %d] [APPEND_TO_FILE_FAIL] Fatal error in APPEND_TO_FILE request from client %ld.\n", worker_no, fd_client);
+                result.code = FATAL_ERROR;
+            } else {
+                log_stats(
+                    "[THREAD %d] [APPEND_TO_FILE_FAIL] Non-fatal error in APPEND_TO_FILE request from client %ld: %s.\n", 
+                    worker_no, fd_client, threadRes_toMsg(res)
+                );
+                result.code = NOT_FATAL;
+            }
+
             break;
+        }
+        default:{
+            log_fatal("[THREAD %d] Non conosco l'op code", worker_no, fd_client);
+            result.code = FATAL_ERROR;
+            break;
+        }
     }
 
     if( writen(pipe[WEND], &res, sizeof(worker_res)) == -1){

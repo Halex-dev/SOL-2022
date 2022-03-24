@@ -86,9 +86,6 @@ void close_connection(long fd_client){
     // closing connection
     close(fd_client);
 
-    //Remove lock and close all file opened by client
-    //TODO DA FARE --> per forza? DISPENDIOSO, CERCARE ALTRA SOLUZIONE
-
     // no need for mutex, only this thread deals with curr_state.conn/max_conn
     curr_state.conn--;
     log_stats("[CLOSE-CONN] Closed connection with client %ld. (Attualmente connessi: %d)", fd_client, curr_state.conn);
@@ -101,10 +98,15 @@ void state_increment_file(){
 
         curr_state.files++;
 
+        if(curr_state.files > server.max_files){
+            check_expell_file();
+        }
+        
         if(curr_state.files > curr_state.max_files) 
             curr_state.max_files = curr_state.files;
                     
         log_stats("[CURRENT_FILES] %u files are currently stored.", curr_state.files);
+
     safe_pthread_mutex_unlock(&curr_state_mtx);
 }
 
@@ -114,6 +116,7 @@ void state_dec_file(){
         curr_state.files--;
                     
         log_stats("[CURRENT_FILES] %u files are currently stored.", curr_state.files);
+
     safe_pthread_mutex_unlock(&curr_state_mtx);
 }
 
@@ -208,53 +211,6 @@ int MFU_policy(File* a, File* b){
     return 0;
 }
 
-void file_remove_hash(void* key, size_t ksize, void* value, void* usr){
-
-    File* file = (File *) value;
-
-    replace_data* replace = (replace_data*) usr;
-
-    if(file == NULL) return;
-
-    if(file->size == 0) return;
-
-    operation_reader_lock(file);
-
-    if(replace->file != NULL){
-        operation_reader_lock(replace->file);
-    }
-        
-    if(!file->can_expelled){
-        
-        if(replace->file != NULL){
-            storage_reader_unlock(replace->file);
-        }
-        
-        storage_reader_unlock(file);
-        return;
-    }
-
-    if(replace->file == NULL || replace->policy(file, replace->file) < 0){
-
-        //Unlock before change the file
-        if(replace->file != NULL) {
-            storage_reader_unlock(replace->file);
-        }
-            
-        // updating least_file
-        replace->file = file;
-        replace->pathname = key;
-    }
-    else{
-        //Unlock before change the file
-        if(replace->file != NULL) {
-            storage_reader_unlock(replace->file);
-        }
-    }
-
-    storage_reader_unlock(file);
-}
-
 void file_remove_rbt(void *d, void* usr){
     Node *p;
 	
@@ -305,7 +261,54 @@ void file_remove_rbt(void *d, void* usr){
     storage_reader_unlock(file);
 }
 
-replace_data expell_file(size_t remove_space){
+void file_remove_hash(void* key, size_t ksize, void* value, void* usr){
+
+    File* file = (File *) value;
+
+    replace_data* replace = (replace_data*) usr;
+
+    if(file == NULL) return;
+
+    if(file->size == 0) return;
+
+    operation_reader_lock(file);
+
+    if(replace->file != NULL){
+        operation_reader_lock(replace->file);
+    }
+        
+    if(!file->can_expelled){
+        
+        if(replace->file != NULL){
+            storage_reader_unlock(replace->file);
+        }
+        
+        storage_reader_unlock(file);
+        return;
+    }
+
+    if(replace->file == NULL || replace->policy(file, replace->file) < 0){
+
+        //Unlock before change the file
+        if(replace->file != NULL) {
+            storage_reader_unlock(replace->file);
+        }
+            
+        // updating least_file
+        replace->file = file;
+        replace->pathname = key;
+    }
+    else{
+        //Unlock before change the file
+        if(replace->file != NULL) {
+            storage_reader_unlock(replace->file);
+        }
+    }
+
+    storage_reader_unlock(file);
+}
+
+replace_data get_expell_file(){
 
     replace_data replace = {
         .file = NULL,
@@ -314,15 +317,38 @@ replace_data expell_file(size_t remove_space){
     };
 
     if(server.storage == HASH){
-        storage_hash_hiterate(file_remove_hash, &replace);
+        storage_hash_hiterate_nolock(file_remove_hash, &replace);
     }
     else if(server.storage == RBT){
-        storage_rbt_hiterate(file_remove_rbt, &replace);
+        storage_rbt_hiterate_nolock(file_remove_rbt, &replace);
     }
 
-    state_remove_policy(replace.file);
+    return replace;
+}
+
+void check_expell_file(){
+
+    log_error("--------------- lock storage ");
+    storage_lock();
+    log_error("--------------- storage lockato");
+
+    replace_data replace = get_expell_file();
+
+    log_error("--------------- Salve non deadlock");
+    operation_writer_lock(replace.file);
+    
+    //Lock get before do check_expell_file
+    curr_state.space -= replace.file->size;
+    curr_state.files--;
+    curr_state.n_policy++;
+                
+    log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
 
     log_stats("[REPLACEMENT] [%s] File \"%s\" was removed from the server by the replacement algorithm.", getPolicy(), replace.pathname);
     log_stats("[REPLACEMENT] [BF] %lu bytes freed.", replace.file->size);
-    return replace;
+
+    del_storage_nolock(replace.pathname);
+
+    storage_unlock();
+    log_error("--------------- unlock storage ");
 }

@@ -53,6 +53,7 @@ void remove_file(int worker_no, long fd_client, api_msg* msg){
     del_storage(pathname);
     //print_storage();
 
+    log_stats("[THREAD %d] [REMOVE_FILE_SUCCESS] Successfully removed file \"%s\" from server.\n", worker_no, pathname);
     free(pathname);
     msg->response = RES_SUCCESS;
 }

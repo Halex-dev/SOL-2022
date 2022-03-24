@@ -7,13 +7,7 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
         return -1;
     }
 
-    char * pathname;
-
-    if((pathname = absolute_path(sockname)) == NULL){
-        errno = EINVAL;
-        return -1 ;
-    }
-
+    char* pathname = absolute_path(sockname);
     SocketConnection* socket_c;
 
     if((socket_c = getSocket(pathname)) == NULL)
@@ -83,12 +77,7 @@ int closeConnection(const char* sockname) {
         return -1;
     }
     
-    char * pathname;
-
-    if((pathname = absolute_path(sockname)) == NULL){
-        errno = EINVAL;
-        return -1 ;
-    }
+    char* pathname = absolute_path(sockname);
 
     SocketConnection* socket_c;
 

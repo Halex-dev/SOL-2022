@@ -174,7 +174,11 @@ stats:
 
 .PHONY: test1
 test1: cleanTest1 cleanlog cleanStorage
-	@bash $(SCRIPT_DIR)/test1.sh
+	@bash $(SCRIPT_DIR)/test1.sh HASH
+
+.PHONY: test1RBT
+test1RBT: cleanTest1 cleanlog cleanStorage
+	@bash $(SCRIPT_DIR)/test1.sh RBT
 
 .PHONY: test2
 test2: cleanTest2 cleanlog cleanStorage

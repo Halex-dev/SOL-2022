@@ -129,6 +129,40 @@ char* absolute_path(const char* str){
     return key;
 }
 
+char* create_absolute_path(const char *dir){
+    
+    char * key;
+
+    //Get absolute path
+    if((key = realpath(dir, NULL)) == NULL){
+        _mkdir(dir);
+
+        if((key = realpath(dir, NULL)) == NULL){
+            log_error("\tError in create new folder (%s) : %s", dir,strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return key;
+}
+void _mkdir(const char *dir) {
+    char tmp[256];
+    char *p = NULL;
+    size_t len;
+
+    snprintf(tmp, sizeof(tmp),"%s",dir);
+    len = strlen(tmp);
+    if (tmp[len - 1] == '/')
+        tmp[len - 1] = 0;
+    for (p = tmp + 1; *p; p++)
+        if (*p == '/') {
+            *p = 0;
+            mkdir(tmp, S_IRWXU);
+            *p = '/';
+        }
+    mkdir(tmp, S_IRWXU);
+}
+
 int file_size(FILE* file){
     int fd = fileno(file);
     struct stat st;
@@ -419,7 +453,6 @@ void reset_msg(api_msg* msg){
     msg->operation = REQ_NULL;
     msg->response = RES_NULL;
 }
-
 
 void reset_msg_free(api_msg* msg){
 

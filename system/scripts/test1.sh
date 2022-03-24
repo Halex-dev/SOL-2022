@@ -16,11 +16,13 @@ NORMC="\033[0m"
 SERVER=./system/bin/server 
 CLIENT=./system/bin/client
 
+STORAGE=$1
+
 # Preparo il file di configurazione
 touch ${CONFIG}
 echo -e "WORKERS = 1\nSOCK_PATH = ${SOCK_NAME}\n\
 MAX_FILES = 10000\nMAX_SPACE = 128\nLOG_PATH = system/logs/server\n\
-POLICY = MFU\nDEBUG = no\nSTORAGE = HASH" > ${CONFIG}
+POLICY = MFU\nDEBUG = no\nSTORAGE = ${STORAGE}" > ${CONFIG}
 
 echo -e "${GREEN}\n\tOpening server process.${NORMC}\n";
 valgrind --leak-check=full ${SERVER} ${CONFIG} & # opening server

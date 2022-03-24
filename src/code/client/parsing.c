@@ -39,10 +39,6 @@ int parsing(int argc, char *argv[]){
             }
 
             opt_c.sock = absolute_path(optarg);
-            if(opt_c.sock == NULL){
-               log_error("Error to convert path '%s' into absolute", optarg);
-               exit(EXIT_FAILURE);
-            }
             socket = true;
             break;
          }
@@ -121,11 +117,7 @@ int parsing(int argc, char *argv[]){
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_D;
 
-            char * dirPath = absolute_path(optarg);
-            if(dirPath == NULL){
-               log_error("Error to convert path '%s' into absolute", optarg);
-               exit(EXIT_FAILURE);
-            }
+            char* dirPath = create_absolute_path(optarg);
 
             List_add(operation, action, (void*) dirPath);
             break;
@@ -134,11 +126,7 @@ int parsing(int argc, char *argv[]){
             action_c* action = safe_calloc(1, sizeof(action_c));
             *action = ACT_d;
 
-            char * dirPath = absolute_path(optarg);
-            if(dirPath == NULL){
-               log_error("Error to convert path '%s' into absolute", optarg);
-               exit(EXIT_FAILURE);
-            }
+            char* dirPath = create_absolute_path(optarg);
 
             List_add(operation, action, (void*) dirPath);
             break;
@@ -197,11 +185,6 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
          dirPath = strtok_r(parameters, ",", &p);
          dirPath = absolute_path(dirPath);
 
-         if(dirPath == NULL){
-            log_error("Error to convert path '%s' into absolute", optarg);
-            exit(EXIT_FAILURE);
-         }
-
          struct stat properties;
 
          if(stat(dirPath, &properties) == -1){
@@ -250,11 +233,6 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             
          while(token) {
             char* filePath = absolute_path(token);
-            // converting token into absolute path if necessary
-            if(filePath == NULL){
-               log_error("Error to convert path '%s' into absolute", token);
-               exit(EXIT_FAILURE);
-            }
 
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
@@ -288,11 +266,6 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             
          while(token) {
             char* filePath = absolute_path(token);
-            // converting token into absolute path if necessary
-            if(filePath == NULL){
-               log_error("Error to convert path '%s' into absolute", token);
-               exit(EXIT_FAILURE);
-            }
 
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
@@ -314,11 +287,6 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             
          while(token) {
             char* filePath = absolute_path(token);
-            // converting token into absolute path if necessary
-            if(filePath == NULL){
-               log_error("Error to convert path '%s' into absolute", token);
-               exit(EXIT_FAILURE);
-            }
 
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
@@ -340,11 +308,6 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             
          while(token) {
             char* filePath = absolute_path(token);
-            // converting token into absolute path if necessary
-            if(filePath == NULL){
-               log_error("Error to convert path '%s' into absolute", token);
-               exit(EXIT_FAILURE);
-            }
 
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;
@@ -366,11 +329,6 @@ LinkedList* convert_absolute_path(action_c action, char* parameters){
             
          while(token) {
             char* filePath = absolute_path(token);
-            // converting token into absolute path if necessary
-            if(filePath == NULL){
-               log_error("Error to convert path '%s' into absolute", token);
-               exit(EXIT_FAILURE);
-            }
 
             parsing_o* par = safe_calloc(1, sizeof(action_c));
             *par = FILES;

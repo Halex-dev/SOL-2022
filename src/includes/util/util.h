@@ -126,12 +126,21 @@ ssize_t readn(int fd, void *vptr, size_t n);
  */
 ssize_t writen(int fd, const void *vptr, size_t n);
 
+/**
+ * @brief https://stackoverflow.com/questions/2336242/recursive-mkdir-system-call-on-unix
+ * 
+ * @param dir 
+ */
+void _mkdir(const char *dir);
 
-char * absolute_path(const char* str);
+
+char* absolute_path(const char* str);
+char* create_absolute_path(const char *dir);
+
 int file_size(FILE* file);
 void* file_read(const char* pathname);
 int file_write(const char* pathname, void* data, size_t size);
-char * long_to_string(long num);
+char* long_to_string(long num);
 int file_size_path(const char* pathname);
 
 // _______________________________ COMMUNICATION _______________________________ //

@@ -9,6 +9,15 @@ char* getPolicy(){
     return ( server.policy == FIFO ? "FIFO" : (server.policy == LRU ? "LRU" : (server.policy == LFU ? "LFU" : "MFU")) );
 }
 
+char* getStorage(){
+    return ( server.storage == HASH ? "HASH" : "RBT");
+}
+
+char* getDebug(){
+    return ( server.debug == true ? "YES" : "NO");
+}
+
+
 // define our callback with the correct parameters
 void print_entry(void* key, size_t ksize, void* value, void* usr)
 {
@@ -43,25 +52,29 @@ int compare_func(const void *d1, const void *d2){
 	return strcmp(p1->key, p2->key);
 }
 
-void destroy_func(void *d){
-	Node *p;
-	
-	assert(d != NULL);
-	
-	p = (Node *) d;
-    delete_node_full(p);
-}
-
 void print_func(void *d){
 	Node *p;
 	
 	assert(d != NULL);
 	
 	p = (Node *) d;
-	printf("- [%s]", p->key);
+
+    File* file = (File *) p->data;
+
+    char time_create[MAX_BUFF_DATA];
+    strftime(time_create, sizeof time_create, "%D %T", gmtime(&file->creation_time.tv_sec));
+
+    char time_use[MAX_BUFF_DATA];
+    strftime(time_use, sizeof time_use, "%D %T", gmtime(&file->last_use.tv_sec));
+
+    // prints the entry's key and value
+	// assumes the key is a null-terminated string
+    
+    fprintf(stdout,"- Pathname: \"%s\" lock: %ld size: %ld creation: %s last_use: %s \n",\
+    (char *)p->key, file->fd_lock, file->size, time_create, time_use);
 }
 
-void free_file(void* key, size_t ksize, void* value, void* usr){
+void free_file_hash(void* key, size_t ksize, void* value, void* usr){
 
     File* file = (File *) value;
     
@@ -76,8 +89,74 @@ void free_file(void* key, size_t ksize, void* value, void* usr){
     if(file->opened != NULL)
         dict_free(file->opened);
 
-    free(file);
+    if(file != NULL)
+        free(file);
 }
+
+void remove_fd_hash(void* key, size_t ksize, void* value, void* usr){
+
+    File* file = (File *) value;
+
+    if(file == NULL) return;
+
+    char* fd = (char*) usr;
+
+    operation_writer_lock(file);
+
+    //The client not opened the file
+    if(dict_contain(file->opened, fd)){
+        dict_del(file->opened, fd);
+    }
+
+    storage_writer_unlock(file);
+}
+
+
+void destroy_func(void *d){
+	Node *p;
+	
+	assert(d != NULL);
+	
+	p = (Node *) d;
+    File* file = (File*) p->data;
+
+    if(p->key != NULL)
+        free(p->key);
+
+    if(file == NULL) return;
+
+    if(file->data != NULL)
+        free(file->data);
+
+    if(file->opened != NULL)
+        dict_free(file->opened);
+
+    free(file);
+    free(p);
+}
+
+void remove_fd_rbt(void *d, void* usr){
+    Node *p;
+	
+	assert(d != NULL);
+	
+	p = (Node *) d;
+    File* file = (File*) p->data;
+
+    if(file == NULL) return;
+
+    char* fd = (char*) usr;
+
+    operation_writer_lock(file);
+
+    //The client not opened the file
+    if(dict_contain(file->opened, fd)){
+        dict_del(file->opened, fd);
+    }
+
+    storage_writer_unlock(file);
+}
+
 /* ________________________________ STORAGE __________________________________________________ */
 
 void storage_init(){
@@ -112,10 +191,26 @@ void print_storage(){
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
+void remove_openlock(long fd_client){
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+
+    char* num = long_to_string(fd_client);
+
+    if(server.storage == HASH){
+        hashmap_iterate(hash, remove_fd_hash, num);
+    }
+    else if(server.storage == RBT){
+        rb_hitarate(rbt, remove_fd_rbt, num);
+    }
+
+    free(num);
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
+}
+
 //No mutex, is the final step
 void clean_storage(){
     if(server.storage == HASH){
-        hashmap_iterate(hash, free_file, NULL);
+        hashmap_iterate(hash, free_file_hash, NULL);
         hashmap_free(hash);
     }
     else if(server.storage == RBT){
@@ -139,6 +234,22 @@ void storage_rbt_hiterate(void (*func)(void *, void* param), void* param){
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
+void storage_lock(){
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+}
+
+void storage_unlock(){
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
+}
+
+void storage_hash_hiterate_nolock(hashmap_callback func, void* param){
+    hashmap_iterate(hash, func, param);
+}
+
+void storage_rbt_hiterate_nolock(void (*func)(void *, void* param), void* param){
+    rb_hitarate(rbt, func, param);
+}
+
 void insert_storage(char* key, void* data){
 
     safe_pthread_mutex_lock(&storage_thread_mtx);
@@ -148,8 +259,8 @@ void insert_storage(char* key, void* data){
         hashmap_set(hash, key, len, data);
     }
     else if(server.storage == RBT){
+        log_error("TEST %s", key);
         Node* node = create_node(key, data);
-
         if (rb_insert(rbt, node) == NULL) {
             log_error("RBT out of memory for key %s",key);
 			free(data);
@@ -177,7 +288,7 @@ void del_storage(char* key){
     if(server.storage == HASH){
         int len = strlen(key);
         //hashmap_remove(hash, key, len);
-        hashmap_remove_free(hash, key, len, free_file, NULL);
+        hashmap_remove_free(hash, key, len, free_file_hash, NULL);
     }
     else if(server.storage == RBT){
         Node node;
@@ -190,6 +301,24 @@ void del_storage(char* key){
 
     sizeStorage--;
     safe_pthread_mutex_unlock(&storage_thread_mtx);
+}
+
+void del_storage_nolock(char* key){
+
+    if(server.storage == HASH){
+        int len = strlen(key);
+        //hashmap_remove(hash, key, len);
+        hashmap_remove_free(hash, key, len, free_file_hash, NULL);
+    }
+    else if(server.storage == RBT){
+        Node node;
+        void* out = NULL;
+        node.key = key;
+
+        if ((out = rb_find(rbt, &node)) != NULL)
+		    rb_delete(rbt, out, 0);
+    }
+    sizeStorage--;
 }
 
 void* search_storage(char* key){
@@ -206,7 +335,9 @@ void* search_storage(char* key){
         Node node;
 
         node.key = key;
-        out = rb_find(rbt, &node);
+        rbnode* find = rb_find(rbt, &node);
+        Node* noderbt = find->data;
+        out = noderbt->data;
     }
 
     safe_pthread_mutex_unlock(&storage_thread_mtx);

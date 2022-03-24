@@ -162,7 +162,7 @@ int threadpool_destroy(tpool_t *pool, shutdown_mode_t flags)
         
         if(pool->shutdown == immediate_shutdown ){
             for(i = 0; i < pool->thread_count; i++) {
-                if(pthread_detach(pool->threads[i]) != 0)
+                if(pthread_cancel(pool->threads[i]) != 0)
                     err = tpool_thread_failure;
             }
         }
