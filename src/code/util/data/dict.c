@@ -4,15 +4,12 @@ void print_key(void* key, size_t ksize, void* value, void* usr){
     printf("    - Key %s\n", (char *)key);
 }
 
-void free_data(void* key, size_t ksize, void* data, void* usr){
-    if(key != NULL)
-	    free(key);
-        
-    if(data != NULL)
-        free(data);
-}
+Dict* dict_init(hashmap_callback func_free){
 
-Dict* dict_init(){
+    if (func_free == NULL){
+        errno = EINVAL;
+        return NULL;
+    }
 
     Dict* dict = safe_calloc(1, sizeof(Dict));
 
@@ -22,6 +19,7 @@ Dict* dict_init(){
     }
 
     dict->elem = 0;
+    dict->func_free = func_free;
 
     return dict;
 }
@@ -41,7 +39,7 @@ void dict_clean(Dict* dict){
         return;
     }
 
-    hashmap_iterate(dict->hash, free_data, NULL);
+    hashmap_iterate(dict->hash, dict->func_free, NULL);
     dict->elem--;
 }
 
@@ -51,7 +49,7 @@ void dict_free(Dict* dict){
         return;
     }
 
-    hashmap_iterate(dict->hash, free_data, NULL);
+    hashmap_iterate(dict->hash, dict->func_free, NULL);
     hashmap_free(dict->hash);
     free(dict);
 }
@@ -74,7 +72,7 @@ void dict_del(Dict* dict, char* key){
     }
 
     int len = strlen(key);
-    hashmap_remove_free(dict->hash, key, len, free_data, NULL);
+    hashmap_remove_free(dict->hash, key, len, dict->func_free, NULL);
     dict->elem--;
 }
 

@@ -70,8 +70,8 @@ void clean_memory(int flags){
     printState();
     
     //THREAD
-    cleen_handler(graceful_shutdown);
-    threadpool_destroy(tm, graceful_shutdown);
+    cleen_handler(flags);
+    threadpool_destroy(tm, flags);
 
     //STORAGE
     clean_storage();
@@ -130,26 +130,30 @@ void state_remove_space(File* file){
     safe_pthread_mutex_unlock(&curr_state_mtx);
 }
 
-void state_remove_policy(File* file){
+
+void state_add_space(int size){
     safe_pthread_mutex_lock(&curr_state_mtx);
 
-        curr_state.space -= file->size;
-        curr_state.files--;
-        curr_state.n_policy++;
-                    
-        log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
-    safe_pthread_mutex_unlock(&curr_state_mtx);
-}
-
-void state_add_space(File* file){
-    safe_pthread_mutex_lock(&curr_state_mtx);
-
-        curr_state.space += file->size;
+        curr_state.space += size;
 
         if(curr_state.space > curr_state.max_space) 
             curr_state.max_space = curr_state.space;
                     
         log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
+    safe_pthread_mutex_unlock(&curr_state_mtx);
+}
+
+void state_append_space(size_t add){
+    safe_pthread_mutex_lock(&curr_state_mtx);
+
+        curr_state.space += add;
+
+        if(curr_state.space > curr_state.max_space) 
+            curr_state.max_space = curr_state.space;
+                    
+        log_stats("[APPEND_TO_FILE][CURRENT_FILES] %u files are currently stored.", curr_state.space);
+        log_stats("[APPEND_TO_FILE][CURRENT_SPACE] %lu bytes are currently occupied.", curr_state.files);
+
     safe_pthread_mutex_unlock(&curr_state_mtx);
 }
 
@@ -164,7 +168,7 @@ int state_get_space(){
 
 void printState(){
     safe_pthread_mutex_lock(&curr_state_mtx);
-     printf("\n\n");
+    printf("\n\n");
         // printing summary of stats
     printf("\t\t\t\033[0;32mPrinting summary of server statistics.\033[0m\n");
     printf("\tMaximum number of stored files:     %15u\n", curr_state.max_files);
@@ -326,15 +330,105 @@ replace_data get_expell_file(){
     return replace;
 }
 
+int check_expell_size(File* file, long fd_client, size_t size){
+
+    safe_pthread_mutex_lock(&curr_state_mtx);
+
+    int newSize = size + curr_state.space;
+
+    if(newSize > server.max_space){
+
+        storage_lock();
+
+        int remove_space = newSize - server.max_space;
+
+        if(remove_space > curr_state.space){// can't free more space than I currently have
+            safe_pthread_mutex_unlock(&curr_state_mtx);
+            storage_unlock();
+            return -2;
+        } 
+
+        size_t freed = 0;
+        int file_removed = 0;
+
+        api_msg msg;
+        memset(&msg, 0, sizeof(api_msg));
+
+        while(freed < remove_space){
+
+            replace_data replace = get_expell_file();
+
+            if(replace.file == NULL){
+                log_error("break");
+                break;
+            }
+                
+            operation_writer_lock(replace.file);
+
+            msg.response = RES_DATA;
+            msg.data_length = strlen(replace.pathname);
+            msg.data = replace.pathname;
+            
+            //Send pathname
+            if(send_msg(fd_client, &msg) == -1){
+                storage_unlock();
+                safe_pthread_mutex_unlock(&curr_state_mtx);
+                storage_writer_unlock(replace.file);
+                return -1;
+            }
+
+            //reset_data_msg(msg);
+
+            msg.response = RES_DATA;
+            msg.data_length = replace.file->size;
+            msg.data = replace.file->data;
+
+            //Send File data
+            if(send_msg(fd_client, &msg) == -1){
+                storage_unlock();
+                safe_pthread_mutex_unlock(&curr_state_mtx);
+                storage_writer_unlock(replace.file);
+                return -1;
+            }
+
+            freed = freed + replace.file->size;
+            file_removed++;
+
+            //CURR -----------------
+            curr_state.space -= replace.file->size;
+            curr_state.files--;
+            curr_state.n_policy++;
+
+            log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
+
+            log_stats("[REPLACEMENT] [%s] File \"%s\" was removed from the server by the replacement algorithm.", getPolicy(), replace.pathname);
+            log_stats("[REPLACEMENT] [BF] %lu bytes freed.", replace.file->size);
+
+            del_storage_nolock(replace.pathname);
+        }
+
+        log_stats("[REPLACEMENT] In total %d (%ld) files were removed from the server.", file_removed, freed);
+
+        storage_unlock();
+        
+    }
+
+    safe_pthread_mutex_unlock(&curr_state_mtx);
+    return 0;
+}
+
 void check_expell_file(){
 
-    log_error("--------------- lock storage ");
     storage_lock();
-    log_error("--------------- storage lockato");
 
     replace_data replace = get_expell_file();
 
-    log_error("--------------- Salve non deadlock");
+    if(replace.file == NULL){
+        storage_unlock();
+        return;
+    }
+        
+
     operation_writer_lock(replace.file);
     
     //Lock get before do check_expell_file
@@ -350,5 +444,4 @@ void check_expell_file(){
     del_storage_nolock(replace.pathname);
 
     storage_unlock();
-    log_error("--------------- unlock storage ");
 }

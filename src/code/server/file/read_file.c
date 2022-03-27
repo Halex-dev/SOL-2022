@@ -7,7 +7,7 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname);
+    File* file = search_storage(pathname,1);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
@@ -17,7 +17,7 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
 
     char* num = long_to_string(fd_client);
 
-    storage_reader_lock(file);
+    //storage_reader_lock(file);
 
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;

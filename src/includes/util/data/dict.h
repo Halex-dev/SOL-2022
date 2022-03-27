@@ -7,9 +7,10 @@
 typedef struct dict {
     hashmap *hash;
     int elem;
+    hashmap_callback func_free;
 } Dict;
 
-Dict* dict_init();
+Dict* dict_init(hashmap_callback func_free);
 void dict_print(Dict* dict);
 void dict_free(Dict* dict);
 int dict_size(Dict* dict);

@@ -7,7 +7,7 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname);
+    File* file = search_storage(pathname,0);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
@@ -15,7 +15,7 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }
 
-    storage_writer_lock(file);
+    //storage_writer_lock(file);
 
     /** 
     char* num = long_to_string(fd_client);
@@ -44,8 +44,16 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
         while(fd_lock != -1){//Wait unlock file || Active waiting
             usleep(50); //I slow down a bit before checking if there is another request
             //safe_pthread_cond_wait(&(file->lock_cond), &(files_mtx));//Problem when have multiple thread, i wanto to contine execute request
-            threadpool_queue_next(tm, worker_no); //I cna't do mutex inside becouse i'm not sure if the thread wake up (when i have more one thread)
-            storage_reader_lock(file);
+            threadpool_queue_next(tm, worker_no); //I can't do mutex inside becouse i'm not sure if the thread wake up (when i have more one thread)
+
+            File* file = search_storage(pathname,1);
+
+            if(file == NULL){
+                msg->response = RES_DELETE;
+                free(pathname);
+                return;
+            }
+
             fd_lock = file->fd_lock;
             storage_reader_unlock(file);
         }

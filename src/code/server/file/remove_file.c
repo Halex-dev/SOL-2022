@@ -8,17 +8,20 @@ void remove_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname);
-    
+    log_error("[THREAD %d] Prendo file %s", worker_no, pathname);
+    File* file = search_storage(pathname,3);
+    log_error("[THREAD %d] lock presa %s", worker_no, pathname);
+
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
+        storage_unlock();
         free(pathname);
         return;
     }
 
     char* num = long_to_string(fd_client);
 
-    storage_writer_lock(file);
+    //storage_writer_lock(file);
 
     //The client not opened the file
     if(!dict_contain(file->opened, num)){
@@ -26,6 +29,7 @@ void remove_file(int worker_no, long fd_client, api_msg* msg){
         free(num);
         free(pathname);
         storage_writer_unlock(file);
+        storage_unlock();
         return;
     }
 
@@ -36,6 +40,7 @@ void remove_file(int worker_no, long fd_client, api_msg* msg){
         msg->response = RES_NOT_YOU_LOCKED;
         free(pathname);
         storage_writer_unlock(file);
+        storage_unlock();
         return;
     }
     
@@ -44,13 +49,15 @@ void remove_file(int worker_no, long fd_client, api_msg* msg){
         msg->response = RES_NOT_LOCKED;
         free(pathname);
         storage_writer_unlock(file);
+        storage_unlock();
         return;
     }
 
     state_dec_file();
     state_remove_space(file);
 
-    del_storage(pathname);
+    del_storage_nolock(pathname);
+    storage_unlock();
     //print_storage();
 
     log_stats("[THREAD %d] [REMOVE_FILE_SUCCESS] Successfully removed file \"%s\" from server.\n", worker_no, pathname);

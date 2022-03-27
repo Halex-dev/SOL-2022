@@ -9,13 +9,24 @@ void resetSocket(SocketConnection* socket){
     socket->success = 0;
 }
 
+void free_socket(void* key, size_t ksize, void* data, void* usr){
+
+    if(key != NULL){
+        free(key);
+    }
+	    
+    if(data != NULL){
+        free(data);
+    }
+}
+
 bool isConnect(SocketConnection* socket){
     return (socket->fd != -1);
 }
 
 SocketConnection* addSocket(char* key){
     if(socket_m == NULL)
-        socket_m = dict_init();
+        socket_m = dict_init(free_socket);
 
     SocketConnection* socket_c = safe_calloc(1, sizeof(SocketConnection));
     resetSocket(socket_c);
@@ -25,7 +36,7 @@ SocketConnection* addSocket(char* key){
 
 SocketConnection* getSocket(char* key){
     if(socket_m == NULL)
-        socket_m = dict_init();
+        socket_m = dict_init(free_socket);
 
     SocketConnection* socket_c = dict_get(socket_m, key);
     return socket_c;
@@ -33,7 +44,7 @@ SocketConnection* getSocket(char* key){
 
 bool removeSocket(char* key){
     if(socket_m == NULL)
-        socket_m = dict_init();
+        socket_m = dict_init(free_socket);
     
     SocketConnection* socket_c = dict_get(socket_m, key);
 
@@ -53,7 +64,7 @@ bool removeSocket(char* key){
 
 void setCurrent(char* key){
     if(socket_m == NULL)
-        socket_m = dict_init();
+        socket_m = dict_init(free_socket);
     
     char* socketpath = absolute_path(key);
 

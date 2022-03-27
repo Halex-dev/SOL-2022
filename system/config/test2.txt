@@ -1,8 +1,0 @@
-WORKERS = 8
-SOCK_PATH = ./system/bin/SOL-2022.sk
-MAX_FILES = 100
-MAX_SPACE = 32
-LOG_PATH = system/logs/server
-POLICY = MFU
-DEBUG = no
-STORAGE = HASH

@@ -18,8 +18,11 @@ NORMC="\033[0m"
 SERVER=./system/bin/server 
 CLIENT=./system/bin/client
 
-FILES_CREATED=50
-CLIENT_TO_OPEN=25
+WORKERS=8
+SECOND=30
+MAX_FILES=100
+FILES_CREATED=${MAX_FILES}+20
+CLIENT_TO_OPEN=2*${WORKERS}
 
 function createClient {
 
@@ -39,9 +42,18 @@ function createClient {
             FILES_READ=${FILES_READ},test/test3/WRITE/file${j}.dat
         done
 
+        FILES_DELETE="test/test3/WRITE/file0.dat"
+        for (( j=$((( $RANDOM % ($FILES_CREATED - 1) ) + 1 )); j <= $((( $RANDOM % ($FILES_CREATED - 1) ) + 1 )); j++ ))
+        do
+            FILES_DELETE=${FILES_READ},test/test3/WRITE/file${j}.dat
+        done
+
         LOCK=$((( $RANDOM % ($FILES_CREATED - 1) ) + 1 ))
-        ${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 100)) -d test/test3/READN -w test/test3/WRITE/ -D test/test3/EXPELLED -r ${FILES_READ} -l test/test3/WRITE/file${LOCK}.dat -t 500 -u test/test3/WRITE/file${LOCK}.dat &
-        #${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 100)) -d test/test3/READN -w test/test3/WRITE/ -D test/test3/EXPELLED -r ${FILES_READ} &
+        #${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 100)) -d test/test3/READN -w test/test3/WRITE/ -D test/test3/EXPELLED -r ${FILES_READ} -l test/test3/WRITE/file${LOCK}.dat -t 500 -u test/test3/WRITE/file${LOCK}.dat &
+        #${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -c ${FILES_DELETE}  &
+
+        ${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -R $((1+ $RANDOM % 20))  &
+        #${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -l test/test3/WRITE/file${LOCK}.dat -t 500 -u test/test3/WRITE/file${LOCK}.dat
     done
 }
 
@@ -50,14 +62,15 @@ echo -e "${GREEN}\t TEST 3: Stress-test on server ${NORMC}\n"
 
 # Preparo il file di configurazione
 touch ${CONFIG}
-echo -e "WORKERS = 8\nSOCK_PATH = ${SOCK_NAME}\n\
-MAX_FILES = 100\nMAX_SPACE = 32\nLOG_PATH = system/logs/server\n\
-POLICY = MFU\nDEBUG = no\nSTORAGE = HASH" > ${CONFIG}
+echo -e "WORKERS = ${WORKERS}\nSOCK_PATH = ${SOCK_NAME}\n\
+MAX_FILES = ${MAX_FILES}\nMAX_SPACE = 32\nLOG_PATH = system/logs/server\n\
+POLICY = MFU\nDEBUG = yes\nSTORAGE = HASH" > ${CONFIG}
 
 echo -e "${GREEN}\t TEST 3: Config file write in ${CONFIG}${NORMC}\n"
 
 echo -e "${GREEN}\n\tOpening server process.${NORMC}\n";
-valgrind --leak-check=full --show-leak-kinds=all ${SERVER} ${CONFIG} & # opening server
+#valgrind --leak-check=full --error-limit=no --show-leak-kinds=all ${SERVER} ${CONFIG} & # opening server
+${SERVER} ${CONFIG} & # opening server
 SERVER_PID=$! # getting server PID
 sleep 2 # Wait 1 second to server print
 
@@ -67,15 +80,15 @@ sleep 2 # Wait 2 second to read echo
 
 for (( i=0; i < ${FILES_CREATED}; i++ ))
 do
-    dd if=/dev/zero of=${WRITE_DIR}/file${i}.dat  bs=1b  count=$((1 + $RANDOM % 3200)) #max file 1.6MB
+    dd if=/dev/zero of=${WRITE_DIR}/file${i}.dat  bs=1b  count=$((1 + $RANDOM % 800)) #max file 1.6MB (3200)
 done
 
 sleep 1
 echo -e "\n"
 
-echo -e "${GREEN}\tTEST 3: Create connection every 0,5 sec. After 30 seconds force to close server. ${NORMC}\n"
+echo -e "${GREEN}\tTEST 3: Create connection every 0,5 sec. After ${SECOND} seconds force to close server. ${NORMC}\n"
 
-for (( i=0; i < 60; i++ )) # wait 30 second
+for (( i=0; i < ${SECOND}*2; i++ )) # wait 30 second
 do
     createClient &
     sleep 0.5
@@ -84,5 +97,5 @@ done
 echo -e "${GREEN}\tTEST 3: Close server.${NORMC}\n";
 kill -SIGINT ${SERVER_PID}
 rm -f ${CONFIG}
-
+sleep 2
 echo -e "${GREEN}\n\tEnded test!${NORMC}\n"

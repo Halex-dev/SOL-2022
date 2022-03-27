@@ -10,11 +10,14 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
 
     if(msg->flags == O_ALL){
 
+        log_error("[THREAD %d] storage_contains", worker_no);
+        
         if(storage_contains(pathname)){
             msg->response = RES_EXIST;
             free(pathname);
             return;
         }
+        log_error("[THREAD %d] storage_contains ok", worker_no);
 
         File* file = safe_calloc(1, sizeof(File));
         storage_file_create(file, msg->flags, fd_client);
@@ -31,11 +34,14 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
     }
     else if(msg->flags == O_CREATE){
 
+        log_error("[THREAD %d] storage_contains", worker_no);
+        
         if(storage_contains(pathname)){
             msg->response = RES_EXIST;
             free(pathname);
             return;
         }
+        log_error("[THREAD %d] storage_contains ok", worker_no);
 
         File* file = safe_calloc(1, sizeof(File));
         storage_file_create(file, msg->flags, fd_client);
@@ -49,7 +55,9 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
     }
     else if(msg->flags == O_LOCK){
 
-        File* file = (File *) search_storage(pathname);
+        log_error("[THREAD %d] search_storage %s", worker_no, pathname);
+        File* file = search_storage(pathname,0);
+        log_error("[THREAD %d] search_storage ok %s", worker_no, pathname);
 
         if(file == NULL){
             msg->response = RES_NOT_EXIST;
@@ -57,7 +65,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
             return;
         }
 
-        storage_writer_lock(file);
+        //storage_writer_lock(file);
 
         // already locked by other client
         if(file->fd_lock != -1 && file->fd_lock != fd_client){ 
@@ -79,6 +87,14 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
             free(pathname);
             return;
         }
+
+        if(dict_contain(file->opened, num)){
+            msg->response = RES_ALREADY_OPEN;
+            free(num);
+            storage_writer_unlock(file);
+            free(pathname);
+            return;
+        }
             
         fd_data* data = safe_calloc(1, sizeof(fd_data));
         //Insert client by open
@@ -90,7 +106,9 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
     }
     else if(msg->flags == O_NULL){
 
-        File* file = (File *) search_storage(pathname);
+        log_error("[THREAD %d] search_storage %s", worker_no, pathname);
+        File* file = search_storage(pathname,0);
+        log_error("[THREAD %d] search_storage ok %s", worker_no, pathname);
         
         if(file == NULL){
             msg->response = RES_NOT_EXIST;
@@ -98,7 +116,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
             return;
         }
 
-        storage_writer_lock(file);
+        //storage_writer_lock(file);
 
         // Is locked by other client
         if(file->fd_lock != -1 && file->fd_lock != fd_client){ 
@@ -113,6 +131,14 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
 
         if(num == NULL){
             msg->response = RES_ERROR;
+            storage_writer_unlock(file);
+            free(pathname);
+            return;
+        }
+
+        if(dict_contain(file->opened, num)){
+            msg->response = RES_ALREADY_OPEN;
+            free(num);
             storage_writer_unlock(file);
             free(pathname);
             return;

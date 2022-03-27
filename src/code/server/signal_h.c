@@ -20,15 +20,17 @@ void* sig_handler_thread(void* arg){
 
         switch (sig) {
             // closing server immediately
-            case SIGINT:
+            case SIGINT:{
                 log_info("Received signal to force close server.");
-                server.socket.mode = CLOSE_SERVER; //CHANGE TO FORCE_CLOSE_SERVER
+                server.socket.mode = CLOSE_SERVER;
 
                 // signaling to main thread
                 close(pipe[WEND]);
                 pipe[WEND] = -1;
                 return NULL;
-            case SIGQUIT:
+            }
+                
+            case SIGQUIT:{
                 log_info("Received signal to close server.\n");
                 server.socket.mode = CLOSE_SERVER;
 
@@ -37,9 +39,10 @@ void* sig_handler_thread(void* arg){
                 pipe[WEND] = -1;
 
                 return NULL;
+            }
                 
             // blocking new connections
-            case SIGHUP:
+            case SIGHUP:{
                 log_info("Received signal to refuse incoming connections");
                 server.socket.mode = REFUSE_CONN; //CHANGE TO REFUSE_CONN
 
@@ -47,8 +50,8 @@ void* sig_handler_thread(void* arg){
                 close(pipe[WEND]);
                 pipe[WEND] = -1;
                 return NULL;
-
-            default: ;
+            }
+            default:;
         }
     }
     return NULL;

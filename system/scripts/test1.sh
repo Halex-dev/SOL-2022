@@ -37,6 +37,10 @@ echo -e "${GREEN}\n\t[CLIENT 1] Tests -W and -c. (Upload two file and after dele
 ${CLIENT} -f ${SOCK_NAME} -p -t 200 -W test/test1/WRITE/help.txt,test/test1/WRITE/help2.txt -D test/test1/EXPELLED -c test/test1/WRITE/help2.txt #ok
 sleep 2 # wait 2 sec before execute other command
 
+echo -e "${GREEN}\n\t[CLIENT 1.2] Tests -W and delete it. (APPEND)${NORMC}\n";
+${CLIENT} -f ${SOCK_NAME} -p -t 200 -W test/test1/WRITE/help.txt -D test/test1/EXPELLED -c test/test1/WRITE/help.txt
+sleep 2 # wait 2 sec before execute other command
+
 echo -e "${GREEN}\n\t[CLIENT 2] Tests -w. (Upload 8 file from test/test1/WRITE/)${NORMC}\n";
 ${CLIENT} -f ${SOCK_NAME} -p -t 200 -w test/test1/WRITE/,8 -D test/test1/EXPELLED
 sleep 2 # wait 2 sec before execute other command
@@ -53,6 +57,7 @@ echo -e "${GREEN}\n\t[CLIENT 5] Tests -l and -u, when user has already locked fi
 ${CLIENT} -f ${SOCK_NAME} -p -t 200 -l test/test1/WRITE/help.txt -u test/test1/WRITE/help.txt
 sleep 2 # wait 2 sec before execute other command
 
+sleep 2
 kill -SIGHUP ${SERVER_PID}
 rm -f ${CONFIG}
 sleep 3 # once again to make valgrind print stuff

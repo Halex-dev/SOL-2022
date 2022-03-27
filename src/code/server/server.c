@@ -30,6 +30,7 @@ int main(int argc, char* argv[]){
     
     log_setConsole(LOG_INFO, server.debug);
     log_setConsole(LOG_ERROR, server.debug);
+    //log_setConsole(LOG_STATS, false);
     log_setConsole(LOG_STATS, server.debug);
     log_setConsole(LOG_FATAL, server.debug);
 
@@ -205,5 +206,5 @@ int main(int argc, char* argv[]){
 //TODO
 /**
  * Compressione file?
- * CHECK RBT
+ * Ricontrollare tutto e commentare tutti gli h
  */

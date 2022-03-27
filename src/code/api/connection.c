@@ -56,7 +56,7 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
             continue;
         }
 
-        log_info("Connected to %s", sockname);
+        log_info("CLIENT > Connected to %s", sockname);
         return 0;
     }
     while(curr_time.tv_sec < abstime.tv_sec);
@@ -101,6 +101,6 @@ int closeConnection(const char* sockname) {
         dict_free(socket_m);
         
     free(pathname);
-    log_info("Connected closed to %s", sockname); 
+    log_info("CLIENT > Connected closed to %s", sockname); 
     return 0;
 }

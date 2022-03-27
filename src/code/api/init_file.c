@@ -37,13 +37,19 @@ int openFile(const char* pathname, int flags){
         reset_msg_free(&msg);
         return -1;
     }
-    
-    if(msg.response != RES_SUCCESS){
+
+    if(msg.response == RES_EXIST){
+        errno = EEXIST;
+        reset_msg_free(&msg);
+        return 0;
+    }
+
+    if(msg.response != RES_SUCCESS && msg.response != RES_EXIST){
         errno = api_errno(msg.response);
         reset_msg_free(&msg);
         return -1;
     }
-    
+
     reset_msg_free(&msg);
     errno = 0;
     return 0;

@@ -1,7 +1,7 @@
 // _____________________________________ COMMUNICATION FUNCTION  _____________________________________ //
 
 /**
-* REQUEST CLIENT 20-50
+* REQUESTCLIENT 20-50
 */
 typedef enum {
     REQ_DATA = 20,
@@ -35,6 +35,8 @@ typedef enum {
     RES_EXIST = -10,
     RES_NOT_EXIST = -11,
     RES_NOT_OPEN = -12,
+    RES_DELETE = -13,
+    RES_ALREADY_OPEN = -14,
 
     /**
      *  LOCK/UNLOCK RESPONSE SERVER -29 - -20

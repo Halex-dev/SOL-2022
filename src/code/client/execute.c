@@ -10,7 +10,7 @@ int execute(){
     while(curr != NULL){
         
         if(nsleep(opt_c.time) == -1){
-            log_error("Something went wrong, try again.");
+            log_error("CLIENT > Something went wrong, try again.");
             exit(EXIT_FAILURE);
         }
 
@@ -21,7 +21,7 @@ int execute(){
                 char* exp_dir = NULL;
                 long* num = curr->data;
                 opt_c.time = *num;
-                log_info("Change time execute to %d", opt_c.time);
+                log_info("CLIENT > Change time execute to %d", opt_c.time);
                 free(num);
                 NEXT;
                 break;
@@ -36,7 +36,7 @@ int execute(){
                 //Get expelled dir if exist
                 if(opt_d != NULL && *opt_d == ACT_D){
                     exp_dir = (char*)curr->next->data;
-                    log_info("Writing expelled files in folder %s (option -D was set).", exp_dir);
+                    log_info("CLIENT > Writing expelled files in folder %s (option -D was set).", exp_dir);
                 } 
 
                 //Get dir for write and num file
@@ -56,7 +56,7 @@ int execute(){
 
                 int writen;
                 if((writen = rec_write_dir(dirPath, &files, exp_dir)) == -1){
-                    log_error("Could not open directory %s: %s.", dirPath, strerror(errno));
+                    log_error("CLIENT > Could not open directory %s: %s.", dirPath, strerror(errno));
                 }
                 
                 if(exp_dir != NULL)
@@ -76,7 +76,7 @@ int execute(){
                 //Get expelled dir if exist
                 if(curr->next != NULL && *opt_d == ACT_D){
                     exp_dir = (char*)curr->next->data;
-                    log_info("Writing expelled files in folder %s (option -D was set).", exp_dir);
+                    log_info("CLIENT > Writing expelled files in folder %s (option -D was set).", exp_dir);
                 } 
 
                 //Get dir for write and num file
@@ -89,31 +89,62 @@ int execute(){
                     char* file = files->data;
 
                     if(*prs != FILES)
-                        log_error("This was not supposed to happen. Contact a programmer.");
+                        log_error("CLIENT > This was not supposed to happen. Contact a programmer.");
 
+                    log_info("CLIENT > Write file %s on server", file);
 
-                    //TODO APPEND CON errno
-                    log_info("Write file %s on server", file);
+                    int res_open = openFile(file, O_ALL);
 
-                    if(openFile(file, O_ALL) == -1){
+                    if( res_open == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     }
+                    
+                    if (errno == EEXIST){
 
-                    if(writeFile(file, exp_dir) == -1){
-                        log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
-                        files=files->next;
-                        continue;
-                    } 
+                        log_warn("CLIENT > The file already exists, request append");
+                        void* buffer = NULL;
+                        int size = file_size_path(file);
 
+                        if(size == -1){
+                            files=files->next;
+                            continue;
+                        }
+
+                        if(openFile(file, O_LOCK) == -1){
+                            log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                            files=files->next;
+                            continue;
+                        }
+
+                        if((buffer = file_read(file)) == NULL){
+                            log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                            files=files->next;
+                            continue;
+                        }
+
+                        if(appendToFile(file, buffer, size, exp_dir) == -1){
+                            log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                            files=files->next;
+                            continue;
+                        } 
+                    }
+                    else{
+                        if(writeFile(file, exp_dir) == -1){
+                            log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
+                            files=files->next;
+                            continue;
+                        } 
+                    }
+                    
                     if(closeFile(file) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
                         files=files->next;
                         continue;
                     }
 
-                    log_info("File %s has been written to the server", file);
+                    log_info("CLIENT > File %s has been written to the server", file);
 
                     files = files->next;
                 }
@@ -142,7 +173,7 @@ int execute(){
                     if(*prs != FILES)
                         log_error("This was not supposed to happen. Contact a programmer.");
 
-                    log_info("Remove file %s on server", file);
+                    log_info("CLIENT > Remove file %s on server", file);
 
                     if(openFile(file, O_LOCK) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
@@ -160,7 +191,7 @@ int execute(){
                         continue;
                     } 
 
-                    log_info("File %s has been removed from the server ", file);
+                    log_info("CLIENT > File %s has been removed from the server ", file);
 
                     files = files->next;
                 }
@@ -185,7 +216,7 @@ int execute(){
                     if(*prs != FILES)
                         log_error("This was not supposed to happen. Contact a programmer.");
 
-                    log_info("Lock file %s on server", file);
+                    log_info("CLIENT > Lock file %s on server", file);
 
                     if(lockFile(file) == -1){
                         log_warn("\t\\-----> OPEN Go to next file (%s)", strerror(errno));
@@ -193,7 +224,7 @@ int execute(){
                         continue;
                     }
 
-                    log_info("File %s has been locked from the server", file);
+                    log_info("CLIENT > File %s has been locked from the server", file);
 
                     files = files->next;
                 }
@@ -215,9 +246,9 @@ int execute(){
                     char* file = files->data;
 
                     if(*prs != FILES)
-                        log_error("This was not supposed to happen. Contact a programmer.");
+                        log_error("CLIENT > This was not supposed to happen. Contact a programmer.");
 
-                    log_info("Lock file %s on server", file);
+                    log_info("CLIENT > Unlock file %s on server", file);
 
                     if(unlockFile(file) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
@@ -225,7 +256,7 @@ int execute(){
                         continue;
                     }
 
-                    log_info("File %s has been unlocked from the server", file);
+                    log_info("CLIENT > File %s has been unlocked from the server", file);
 
                     files = files->next;
                 }
@@ -246,7 +277,7 @@ int execute(){
                 //Get expelled dir if exist
                 if(opt_d != NULL && *opt_d == ACT_d){
                     exp_dir = (char*)curr->next->data;
-                    log_info("Writing expelled files in folder %s (option -D was set).", exp_dir);
+                    log_info("CLIENT > Writing expelled files in folder %s (option -D was set).", exp_dir);
                 } 
 
                 //Get dir for read and num file
@@ -259,9 +290,9 @@ int execute(){
                     char* file = files->data;
 
                     if(*prs != FILES)
-                        log_error("This was not supposed to happen. Contact a programmer.");
+                        log_error("CLIENT > This was not supposed to happen. Contact a programmer.");
 
-                    log_info("Read file %s from server", file);
+                    log_info("CLIENT > Read file %s from server", file);
 
                     if(openFile(file, O_NULL) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
@@ -292,13 +323,13 @@ int execute(){
                             log_error("An error occurred while writing %s: %s", fileName, strerror(errno));
                         }
 
-                        log_info("Read file %s in the server and writed it in %s", fileName, path);
+                        log_info("CLIENT > Read file %s in the server and writed it in %s", fileName, path);
                         free(path);
                         free(exp_dir);
                     }
                     free(buff);
 
-                    log_info("Read file %s in the server", fileName);
+                    log_info("CLIENT > Read file %s in the server", fileName);
 
                     if(closeFile(file) == -1){
                         log_warn("\t\\-----> Go to next file (%s)", strerror(errno));
@@ -325,7 +356,7 @@ int execute(){
                 //Get expelled dir if exist
                 if(opt_d != NULL && *opt_d == ACT_d){
                     exp_dir = (char*)curr->next->data;
-                    log_info("Writing expelled files in folder %s (option -D was set).", exp_dir);
+                    log_info("CLIENT > Writing expelled files in folder %s (option -D was set).", exp_dir);
                 } 
 
                 //Get num file
@@ -338,7 +369,7 @@ int execute(){
                 int readed;
 
                 if((readed = readNFiles(files, exp_dir)) == -1){
-                    log_error("Error on read %d files on server: %s.",files, strerror(errno));
+                    log_error("CLIENT > Error on read %d files on server: %s.",files, strerror(errno));
                 }
 
                 if(exp_dir != NULL)
@@ -401,27 +432,59 @@ int rec_write_dir(const char* dirname, int* numFiles, const char* exp_dir){
         } 
         else { // It's a file
 
-            log_info("Write file %s on server", path);
+            log_info("CLIENT > Write file %s on server", path);
 
             if(write != -1)
                 write--;
 
-            if(openFile(path, O_ALL) == -1){
-                log_warn("\t\\-----> Go to next file");
+            errno = 0;
+            int res_open = openFile(path, O_ALL);
+
+            if( res_open == -1){
+                log_warn("\t\\-----> Go to next file (%s)\n", strerror(errno));
                 continue;
             }
 
-            if(writeFile(path, exp_dir) == -1){
-                log_warn("\t\\-----> Go to next file");
-                continue;
-            } 
+            if (errno == EEXIST){
+
+                log_warn("CLIENT > The file already exists, request append to %s", path);
+                void* buffer = NULL;
+                int size = file_size_path(path);
+
+                if(size == -1){
+                    continue;
+                }
+
+                if(openFile(path, O_LOCK) == -1){
+                    log_warn("\t\\-----> Go to next file (%s)\n", strerror(errno));
+                    continue;
+                }
+
+                if((buffer = file_read(path)) == NULL){
+                    log_warn("\t\\-----> Go to next file (%s)\n", strerror(errno));
+                    continue;
+                }
+
+                if(appendToFile(path, buffer, size, exp_dir) == -1){
+                    log_warn("\t\\-----> Go to next file (%s)\n", strerror(errno));
+                    continue;
+                } 
+            }
+            else{
+                log_warn("CLIENT > The file doesn't exists, write %s", path);
+
+                if(writeFile(path, exp_dir) == -1){
+                    log_warn("\t\\-----> Go to next file (%s)\n", strerror(errno));
+                    continue;
+                } 
+            }
 
             if(closeFile(path) == -1){
-                log_warn("\t\\-----> Go to next file");
+                log_warn("\t\\-----> Go to next file (%s)\n", strerror(errno));
                 continue;
             }
 
-            log_info("File %s has been written to the server", path);
+            log_info("File %s has been written to the server\n", path);
             /** I don't count files with error
              * if(write != -1)
              *   write--;

@@ -119,6 +119,8 @@ int nsleep(int us){
 
 // _______________________________ FUNCTION _______________________________ //
 
+
+//TODO ERRORE PER OGNI ABSOLUTE COSI DA DISTINGUERE
 char* absolute_path(const char* str){
     char * key;
     //Get absolute path
@@ -428,7 +430,31 @@ char * print_res(api_res res){
             break;
         case RES_NULL:
             return "RES_NULL";
-            break;     
+            break;
+        case RES_DATA:
+            return "RES_DATA";
+            break;
+        case RES_ERROR_DATA:
+            return "RES_ERROR_DATA";
+            break;
+        case RES_NO_DATA:
+            return "RES_NO_DATA";
+            break;
+        case RES_DELETE:
+            return "RES_DELETE";
+            break;
+        case RES_NOT_YOU_LOCKED:
+            return "RES_NOT_YOU_LOCKED";
+            break;
+        case RES_YOU_LOCKED:
+            return "RES_YOU_LOCKED";
+            break;
+        case RES_NOT_EMPTY:
+            return "RES_YOU_LOCKED";
+            break;
+        case RES_SERVER_EMPTY:
+            return "RES_YOU_LOCKED";
+            break;
         default:
             return "IDK";
             break;

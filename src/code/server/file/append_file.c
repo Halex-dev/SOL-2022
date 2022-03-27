@@ -1,13 +1,12 @@
 #include "server.h"
 
-void write_file(int worker_no, long fd_client, api_msg* msg){
-
+void append_file(int worker_no, long fd_client, api_msg* msg){
     int len_path = strlen(msg->data);
     char* pathname = safe_calloc(len_path+1,sizeof(char));
     strcpy(pathname, msg->data);
 
     reset_data_msg(msg);
-
+    
     File* file = search_storage(pathname,1);
 
     if(file == NULL){
@@ -23,8 +22,8 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;
         free(num);
-        free(pathname);
         storage_reader_unlock(file);
+        free(pathname);
         return;
     }
     free(num);
@@ -36,20 +35,13 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
         storage_reader_unlock(file);
         return;
     }
-
+    
     if(file->fd_lock == -1){
         //Client not do openFile(pathname, O_LOCK) or lockFile
         msg->response = RES_NOT_LOCKED;
         free(pathname);
         storage_reader_unlock(file);
         return;
-    }
-
-    if(file->size != 0){
-        //Client not do openFile(pathname, O_CREATE| O_LOCK).
-        free(pathname);
-        storage_reader_unlock(file);
-        msg->response = RES_NOT_EMPTY;
     }
 
     msg->operation = REQ_DATA;
@@ -63,8 +55,7 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
         storage_reader_unlock(file);
         return;
     }
-    
-    //Get Data
+
     if(read_msg(fd_client, msg) == -1){ // error in reading (I'm waiting a NULL request)
         msg->response = RES_ERROR_DATA;
         free(pathname);
@@ -81,6 +72,8 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }
 
+    //Calculate if must remove one or more file
+
     //exclude the file updloaded
     file->can_expelled = false;
     storage_reader_unlock(file);
@@ -91,7 +84,7 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
 
     //Exclusion done, now I can remove it if necessary
     file->can_expelled = true;
-    
+
     if( res == -1){
         msg->response = RES_ERROR_DATA;
         storage_writer_unlock(file);
@@ -106,32 +99,33 @@ void write_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }
 
-    file->data = msg->data;
-    file->size = msg->data_length;
+    // updating file data
+    file->data = safe_realloc(file->data, file->size + msg->data_length);
+    memcpy((unsigned char*)(file->data) + file->size, msg->data, msg->data_length);
+    file->size += msg->data_length;
     int size_add = msg->data_length;
+    free(msg->data);
 
-    log_stats("[THREAD %d] [WRITE_FILE_SUCCESS] Successfully written file \"%s\" into server.", worker_no, pathname);
-    log_stats("[THREAD %d] [WRITE_FILE_SUCCESS][WB] %lu bytes were written.", worker_no, file->size);
+    // updating last use time
+    if(clock_gettime(CLOCK_REALTIME, &(file->last_use)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    free(pathname);
 
     msg->data_length = 0;
     msg->data = NULL;
     msg->response = RES_NO_DATA;
 
-    free(pathname);
-    
     if(send_msg(fd_client, msg) == -1){
         msg->response = RES_ERROR_DATA;
         storage_writer_unlock(file);
         return;
     }
 
-    if(clock_gettime(CLOCK_REALTIME, &(file->last_use)) == -1){
-        perror("Error in getting clock time");
-        fprintf(stderr, "Fatal error in getting clock time. Aborting.\n");
-        exit(EXIT_FAILURE);
-    }
-
     storage_writer_unlock(file);
-    state_add_space(size_add);
+    state_append_space(size_add);
     msg->response = RES_SUCCESS;
 }

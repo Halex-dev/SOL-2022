@@ -22,6 +22,7 @@ char* getDebug(){
 void print_entry(void* key, size_t ksize, void* value, void* usr)
 {
     File* file = (File *) value;
+    int* size = (int *) usr;
 
     char time_create[MAX_BUFF_DATA];
     strftime(time_create, sizeof time_create, "%D %T", gmtime(&file->creation_time.tv_sec));
@@ -34,6 +35,8 @@ void print_entry(void* key, size_t ksize, void* value, void* usr)
     
     fprintf(stdout,"- Pathname: \"%s\" lock: %ld size: %ld creation: %s last_use: %s \n",\
     (char *)key, file->fd_lock, file->size, time_create, time_use);
+
+    *size += file->size;
 
     //ONLY DEBUG
     dict_print(file->opened); 
@@ -77,20 +80,31 @@ void print_func(void *d){
 void free_file_hash(void* key, size_t ksize, void* value, void* usr){
 
     File* file = (File *) value;
-    
-    if(key != NULL)
+
+    if(key != NULL){
         free(key);
+        key = NULL;
+    }
+
+    ksize = 0;
 
     if(file == NULL) return;
 
-    if(file->data != NULL)
+    if(file->data != NULL && file->size > 0){
+
         free(file->data);
-
-    if(file->opened != NULL)
+        file->data = NULL;
+        file->size = 0;
+    }
+    
+    if(file->opened != NULL){
         dict_free(file->opened);
-
-    if(file != NULL)
-        free(file);
+        file->opened = NULL;
+    }
+    
+    free(file);
+    file = NULL;
+    value = NULL;
 }
 
 void remove_fd_hash(void* key, size_t ksize, void* value, void* usr){
@@ -119,20 +133,29 @@ void destroy_func(void *d){
 	
 	p = (Node *) d;
     File* file = (File*) p->data;
+    char* key = p->key;
 
-    if(p->key != NULL)
-        free(p->key);
+    if(key != NULL){
+        free(key);
+        key = NULL;
+    }
 
     if(file == NULL) return;
 
-    if(file->data != NULL)
+    if(file->data != NULL && file->size > 0){
         free(file->data);
-
-    if(file->opened != NULL)
+        file->data = NULL;
+    }
+        
+    if(file->opened != NULL){
         dict_free(file->opened);
-
+        file->opened = NULL;
+    }
+        
     free(file);
+    file = NULL;
     free(p);
+    p = NULL;
 }
 
 void remove_fd_rbt(void *d, void* usr){
@@ -155,6 +178,27 @@ void remove_fd_rbt(void *d, void* usr){
     }
 
     storage_writer_unlock(file);
+}
+
+void free_dict(void* key, size_t ksize, void* value, void* usr){
+
+    fd_data* fd = (fd_data *) value;
+
+    if(key != NULL){
+        free(key);
+        key = NULL;
+    }
+    
+    if(fd == NULL) return;
+
+    if(fd->name != NULL){
+        free(fd->name);
+        fd->name = NULL;
+    }
+
+    free(fd);
+    fd = NULL;
+    value = NULL;
 }
 
 /* ________________________________ STORAGE __________________________________________________ */
@@ -181,7 +225,11 @@ void print_storage(){
     fprintf(stdout,"--------------------- PRINT ALL FILES ------------------------\n");
 
     if(server.storage == HASH){
-        hashmap_iterate(hash, print_entry, NULL);
+        int size = 0;
+        hashmap_iterate(hash, print_entry, &size);
+        
+        //DEBUG
+        //fprintf(stdout," ------------------- TOTAL : %d --------------------------\n", size);
     }
     else if(server.storage == RBT){
         rb_print(rbt, print_func);
@@ -207,8 +255,9 @@ void remove_openlock(long fd_client){
     safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
-//No mutex, is the final step
 void clean_storage(){
+    safe_pthread_mutex_lock(&storage_thread_mtx);
+
     if(server.storage == HASH){
         hashmap_iterate(hash, free_file_hash, NULL);
         hashmap_free(hash);
@@ -216,6 +265,7 @@ void clean_storage(){
     else if(server.storage == RBT){
         rb_destroy(rbt);
     }
+    safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
 void storage_hash_hiterate(hashmap_callback func, void* param){
@@ -259,7 +309,6 @@ void insert_storage(char* key, void* data){
         hashmap_set(hash, key, len, data);
     }
     else if(server.storage == RBT){
-        log_error("TEST %s", key);
         Node* node = create_node(key, data);
         if (rb_insert(rbt, node) == NULL) {
             log_error("RBT out of memory for key %s",key);
@@ -321,7 +370,7 @@ void del_storage_nolock(char* key){
     sizeStorage--;
 }
 
-void* search_storage(char* key){
+void* search_storage(char* key, int flag){
 
     safe_pthread_mutex_lock(&storage_thread_mtx);
 
@@ -340,7 +389,20 @@ void* search_storage(char* key){
         out = noderbt->data;
     }
 
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
+    if(out != NULL){
+
+        if(flag == 0 || flag == 3){
+            storage_writer_lock((File *)out);
+        }
+        
+        if(flag == 1){
+            storage_reader_lock((File *)out);
+        }
+
+    }
+        
+    if(flag != 3)
+        safe_pthread_mutex_unlock(&storage_thread_mtx);
 
     return out;
 }
@@ -397,7 +459,7 @@ int storage_file_create(File* file, long flags, long fd_client){
     fd_data* data = safe_calloc(1, sizeof(fd_data));
 
     //Inizialize dictionary
-    file->opened = dict_init();
+    file->opened = dict_init(free_dict);
     dict_insert(file->opened, num, data);
 
     // current thread gets mutex control
@@ -455,6 +517,7 @@ void storage_reader_unlock(File* file){
 }
 
 void storage_writer_lock(File* file){
+
     safe_pthread_mutex_lock(&(file->order_mtx));
     safe_pthread_mutex_lock(&(file->file_mtx));
     while(file->n_writers > 0 || file->n_readers > 0)

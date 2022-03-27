@@ -141,11 +141,11 @@ void worker(void* arg){
                 res.code = SUCCESS;      
             }
             else if(msg_c.response == RES_CLOSE || msg_c.response == RES_ERROR) {
-                log_stats("[THREAD %d] [LOCK_FILE_FAIL] Fatal error in REMOVE_FILE request from client %ld.", worker_no, fd_client);
+                log_stats("[THREAD %d] [REMOVE_FILE] Fatal error in REMOVE_FILE request from client %ld.", worker_no, fd_client);
                 res.code = FATAL_ERROR;
             } 
             else {
-                log_stats("[THREAD %d] [LOCK_FILE_FAIL] Non-fatal error in REMOVE_FILE request from client %ld.", worker_no, fd_client);
+                log_stats("[THREAD %d] [REMOVE_FILE] Non-fatal error in REMOVE_FILE request from client %ld.", worker_no, fd_client);
                 res.code = NOT_FATAL;
             }
 
@@ -255,35 +255,35 @@ void worker(void* arg){
 
             break;
         }
-        case APPEND_TO_FILE: {
-            log_stats("[THREAD %d] [APPEND_TO_FILE] Request from client %ld is APPEND_TO_FILE.\n", worker_no, fd_client);
-            int res = append_file(worker_no, fd_client);
-
-            if( writen(fd_client, &res, sizeof(int)) == -1){
-                perror("Error in writing to client");
-                result.code = FATAL_ERROR;
+        case REQ_APPEND_TO_FILE: {
+            log_stats("[THREAD %d] [APPEND_TO_FILE] Request from client %ld is APPEND_TO_FILE.", worker_no, fd_client);
+            
+            append_file(worker_no, fd_client, &msg_c);
+            
+            if(send_msg(fd_client, &msg_c) == -1){
+                log_error("Error in writing to client");
+                res.code = FATAL_ERROR;
                 break;
             }
-
+            
             // setting result code for main thread
-            if(res == SUCCESS)
-                result.code = SUCCESS;
-            else if(res == RES_CLOSE || res == RES_ERROR){
-                log_stats("[THREAD %d] [APPEND_TO_FILE_FAIL] Fatal error in APPEND_TO_FILE request from client %ld.\n", worker_no, fd_client);
-                result.code = FATAL_ERROR;
-            } else {
-                log_stats(
-                    "[THREAD %d] [APPEND_TO_FILE_FAIL] Non-fatal error in APPEND_TO_FILE request from client %ld: %s.\n", 
-                    worker_no, fd_client, threadRes_toMsg(res)
-                );
-                result.code = NOT_FATAL;
+            if(msg_c.response == RES_SUCCESS){
+                res.code = SUCCESS;      
+            }
+            else if(msg_c.response == RES_CLOSE || msg_c.response == RES_ERROR) {
+                log_stats("[THREAD %d] [APPEND_TO_FILE] Fatal error in APPEND_TO_FILE request from client %ld.", worker_no, fd_client);
+                res.code = FATAL_ERROR;
+            } 
+            else {
+                log_stats("[THREAD %d] [APPEND_TO_FILE] Non-fatal error in APPEND_TO_FILE request from client %ld.", worker_no, fd_client);
+                res.code = NOT_FATAL;
             }
 
             break;
         }
         default:{
             log_fatal("[THREAD %d] Non conosco l'op code", worker_no, fd_client);
-            result.code = FATAL_ERROR;
+            res.code = FATAL_ERROR;
             break;
         }
     }

@@ -7,7 +7,7 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname);
+    File* file = search_storage(pathname,0);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
@@ -15,7 +15,7 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg){
         return;
     }
 
-    storage_writer_lock(file);
+    //storage_writer_lock(file);
 
     /**
     char* num = long_to_string(fd_client);

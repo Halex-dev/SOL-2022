@@ -342,8 +342,9 @@ void insert_storage(char* key, void* data);
  * @return return the data if key exist, NULL otherwise
  * 
  * @param key 
+ * @param flag
  */
-void* search_storage(char* key);
+void* search_storage(char* key, int flag);
 
 /**
  * @brief Search if the key exist in storage/
@@ -476,9 +477,10 @@ void remove_openlock(long fd_client);
  */
 void state_increment_file();
 
-void state_add_space(File* file);
+void state_add_space(int size);
 void state_remove_space(File* file);
-void state_remove_policy(File* file);
+
+void state_append_space(size_t add);
 void state_dec_file();
 int state_get_space();
 void printState();
@@ -486,12 +488,12 @@ void printState();
 //Get file can remove and lock it.
 replace_data get_expell_file();
 
+int check_expell_size(File* file, long fd_client, size_t size);
 void check_expell_file();
 
 /**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
 
 
-//TODO RIcontrollare tutto
 /**
  * @brief Deals with an openFile request from the API.
  * Can set the RES of msg:
@@ -602,6 +604,18 @@ void read_file(int worker_no, long fd_client, api_msg* msg);
  * @param msg 
  */
 void read_n_file(int worker_no, long fd_client, api_msg* msg);
+
+/**
+ * @brief Deals with an readFile request from the API.
+ * Can set the RES of msg:
+ *      RES_SUCCESS  in case of success;
+ *      RES_ERROR_DATA if the client can't send the data of file
+ * 
+ * @param worker_no 
+ * @param fd_client 
+ * @param msg 
+ */
+void append_file(int worker_no, long fd_client, api_msg* msg);
 
 /**____________________________________________________  GLOBAL VARIABLE  ____________________________________________________ **/
 

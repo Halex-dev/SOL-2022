@@ -142,7 +142,7 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg){
         storage_rbt_hiterate(read_rbt, (void *)&tmp);
     }
 
-    log_stats("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent file \"%d\" to client.", worker_no, (file_n - tmp.N));   
+    log_stats("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent \"%d\" files to client.", worker_no, (file_n - tmp.N));   
 
     msg->response = RES_SUCCESS;
 }

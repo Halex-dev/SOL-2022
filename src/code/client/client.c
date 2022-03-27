@@ -23,6 +23,10 @@ int main(int argc, char* argv[]){
     log_setConsole(LOG_ERROR, opt_c.print);
     log_setConsole(LOG_WARN, opt_c.print);
 
+    //log_setColor(LOG_INFO, GRN_BACK);
+    //log_setColor(LOG_ERROR, RED_BACK);
+    //log_setColor(LOG_WARN, YEL_BACK);
+
     struct timespec abstime;
     clock_gettime(CLOCK_REALTIME, &abstime);
 

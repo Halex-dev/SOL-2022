@@ -43,6 +43,10 @@ int api_errno(int res){
             log_error("[API_ERROR] File is too big for upload");
             return EFBIG;
         }
+        case RES_DELETE:{
+            log_error("[API_ERROR] Someone deleted the file while you were in the queue.");
+            return EFAULT;
+        }
         case RES_NULL:{
             log_error("[API_ERROR] An error as occurred to communicate. Try again.");
             return ECOMM;
@@ -61,6 +65,10 @@ int api_errno(int res){
         }
         case RES_YOU_LOCKED:{
             log_error("[API_ERROR] File is already locked by you.");
+            return EAGAIN;
+        }
+        case RES_ALREADY_OPEN:{
+            log_error("[API_ERROR] File is already open by you.");
             return EAGAIN;
         }
         default:{

@@ -20,9 +20,9 @@ CLIENT=./system/bin/client
 
 # Preparo il file di configurazione
 touch ${CONFIG}
-echo -e "WORKERS =  4\nSOCK_PATH = ${SOCK_NAME}\n\
+echo -e "WORKERS = 4\nSOCK_PATH = ${SOCK_NAME}\n\
 MAX_FILES = 10\nMAX_SPACE = 1\nLOG_PATH = system/logs/server\n\
-POLICY = ${POLICY}\nDEBUG = no\nSTORAGE = HASH" > ${CONFIG}
+POLICY = ${POLICY}\nDEBUG = yes\nSTORAGE = HASH" > ${CONFIG}
 
 echo -e "${GREEN}\n\tOpening server process whith with policy ${POLICY}.${NORMC}\n";
 ${SERVER} ${CONFIG} & # opening server
