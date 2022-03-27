@@ -391,17 +391,17 @@ void* search_storage(char* key, int flag){
 
     if(out != NULL){
 
-        if(flag == 0 || flag == 3){
+        if(flag == WRITE_S || flag == ALL_S){
             storage_writer_lock((File *)out);
         }
         
-        if(flag == 1){
+        if(flag == READ_S){
             storage_reader_lock((File *)out);
         }
 
     }
         
-    if(flag != 3)
+    if(flag != ALL_S)
         safe_pthread_mutex_unlock(&storage_thread_mtx);
 
     return out;

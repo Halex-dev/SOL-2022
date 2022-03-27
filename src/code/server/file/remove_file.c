@@ -8,9 +8,7 @@ void remove_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    log_error("[THREAD %d] Prendo file %s", worker_no, pathname);
-    File* file = search_storage(pathname,3);
-    log_error("[THREAD %d] lock presa %s", worker_no, pathname);
+    File* file = search_storage(pathname,ALL_S);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;

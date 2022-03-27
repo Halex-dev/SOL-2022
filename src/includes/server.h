@@ -329,6 +329,14 @@ void clean_storage();
 /** Function to inizialize storage data struct. */
 void storage_init();
 
+/** File replacement policy. */
+typedef enum {
+    READ_S,
+    WRITE_S,
+    ALL_S
+} flag_storage;
+
+
 /**
  * @brief Insert key and data on storage (Does not make a copy of the data)
  * 

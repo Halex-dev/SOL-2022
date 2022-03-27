@@ -338,13 +338,10 @@ int check_expell_size(File* file, long fd_client, size_t size){
 
     if(newSize > server.max_space){
 
-        storage_lock();
-
         int remove_space = newSize - server.max_space;
 
         if(remove_space > curr_state.space){// can't free more space than I currently have
             safe_pthread_mutex_unlock(&curr_state_mtx);
-            storage_unlock();
             return -2;
         } 
 
@@ -371,7 +368,6 @@ int check_expell_size(File* file, long fd_client, size_t size){
             
             //Send pathname
             if(send_msg(fd_client, &msg) == -1){
-                storage_unlock();
                 safe_pthread_mutex_unlock(&curr_state_mtx);
                 storage_writer_unlock(replace.file);
                 return -1;
@@ -385,7 +381,6 @@ int check_expell_size(File* file, long fd_client, size_t size){
 
             //Send File data
             if(send_msg(fd_client, &msg) == -1){
-                storage_unlock();
                 safe_pthread_mutex_unlock(&curr_state_mtx);
                 storage_writer_unlock(replace.file);
                 return -1;
@@ -408,12 +403,11 @@ int check_expell_size(File* file, long fd_client, size_t size){
         }
 
         log_stats("[REPLACEMENT] In total %d (%ld) files were removed from the server.", file_removed, freed);
-
-        storage_unlock();
         
     }
 
     safe_pthread_mutex_unlock(&curr_state_mtx);
+    
     return 0;
 }
 
@@ -428,7 +422,6 @@ void check_expell_file(){
         return;
     }
         
-
     operation_writer_lock(replace.file);
     
     //Lock get before do check_expell_file

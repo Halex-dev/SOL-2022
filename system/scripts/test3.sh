@@ -21,8 +21,8 @@ CLIENT=./system/bin/client
 WORKERS=8
 SECOND=30
 MAX_FILES=100
-FILES_CREATED=${MAX_FILES}+20
-CLIENT_TO_OPEN=2*${WORKERS}
+FILES_CREATED=${MAX_FILES}+10
+CLIENT_TO_OPEN=10       #1*${WORKERS}
 
 function createClient {
 
@@ -42,18 +42,22 @@ function createClient {
             FILES_READ=${FILES_READ},test/test3/WRITE/file${j}.dat
         done
 
+        OTHER_FILES_WRITES="test/test3/WRITE/file0.dat"
+        
+        for (( j=$((( $RANDOM % ($FILES_CREATED - 1) ) + 1 )); j <= $((( $RANDOM % ($FILES_CREATED - 1) ) + 1 )); j++ ))
+        do
+            OTHER_FILES_WRITES=${FILES_WRITES},test/test3/WRITE/file${j}.dat
+        done
+
         FILES_DELETE="test/test3/WRITE/file0.dat"
         for (( j=$((( $RANDOM % ($FILES_CREATED - 1) ) + 1 )); j <= $((( $RANDOM % ($FILES_CREATED - 1) ) + 1 )); j++ ))
         do
-            FILES_DELETE=${FILES_READ},test/test3/WRITE/file${j}.dat
+            FILES_DELETE=${FILES_WRITES},test/test3/WRITE/file${j}.dat
         done
 
         LOCK=$((( $RANDOM % ($FILES_CREATED - 1) ) + 1 ))
-        #${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 100)) -d test/test3/READN -w test/test3/WRITE/ -D test/test3/EXPELLED -r ${FILES_READ} -l test/test3/WRITE/file${LOCK}.dat -t 500 -u test/test3/WRITE/file${LOCK}.dat &
-        #${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -c ${FILES_DELETE}  &
 
-        ${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -R $((1+ $RANDOM % 20))  &
-        #${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -l test/test3/WRITE/file${LOCK}.dat -t 500 -u test/test3/WRITE/file${LOCK}.dat
+        ${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -R $((1+ $RANDOM % 20)) -W ${OTHER_FILES_WRITES} -c ${FILES_DELETE} &
     done
 }
 
@@ -80,7 +84,7 @@ sleep 2 # Wait 2 second to read echo
 
 for (( i=0; i < ${FILES_CREATED}; i++ ))
 do
-    dd if=/dev/zero of=${WRITE_DIR}/file${i}.dat  bs=1b  count=$((1 + $RANDOM % 800)) #max file 1.6MB (3200)
+    dd if=/dev/zero of=${WRITE_DIR}/file${i}.dat  bs=1b  count=$((1 + $RANDOM % 1600)) #max file 1.6MB (3200)
 done
 
 sleep 1

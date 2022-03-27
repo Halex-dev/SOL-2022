@@ -10,14 +10,11 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
 
     if(msg->flags == O_ALL){
 
-        log_error("[THREAD %d] storage_contains", worker_no);
-        
         if(storage_contains(pathname)){
             msg->response = RES_EXIST;
             free(pathname);
             return;
         }
-        log_error("[THREAD %d] storage_contains ok", worker_no);
 
         File* file = safe_calloc(1, sizeof(File));
         storage_file_create(file, msg->flags, fd_client);
@@ -33,15 +30,12 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
         log_stats("[THREAD %d] [OPEN_FILE_SUCCESS][LOCK][CREATE] Successfully created locked file \"%s\".", worker_no, pathname);
     }
     else if(msg->flags == O_CREATE){
-
-        log_error("[THREAD %d] storage_contains", worker_no);
-        
+       
         if(storage_contains(pathname)){
             msg->response = RES_EXIST;
             free(pathname);
             return;
         }
-        log_error("[THREAD %d] storage_contains ok", worker_no);
 
         File* file = safe_calloc(1, sizeof(File));
         storage_file_create(file, msg->flags, fd_client);
@@ -55,9 +49,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
     }
     else if(msg->flags == O_LOCK){
 
-        log_error("[THREAD %d] search_storage %s", worker_no, pathname);
-        File* file = search_storage(pathname,0);
-        log_error("[THREAD %d] search_storage ok %s", worker_no, pathname);
+        File* file = search_storage(pathname,WRITE_S);
 
         if(file == NULL){
             msg->response = RES_NOT_EXIST;
@@ -106,9 +98,7 @@ void open_file(int worker_no, long fd_client, api_msg* msg){
     }
     else if(msg->flags == O_NULL){
 
-        log_error("[THREAD %d] search_storage %s", worker_no, pathname);
-        File* file = search_storage(pathname,0);
-        log_error("[THREAD %d] search_storage ok %s", worker_no, pathname);
+        File* file = search_storage(pathname,WRITE_S);
         
         if(file == NULL){
             msg->response = RES_NOT_EXIST;

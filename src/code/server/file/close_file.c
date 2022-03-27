@@ -8,9 +8,7 @@ void close_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    log_error("[THREAD %d] search_storage %s", worker_no, pathname);
-    File* file = search_storage(pathname,0);
-    log_error("[THREAD %d] search_storage ok %s", worker_no, pathname);
+    File* file = search_storage(pathname,WRITE_S);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;

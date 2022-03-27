@@ -7,7 +7,7 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname,0);
+    File* file = search_storage(pathname,WRITE_S);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;

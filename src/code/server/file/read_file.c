@@ -7,7 +7,7 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname,1);
+    File* file = search_storage(pathname,READ_S);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;

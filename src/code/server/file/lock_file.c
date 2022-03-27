@@ -7,7 +7,7 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname,0);
+    File* file = search_storage(pathname,WRITE_S);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
@@ -46,7 +46,7 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
             //safe_pthread_cond_wait(&(file->lock_cond), &(files_mtx));//Problem when have multiple thread, i wanto to contine execute request
             threadpool_queue_next(tm, worker_no); //I can't do mutex inside becouse i'm not sure if the thread wake up (when i have more one thread)
 
-            File* file = search_storage(pathname,1);
+            File* file = search_storage(pathname,READ_S);
 
             if(file == NULL){
                 msg->response = RES_DELETE;

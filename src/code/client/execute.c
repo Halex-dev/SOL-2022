@@ -325,7 +325,7 @@ int execute(){
 
                         log_info("CLIENT > Read file %s in the server and writed it in %s", fileName, path);
                         free(path);
-                        free(exp_dir);
+                        //free(exp_dir);
                     }
                     free(buff);
 
@@ -372,11 +372,15 @@ int execute(){
                     log_error("CLIENT > Error on read %d files on server: %s.",files, strerror(errno));
                 }
 
-                if(exp_dir != NULL)
+                if(exp_dir != NULL){
                     free(exp_dir);
+                }
+                    
 
-                if(curr->data != NULL)
+                if(curr->data != NULL){
                     free(curr->data);
+                }
+                    
                     
                 NEXT;
                 break;

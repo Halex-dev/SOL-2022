@@ -7,11 +7,12 @@ void append_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
     
-    File* file = search_storage(pathname,1);
+    File* file = search_storage(pathname,ALL_S);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
         free(pathname);
+        storage_unlock();
         return;
     }
 
@@ -22,7 +23,8 @@ void append_file(int worker_no, long fd_client, api_msg* msg){
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;
         free(num);
-        storage_reader_unlock(file);
+        storage_writer_unlock(file);
+        storage_unlock();
         free(pathname);
         return;
     }
@@ -32,7 +34,8 @@ void append_file(int worker_no, long fd_client, api_msg* msg){
         //Client not do openFile(pathname, O_LOCK) or lockFile first
         msg->response = RES_NOT_YOU_LOCKED;
         free(pathname);
-        storage_reader_unlock(file);
+        storage_writer_unlock(file);
+        storage_unlock();
         return;
     }
     
@@ -40,7 +43,8 @@ void append_file(int worker_no, long fd_client, api_msg* msg){
         //Client not do openFile(pathname, O_LOCK) or lockFile
         msg->response = RES_NOT_LOCKED;
         free(pathname);
-        storage_reader_unlock(file);
+        storage_writer_unlock(file);
+        storage_unlock();
         return;
     }
 
@@ -52,20 +56,23 @@ void append_file(int worker_no, long fd_client, api_msg* msg){
     if(send_msg(fd_client, msg) == -1){
         free(pathname);
         msg->response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
+        storage_writer_unlock(file);
+        storage_unlock();
         return;
     }
 
     if(read_msg(fd_client, msg) == -1){ // error in reading (I'm waiting a NULL request)
         msg->response = RES_ERROR_DATA;
         free(pathname);
-        storage_reader_unlock(file);
+        storage_writer_unlock(file);
+        storage_unlock();
         return;
     }
 
     // file is too big
     if(msg->data_length > server.max_space){
-        storage_reader_unlock(file);
+        storage_writer_unlock(file);
+        storage_unlock();
         del_storage(pathname); //Del this file with zero space
         free(pathname);
         msg->response = RES_TOO_BIG;
@@ -73,21 +80,20 @@ void append_file(int worker_no, long fd_client, api_msg* msg){
     }
 
     //Calculate if must remove one or more file
-
     //exclude the file updloaded
     file->can_expelled = false;
-    storage_reader_unlock(file);
+    storage_writer_unlock(file);
 
-    int res = check_expell_size(file, fd_client, msg->data_length);
-
-    operation_writer_lock(file);
+    int res =  check_expell_size(file, fd_client, msg->data_length);
 
     //Exclusion done, now I can remove it if necessary
+    operation_writer_lock(file);
     file->can_expelled = true;
 
     if( res == -1){
         msg->response = RES_ERROR_DATA;
         storage_writer_unlock(file);
+        storage_unlock();
         free(pathname);
         return;
     }
@@ -95,6 +101,7 @@ void append_file(int worker_no, long fd_client, api_msg* msg){
     if( res == -2){
         msg->response = RES_TOO_BIG;
         storage_writer_unlock(file);
+        storage_unlock();
         free(pathname);
         return;
     }
@@ -122,10 +129,12 @@ void append_file(int worker_no, long fd_client, api_msg* msg){
     if(send_msg(fd_client, msg) == -1){
         msg->response = RES_ERROR_DATA;
         storage_writer_unlock(file);
+        storage_unlock();
         return;
     }
 
     storage_writer_unlock(file);
+    storage_unlock();
     state_append_space(size_add);
     msg->response = RES_SUCCESS;
 }
