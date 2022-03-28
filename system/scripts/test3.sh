@@ -8,7 +8,7 @@
 
 clear
 SOCK_NAME=./system/bin/SOL-2022.sk
-CONFIG=./system/config/test2.txt
+CONFIG=./system/config/test3.txt
 
 WRITE_DIR=./test/test3/WRITE
 
@@ -22,7 +22,7 @@ WORKERS=8
 SECOND=30
 MAX_FILES=100
 FILES_CREATED=${MAX_FILES}+10
-CLIENT_TO_OPEN=10       #1*${WORKERS}
+CLIENT_TO_OPEN=5
 
 function createClient {
 
@@ -56,8 +56,9 @@ function createClient {
         done
 
         LOCK=$((( $RANDOM % ($FILES_CREATED - 1) ) + 1 ))
+        FILES_LOCK="test/test3/WRITE/file${LOCK}.dat"
 
-        ${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -R $((1+ $RANDOM % 20)) -W ${OTHER_FILES_WRITES} -c ${FILES_DELETE} &
+        ${CLIENT} -f ${SOCK_NAME} -W ${FILES_WRITES} -D test/test3/EXPELLED -R $((1+ $RANDOM % 20)) -d test/test3/READN -r ${FILES_READ} -d test/test3/READ -R $((1+ $RANDOM % 20)) -W ${OTHER_FILES_WRITES} -c ${FILES_DELETE} -l ${FILES_LOCK} -t 100 -u ${FILES_LOCK} &
     done
 }
 
@@ -73,7 +74,7 @@ POLICY = MFU\nDEBUG = yes\nSTORAGE = HASH" > ${CONFIG}
 echo -e "${GREEN}\t TEST 3: Config file write in ${CONFIG}${NORMC}\n"
 
 echo -e "${GREEN}\n\tOpening server process.${NORMC}\n";
-#valgrind --leak-check=full --error-limit=no --show-leak-kinds=all ${SERVER} ${CONFIG} & # opening server
+#valgrind --leak-check=full --show-leak-kinds=all ${SERVER} ${CONFIG} & # opening server
 ${SERVER} ${CONFIG} & # opening server
 SERVER_PID=$! # getting server PID
 sleep 2 # Wait 1 second to server print

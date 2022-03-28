@@ -7,22 +7,21 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname,WRITE_S);
+    storage_writer_lock();
+    File* file = search_storage(pathname);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
         free(pathname);
+        storage_writer_unlock();
         return;
     }
-
-    //storage_writer_lock(file);
 
     /**
     char* num = long_to_string(fd_client);
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;
         free(num);
-        storage_writer_unlock(file);
         return;
     }
     free(num);
@@ -31,14 +30,14 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg){
     if(file->fd_lock == -1){ // not locked
         msg->response = RES_NOT_LOCKED;
         free(pathname);
-        storage_writer_unlock(file);
+        storage_writer_unlock();
         return;
     }
     
     if(file->fd_lock != -1 && file->fd_lock != fd_client){ // already locked by other client
         msg->response = RES_NOT_YOU_LOCKED;
         free(pathname);
-        storage_writer_unlock(file);
+        storage_writer_unlock();
         return;
     }
     
@@ -48,6 +47,8 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg){
         log_stats("[THREAD %d] [UNLOCK_FILE_SUCCESS] Successfully unlocked file \"%s\".", worker_no, pathname);
     }
 
+    file->used++;
+    
     free(pathname);
     
     // updating last use
@@ -57,7 +58,6 @@ void unlocks_file(int worker_no, long fd_client, api_msg* msg){
         exit(EXIT_FAILURE);
     }
 
-    storage_writer_unlock(file);
-    
     msg->response = RES_SUCCESS;
+    storage_writer_unlock();
 }

@@ -17,8 +17,6 @@ void read_rbt(void *d, void* read_data){
     if(data->N == -1) 
         data->N = -1;
 
-    operation_reader_lock(file);
-
     api_msg msg;
     memset(&msg, 0, sizeof(api_msg));
 
@@ -30,7 +28,6 @@ void read_rbt(void *d, void* read_data){
 
     if(send_msg(data->fd_client, &msg) == -1){
         msg.response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
         return;
     }
 
@@ -41,16 +38,15 @@ void read_rbt(void *d, void* read_data){
 
     if(send_msg(data->fd_client, &msg) == -1){
         msg.response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
         return;
     }
 
     data->N -= 1;
+    file->used++;
 
     log_stats("[WRITE_TO_CLIENT][READ_N_FILES] Written file \"%s\" to client with fd %ld.", p->key, data->fd_client);
     log_stats("[WRITE_TO_CLIENT][READ_N_FILES][WB] %lu bytes were sent to client.", file->size);
 
-    storage_reader_unlock(file);
 }
 
 void read_hash(void* key, size_t ksize, void* value, void* usr){
@@ -65,8 +61,6 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
     if(data->N == -1) 
         data->N = -1;
 
-    operation_reader_lock(file);
-
     api_msg msg;
     memset(&msg, 0, sizeof(api_msg));
 
@@ -78,7 +72,6 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
 
     if(send_msg(data->fd_client, &msg) == -1){
         msg.response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
         return;
     }
 
@@ -89,7 +82,6 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
 
     if(send_msg(data->fd_client, &msg) == -1){
         msg.response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
         return;
     }
 
@@ -97,15 +89,17 @@ void read_hash(void* key, size_t ksize, void* value, void* usr){
 
     log_stats("[WRITE_TO_CLIENT][READ_N_FILES] Written file \"%s\" to client with fd %ld.", key, data->fd_client);
     log_stats("[WRITE_TO_CLIENT][READ_N_FILES][WB] %lu bytes were sent to client.", file->size);
-
-    storage_reader_unlock(file);
 }
 
 void read_n_file(int worker_no, long fd_client, api_msg* msg){
 
+    storage_reader_lock();
+
+    safe_pthread_mutex_lock(&curr_state_mtx);
+
     int file_n = string_to_int(msg->data);
-    int size = storage_size();
-    
+    int size = curr_state.files;
+
     if(file_n > size || file_n == -1)
         file_n = size;
 
@@ -125,6 +119,8 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg){
 
     if(send_msg(fd_client, msg) == -1){
         msg->response = RES_ERROR_DATA;
+        safe_pthread_mutex_unlock(&curr_state_mtx);
+        storage_reader_unlock();
         return;
     }
 
@@ -132,6 +128,8 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg){
 
     if(file_n == 0){
         msg->response = RES_SERVER_EMPTY;
+        safe_pthread_mutex_unlock(&curr_state_mtx);
+        storage_reader_unlock();
         return;
     }
 
@@ -142,7 +140,9 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg){
         storage_rbt_hiterate(read_rbt, (void *)&tmp);
     }
 
-    log_stats("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent \"%d\" files to client.", worker_no, (file_n - tmp.N));   
-
     msg->response = RES_SUCCESS;
+    safe_pthread_mutex_unlock(&curr_state_mtx);
+    storage_reader_unlock();
+
+    log_stats("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent \"%d\" files to client.", worker_no, (file_n - tmp.N));   
 }

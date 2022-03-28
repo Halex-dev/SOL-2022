@@ -2,8 +2,17 @@
 
 rbtree *rbt = NULL;
 hashmap *hash = NULL;
-pthread_mutex_t storage_thread_mtx = PTHREAD_MUTEX_INITIALIZER;
-int sizeStorage = 0;
+pthread_mutex_t storage_mtx = PTHREAD_MUTEX_INITIALIZER;
+/** Mutex to regulate access to this file. */
+pthread_mutex_t order_mtx = PTHREAD_MUTEX_INITIALIZER;
+/** Conditional variable to gain access to this file. */
+pthread_cond_t access_cond = PTHREAD_COND_INITIALIZER;
+/** Number of readers who are now using this file. */
+unsigned int n_readers = 0;
+/** Number of writers who are now using this file. */
+unsigned int n_writers = 0;
+/** Number of file in the server. */
+unsigned int sizeStorage = 0;
 
 char* getPolicy(){
     return ( server.policy == FIFO ? "FIFO" : (server.policy == LRU ? "LRU" : (server.policy == LFU ? "LFU" : "MFU")) );
@@ -17,6 +26,9 @@ char* getDebug(){
     return ( server.debug == true ? "YES" : "NO");
 }
 
+int getSize(){
+    return sizeStorage;
+}
 
 // define our callback with the correct parameters
 void print_entry(void* key, size_t ksize, void* value, void* usr)
@@ -33,8 +45,8 @@ void print_entry(void* key, size_t ksize, void* value, void* usr)
     // prints the entry's key and value
 	// assumes the key is a null-terminated string
     
-    fprintf(stdout,"- Pathname: \"%s\" lock: %ld size: %ld creation: %s last_use: %s \n",\
-    (char *)key, file->fd_lock, file->size, time_create, time_use);
+    fprintf(stdout,"- Pathname: \"%s\" used: %ld lock: %ld size: %ld creation: %s last_use: %s \n",\
+    (char *)key, file->used, file->fd_lock, file->size, time_create, time_use);
 
     *size += file->size;
 
@@ -73,8 +85,8 @@ void print_func(void *d){
     // prints the entry's key and value
 	// assumes the key is a null-terminated string
     
-    fprintf(stdout,"- Pathname: \"%s\" lock: %ld size: %ld creation: %s last_use: %s \n",\
-    (char *)p->key, file->fd_lock, file->size, time_create, time_use);
+    fprintf(stdout,"- Pathname: \"%s\" used: %ld lock: %ld size: %ld creation: %s last_use: %s \n",\
+    (char *)p->key, file->used, file->fd_lock, file->size, time_create, time_use);
 }
 
 void free_file_hash(void* key, size_t ksize, void* value, void* usr){
@@ -115,14 +127,12 @@ void remove_fd_hash(void* key, size_t ksize, void* value, void* usr){
 
     char* fd = (char*) usr;
 
-    operation_writer_lock(file);
+    
 
     //The client not opened the file
     if(dict_contain(file->opened, fd)){
         dict_del(file->opened, fd);
     }
-
-    storage_writer_unlock(file);
 }
 
 
@@ -170,14 +180,10 @@ void remove_fd_rbt(void *d, void* usr){
 
     char* fd = (char*) usr;
 
-    operation_writer_lock(file);
-
     //The client not opened the file
     if(dict_contain(file->opened, fd)){
         dict_del(file->opened, fd);
     }
-
-    storage_writer_unlock(file);
 }
 
 void free_dict(void* key, size_t ksize, void* value, void* usr){
@@ -220,7 +226,7 @@ void storage_init(){
 }
 
 void print_storage(){
-    safe_pthread_mutex_lock(&storage_thread_mtx);
+    //safe_pthread_mutex_lock(&storage_mtx);
 
     fprintf(stdout,"--------------------- PRINT ALL FILES ------------------------\n");
 
@@ -236,11 +242,12 @@ void print_storage(){
     }
     fprintf(stdout,"--------------------------------------------------------\n");
 
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
+    //safe_pthread_mutex_unlock(&storage_mtx);
 }
 
 void remove_openlock(long fd_client){
-    safe_pthread_mutex_lock(&storage_thread_mtx);
+
+    storage_writer_lock();
 
     char* num = long_to_string(fd_client);
 
@@ -252,11 +259,10 @@ void remove_openlock(long fd_client){
     }
 
     free(num);
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
+    storage_writer_unlock();
 }
 
 void clean_storage(){
-    safe_pthread_mutex_lock(&storage_thread_mtx);
 
     if(server.storage == HASH){
         hashmap_iterate(hash, free_file_hash, NULL);
@@ -265,44 +271,17 @@ void clean_storage(){
     else if(server.storage == RBT){
         rb_destroy(rbt);
     }
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
 void storage_hash_hiterate(hashmap_callback func, void* param){
-    safe_pthread_mutex_lock(&storage_thread_mtx);
-
     hashmap_iterate(hash, func, param);
-
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
 void storage_rbt_hiterate(void (*func)(void *, void* param), void* param){
-    safe_pthread_mutex_lock(&storage_thread_mtx);
-
-    rb_hitarate(rbt, func, param);
-
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
-}
-
-void storage_lock(){
-    safe_pthread_mutex_lock(&storage_thread_mtx);
-}
-
-void storage_unlock(){
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
-}
-
-void storage_hash_hiterate_nolock(hashmap_callback func, void* param){
-    hashmap_iterate(hash, func, param);
-}
-
-void storage_rbt_hiterate_nolock(void (*func)(void *, void* param), void* param){
     rb_hitarate(rbt, func, param);
 }
 
 void insert_storage(char* key, void* data){
-
-    safe_pthread_mutex_lock(&storage_thread_mtx);
 
     if(server.storage == HASH){
         int len = strlen(key);
@@ -316,24 +295,10 @@ void insert_storage(char* key, void* data){
 		}
     }
     sizeStorage++;
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
-}
-
-int storage_size(){
-    int size = 0;
-    safe_pthread_mutex_lock(&storage_thread_mtx);
-
-    size = sizeStorage;
-
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
-
-    return size;
 }
 
 void del_storage(char* key){
 
-    safe_pthread_mutex_lock(&storage_thread_mtx);
-
     if(server.storage == HASH){
         int len = strlen(key);
         //hashmap_remove(hash, key, len);
@@ -349,30 +314,9 @@ void del_storage(char* key){
     }
 
     sizeStorage--;
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
 }
 
-void del_storage_nolock(char* key){
-
-    if(server.storage == HASH){
-        int len = strlen(key);
-        //hashmap_remove(hash, key, len);
-        hashmap_remove_free(hash, key, len, free_file_hash, NULL);
-    }
-    else if(server.storage == RBT){
-        Node node;
-        void* out = NULL;
-        node.key = key;
-
-        if ((out = rb_find(rbt, &node)) != NULL)
-		    rb_delete(rbt, out, 0);
-    }
-    sizeStorage--;
-}
-
-void* search_storage(char* key, int flag){
-
-    safe_pthread_mutex_lock(&storage_thread_mtx);
+void* search_storage(char* key){
 
     void* out = NULL;
 
@@ -385,24 +329,13 @@ void* search_storage(char* key, int flag){
 
         node.key = key;
         rbnode* find = rb_find(rbt, &node);
-        Node* noderbt = find->data;
-        out = noderbt->data;
-    }
 
-    if(out != NULL){
-
-        if(flag == WRITE_S || flag == ALL_S){
-            storage_writer_lock((File *)out);
+        if(find != NULL){
+            Node* noderbt = find->data;
+            out = noderbt->data;
         }
         
-        if(flag == READ_S){
-            storage_reader_lock((File *)out);
-        }
-
     }
-        
-    if(flag != ALL_S)
-        safe_pthread_mutex_unlock(&storage_thread_mtx);
 
     return out;
 }
@@ -410,8 +343,6 @@ void* search_storage(char* key, int flag){
 bool storage_contains(const char* key){
 
     void* out = NULL;
-
-    safe_pthread_mutex_lock(&storage_thread_mtx);
 
     if(server.storage == HASH){
         int len = strlen(key);
@@ -423,8 +354,6 @@ bool storage_contains(const char* key){
         node.key = (char*)key;
         out = rb_find(rbt, &node);
     }
-
-    safe_pthread_mutex_unlock(&storage_thread_mtx);
 
     if(out != NULL){
         return true;
@@ -438,17 +367,12 @@ int storage_file_create(File* file, long flags, long fd_client){
     // general attrs
     file->data = NULL;
     file->size = 0;
-    file->used = -3; //-3 because when you write to the server you will add 3 uses, one for opening, one for closing and one for writing.
+    file->used = -2; //-3 because when you write to the server you will add 2 uses, one for closing and one for writing.
     file->can_expelled = false;
     file->fd_lock = -1;
 
     // init mutex/cond
-    pthread_mutex_init(&(file->file_mtx), NULL);
-    pthread_mutex_init(&(file->order_mtx), NULL);
-    pthread_cond_init(&(file->access_cond), NULL);
-    pthread_cond_init(&(file->lock_cond), NULL);
-    file->n_readers = 0;
-    file->n_writers = 0;
+    //pthread_cond_init(&(file->lock_cond), NULL);
     
     //Convert fd_client to string and add to dict
     char* num = long_to_string(fd_client);
@@ -457,13 +381,11 @@ int storage_file_create(File* file, long flags, long fd_client){
         return -1;
 
     fd_data* data = safe_calloc(1, sizeof(fd_data));
+    memset(data, 0, sizeof(fd_data));
 
     //Inizialize dictionary
     file->opened = dict_init(free_dict);
     dict_insert(file->opened, num, data);
-
-    // current thread gets mutex control
-    storage_writer_lock(file);
 
     // updating time of creation
     if(clock_gettime(CLOCK_REALTIME, &(file->creation_time)) == -1){
@@ -481,73 +403,44 @@ int storage_file_create(File* file, long flags, long fd_client){
     return 0;
 }
 
-void storage_reader_lock(File* file){
-    safe_pthread_mutex_lock(&(file->order_mtx));
-    safe_pthread_mutex_lock(&(file->file_mtx));
+void storage_reader_lock(){
+    safe_pthread_mutex_lock(&(order_mtx));
+    safe_pthread_mutex_lock(&(storage_mtx));
 
-    while(file->n_writers > 0)
-        safe_pthread_cond_wait(&(file->access_cond), &(file->file_mtx));
+    while(n_writers > 0)
+        safe_pthread_cond_wait(&(access_cond), &(storage_mtx));
 
-    file->n_readers++;
-    file->used++;
-    safe_pthread_mutex_unlock(&(file->order_mtx));
-    safe_pthread_mutex_unlock(&(file->file_mtx));
+    n_readers++;
+    safe_pthread_mutex_unlock(&(order_mtx));
+    safe_pthread_mutex_unlock(&(storage_mtx));
 }
 
-void operation_reader_lock(File* file){
-    safe_pthread_mutex_lock(&(file->order_mtx));
-    safe_pthread_mutex_lock(&(file->file_mtx));
+void storage_reader_unlock(){
+    safe_pthread_mutex_lock(&(storage_mtx));
 
-    while(file->n_writers > 0)
-        safe_pthread_cond_wait(&(file->access_cond), &(file->file_mtx));
-
-    file->n_readers++;
-    safe_pthread_mutex_unlock(&(file->order_mtx));
-    safe_pthread_mutex_unlock(&(file->file_mtx));
-}
-
-void storage_reader_unlock(File* file){
-    safe_pthread_mutex_lock(&(file->file_mtx));
-
-    file->n_readers--;
-    if(file->n_readers == 0)
-        safe_pthread_cond_signal(&(file->access_cond));
+    n_readers--;
+    if(n_readers == 0)
+        safe_pthread_cond_signal(&(access_cond));
     
-    safe_pthread_mutex_unlock(&(file->file_mtx));
+    safe_pthread_mutex_unlock(&(storage_mtx));
 }
 
-void storage_writer_lock(File* file){
-
-    safe_pthread_mutex_lock(&(file->order_mtx));
-    safe_pthread_mutex_lock(&(file->file_mtx));
-    while(file->n_writers > 0 || file->n_readers > 0)
-        safe_pthread_cond_wait(&(file->access_cond), &(file->file_mtx));
+void storage_writer_lock(){
+    safe_pthread_mutex_lock(&(order_mtx));
+    safe_pthread_mutex_lock(&(storage_mtx));
+    while(n_writers > 0 || n_readers > 0)
+        safe_pthread_cond_wait(&(access_cond), &(storage_mtx));
     
-
-    file->n_writers++;
-    file->used++;
-    safe_pthread_mutex_unlock(&(file->order_mtx));
-    safe_pthread_mutex_unlock(&(file->file_mtx));
+    n_writers++;
+    safe_pthread_mutex_unlock(&(order_mtx));
+    safe_pthread_mutex_unlock(&(storage_mtx));
 }
 
-void operation_writer_lock(File* file){
-    safe_pthread_mutex_lock(&(file->order_mtx));
-    safe_pthread_mutex_lock(&(file->file_mtx));
-    while(file->n_writers > 0 || file->n_readers > 0)
-        safe_pthread_cond_wait(&(file->access_cond), &(file->file_mtx));
+void storage_writer_unlock(){
+    safe_pthread_mutex_lock(&(storage_mtx));
+
+    n_writers--;
+    safe_pthread_cond_signal(&(access_cond));
     
-
-    file->n_writers++;
-    safe_pthread_mutex_unlock(&(file->order_mtx));
-    safe_pthread_mutex_unlock(&(file->file_mtx));
-}
-
-
-void storage_writer_unlock(File* file){
-    safe_pthread_mutex_lock(&(file->file_mtx));
-
-    file->n_writers--;
-    safe_pthread_cond_signal(&(file->access_cond));
-    
-    safe_pthread_mutex_unlock(&(file->file_mtx));
+    safe_pthread_mutex_unlock(&(storage_mtx));
 }

@@ -96,8 +96,8 @@ void log_setConsole(int level, bool cond);
 /**
  * @brief Set if the level write the line code where it was called
  * 
- * @param level 
- * @param cond 
+ * @param level level of log
+ * @param cond true if write, false otherwise
  */
 void log_setWriteLine(int level, bool cond);
 

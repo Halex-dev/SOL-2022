@@ -133,34 +133,132 @@ ssize_t writen(int fd, const void *vptr, size_t n);
  */
 void _mkdir(const char *dir);
 
-
+/**
+ * @brief Function to convert relative path to absolute
+ * 
+ * @param str 
+ * @return char* 
+ */
 char* absolute_path(const char* str);
+
+/**
+ * @brief Given a path constructs the missing folders recursively
+ * 
+ * @param dir 
+ * @return char* 
+ */
 char* create_absolute_path(const char *dir);
 
+/**
+ * @brief Return size of FILE
+ * 
+ * @param file 
+ * @return int 
+ */
 int file_size(FILE* file);
+
+/**
+ * @brief Returns all bytes read on the pathname file
+ * 
+ * @param pathname 
+ * @return void* 
+ */
 void* file_read(const char* pathname);
+
+/**
+ * @brief Write size data on pathname
+ * 
+ * @param pathname 
+ * @param data 
+ * @param size 
+ * @return int -1 on error, otherwise 0
+ */
 int file_write(const char* pathname, void* data, size_t size);
+
+/**
+ * @brief Function to convert long numer to string
+ * 
+ * @param num 
+ * @return char* 
+ */
 char* long_to_string(long num);
+
+/**
+ * @brief Returns the size of the pathname file
+ * 
+ * @param pathname 
+ * @return int 
+ */
 int file_size_path(const char* pathname);
 
 // _______________________________ COMMUNICATION _______________________________ //
 
+/**
+ * @brief Function to communicate with client/server, send one message.
+ * 
+ * @param fd 
+ * @param msg 
+ * @return int -1 on error, otherwise n bytes send.
+ */
 int send_msg(int fd, api_msg* msg);
+
+/**
+ * @brief Function to communicate with client/server, read one message.
+ * 
+ * @param fd 
+ * @param msg 
+ * @return int -1 on error, otherwise n bytes read.
+ */
 int read_msg(int fd, api_msg* msg);
-char * print_flag(api_flags flag);
-char * print_operation(api_op flag);
-char * print_res(api_res res);
-void print_msg(api_msg* msg);
-void reset_msg(api_msg* msg);
+
+/**
+ * @brief Free all data in the message and delete it
+ * 
+ * @param msg 
+ */
 void free_msg(api_msg* msg);
+
 /**
  * @brief Free data (if is != NULL) and set data lenght to zero.
  * 
  * @param msg 
  */
 void reset_data_msg(api_msg* msg);
+
+/**
+ * @brief Free all element about msg and reset it.
+ * 
+ * @param msg 
+ */
 void reset_msg_free(api_msg* msg);
 
+/**
+ * @brief Reset a msg.
+ * 
+ * @param msg 
+ */
+void reset_msg(api_msg* msg);
+
+/**
+ * @brief Convert string to int
+ * 
+ * @param str 
+ * @return int 
+ */
 int string_to_int(char* str);
+
+/**
+ * @brief Convert int to string
+ * 
+ * @param num 
+ * @return char* 
+ */
 char* int_to_string(int num);
+
+// _______________________________ DEBUG FUNCTION _______________________________ //
+
+char * print_flag(api_flags flag);
+char * print_operation(api_op flag);
+char * print_res(api_res res);
+void print_msg(api_msg* msg);
 #endif

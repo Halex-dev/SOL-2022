@@ -108,7 +108,7 @@ n_unlock=$(grep -Eo "\[UNLOCK_FILE_SUCCESS\]" -c $LOG_FILE)
 n_close=$(grep -Eo "\[CLOSE_FILE_SUCCESS\]" -c $LOG_FILE)
 max_size=$(grep -Eo "\[CURRENT_SPACE\] [0-9]+" ${LOG_FILE} | grep -Eo "[0-9]+" | { max=0; while read num; do if (( max<num )); then ((max=num)); fi; done; echo $max; } )
 max_files=$(grep -Eo "\[CURRENT_FILES\] [0-9]+" ${LOG_FILE} | grep -Eo "[0-9]+" | { max=0; while read num; do if (( max<num )); then ((max=num)); fi; done; echo $max; } )
-max_conn=$(grep -Eo "\[CURRENT_CONNECTIONS\] [0-9]+" ${LOG_FILE} | grep -Eo "[0-9]+" | { max=0; while read num; do if (( max<num )); then ((max=num)); fi; done; echo $max; } )
+max_conn=$(grep -Eo "Currently connected:\ [0-9]+" ${LOG_FILE} | grep -Eo "[0-9]+" | { max=0; while read num; do if (( max<num )); then ((max=num)); fi; done; echo $max; } )
 
 echo "No. of locks: $n_locks"
 echo "No. of total open: $n_openlock"

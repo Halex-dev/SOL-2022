@@ -55,6 +55,10 @@ int api_errno(int res){
             log_error("[API_ERROR] The file has already been written");
             return EAGAIN;
         }
+        case RES_EMPTY:{
+            log_error("[API_ERROR] Canno't append file with zero space.");
+            return EAGAIN;
+        }
         case RES_SERVER_EMPTY:{
             log_error("[API_ERROR] The server is empty");
             return RES_SERVER_EMPTY;

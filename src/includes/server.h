@@ -265,7 +265,11 @@ typedef struct {
     long fd_client;
 } worker_res;
 
-
+/**
+ * @brief Worker thread that execute  all operations
+ * 
+ * @param arg 
+ */
 void worker(void* arg);
 
 // ______________________________________________________ FILES ______________________________________________________ //
@@ -283,18 +287,10 @@ typedef struct {
     long fd_lock;
     /** How much file used for LFU AND MFU replacement algorithm. */
     long used;
-    /** Mutex to regulate access to this file. */
-    pthread_mutex_t order_mtx;
     /** Mutex to modify this file. */
-    pthread_mutex_t file_mtx;
+    //pthread_mutex_t file_mtx;
     /** Conditional variable to gain access to this file. */
-    pthread_cond_t access_cond;
-    /** Conditional variable to gain access to this file. */
-    pthread_cond_t lock_cond;
-    /** Number of readers who are now using this file. */
-    unsigned int n_readers;
-    /** Number of writers who are now using this file. */
-    unsigned int n_writers;
+    //pthread_cond_t lock_cond;
     /** Time of creation to implement FIFO replacement algorithm. */
     struct timespec creation_time;
     /** Time of last use to implement LRU replacement algorithm. */
@@ -304,7 +300,7 @@ typedef struct {
      */ 
     bool can_expelled;
     /**
-     * 
+     * Dictionary contain all user open this file (and they haven't made the close yet)
      */
     Dict* opened;
 } File;
@@ -329,13 +325,6 @@ void clean_storage();
 /** Function to inizialize storage data struct. */
 void storage_init();
 
-/** File replacement policy. */
-typedef enum {
-    READ_S,
-    WRITE_S,
-    ALL_S
-} flag_storage;
-
 
 /**
  * @brief Insert key and data on storage (Does not make a copy of the data)
@@ -352,7 +341,7 @@ void insert_storage(char* key, void* data);
  * @param key 
  * @param flag
  */
-void* search_storage(char* key, int flag);
+void* search_storage(char* key);
 
 /**
  * @brief Search if the key exist in storage/
@@ -374,34 +363,52 @@ void del_storage(char* key);
  * 
  * @param key 
  */
-void del_storage_nolock(char* key);
+void del_storage(char* key);
 
 /**
  * Create new file in memory
  */
 int storage_file_create(File* file, long flags, long fd_client);
 
-/** Locks a file to allow reading operations. */
-void storage_reader_lock(File* file);
-/** Locks a file to allow reading operations without increment used file. */
-void operation_reader_lock(File* file);
-/** Unlocks a file previously locked in reading mode. */
-void storage_reader_unlock(File* file);
-/** Locks a file to allow reading and writing operations. */
-void storage_writer_lock(File* file);
-/** Locks a file to allow reading and writing operations without increment used file. */
-void operation_writer_lock(File* file);
-/** Unlocks a file previously locked in writing mode. */
-void storage_writer_unlock(File* file);
+/**
+ * @brief Lock the storage as a reader
+ * 
+ */
+void storage_reader_lock();
 
-void storage_lock();
-void storage_unlock();
-int storage_size();
+/**
+ * @brief Unlock the storage as a reader
+ * 
+ */
+void storage_reader_unlock();
+
+/**
+ * @brief Lock the storage as a writer
+ * 
+ */
+void storage_writer_lock();
+
+/**
+ * @brief Unlock the storage as a writer
+ * 
+ */
+void storage_writer_unlock();
+
+/**
+ * @brief hiterate func in all element inside storage (RBT)
+ * 
+ * @param func 
+ * @param param 
+ */
 void storage_rbt_hiterate(void (*func)(void *, void* param), void* param);
-void storage_hash_hiterate(hashmap_callback func, void* param);
-void storage_rbt_hiterate_nolock(void (*func)(void *, void* param), void* param);
-void storage_hash_hiterate_nolock(hashmap_callback func, void* param);
 
+/**
+ * @brief hiterate func in all element inside storage (HASH)
+ * 
+ * @param func 
+ * @param param 
+ */
+void storage_hash_hiterate(hashmap_callback func, void* param);
 
 /** data of fd. */
 typedef struct {
@@ -485,19 +492,64 @@ void remove_openlock(long fd_client);
  */
 void state_increment_file();
 
+/**
+ * @brief Get the Size object ---> IS NOT USED, ONLY FOR DEBUG
+ * 
+ * @return int 
+ */
+int getSize();
+
+/**
+ * @brief Records the added space in the file storage server
+ * 
+ * @param size 
+ */
 void state_add_space(int size);
+
+/**
+ * @brief Records the space removed from the file on the storage server
+ * 
+ * @param file 
+ */
 void state_remove_space(File* file);
 
+/**
+ * @brief Records the added space in the file storage server by append operation
+ * 
+ * @param add 
+ */
 void state_append_space(size_t add);
+
+/**
+ * @brief Function to change state of server. Decrement files maintained on the server
+ */
 void state_dec_file();
+
+/**
+ * @brief Returns the space occupied by the server 
+ * 
+ * @return int 
+ */
 int state_get_space();
+
+/**
+ * @brief Function to print all state of server
+ * 
+ */
 void printState();
 
 //Get file can remove and lock it.
 replace_data get_expell_file();
 
+/**
+ * @brief Function to expell file by policy size
+ * 
+ * @param file 
+ * @param fd_client 
+ * @param size 
+ * @return int 
+ */
 int check_expell_size(File* file, long fd_client, size_t size);
-void check_expell_file();
 
 /**____________________________________________________ WORKER FUNCTION   ____________________________________________________ **/
 
@@ -536,7 +588,11 @@ void close_file(int worker_no, long fd_client, api_msg* msg);
  *      RES_SUCCESS  in case of success;
  *      RES_NOT_EXIST  if the client is trying to open a non-existing file
  *      RES_NOT_OPEN  if the client doesn't open the file
+ *      RES_NOT_YOU_LOCKED if the client file is locked by other client
+ *      RES_NOT_LOCKED if the client doesn't locked the file
+ *      RES_NOT_EMPTY if the file size is > 0 (The must do append)
  *      RES_ERROR_DATA if the client can't send the data of file
+ *      RES_TOO_BIG If the file sent by the client exceeds the maximum space of the server
  * 
  * @param worker_no 
  * @param fd_client 
@@ -617,7 +673,13 @@ void read_n_file(int worker_no, long fd_client, api_msg* msg);
  * @brief Deals with an readFile request from the API.
  * Can set the RES of msg:
  *      RES_SUCCESS  in case of success;
+ *      RES_NOT_EXIST  if the client is trying to open a non-existing file
+ *      RES_NOT_OPEN  if the client doesn't open the file
+ *      RES_NOT_YOU_LOCKED if the client file is locked by other client
+ *      RES_NOT_LOCKED if the client doesn't locked the file
+ *      RES_NOT_EMPTY if the file size is > 0 (The must do append)
  *      RES_ERROR_DATA if the client can't send the data of file
+ *      RES_TOO_BIG If the file sent by the client exceeds the maximum space of the server
  * 
  * @param worker_no 
  * @param fd_client 

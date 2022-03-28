@@ -130,7 +130,7 @@ typedef struct SocketConnection{
 } SocketConnection;
 
 extern SocketConnection* current_socket; //for operation
-extern Dict* socket_m;
+extern Dict* socket_m; //All socket
 
 /**
  * Given a socket and reset it.

@@ -101,8 +101,8 @@ int main(int argc, char* argv[]){
                 if(curr_state.conn > curr_state.max_conn)
                     curr_state.max_conn = curr_state.conn;
 
-                log_stats("[CLIENT-NEW] New connection! File descriptor: %ld. (Attualmente connessi: %d)", fd_client, curr_state.conn);
-                
+                log_stats("[CLIENT-NEW] New connection! File descriptor: %ld. (Currently connected: %d)", fd_client, curr_state.conn);
+             
                 // adding client to master set
                 FD_SET(fd_client, &set);
 
@@ -206,5 +206,4 @@ int main(int argc, char* argv[]){
 //TODO
 /**
  * Compressione file?
- * Ricontrollare tutto e commentare tutti gli h
  */

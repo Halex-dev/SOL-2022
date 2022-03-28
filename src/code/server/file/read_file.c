@@ -7,23 +7,23 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname,READ_S);
+    storage_reader_lock();
+    File* file = search_storage(pathname);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
         free(pathname);
+        storage_reader_unlock();
         return;
     }
 
     char* num = long_to_string(fd_client);
 
-    //storage_reader_lock(file);
-
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;
         free(num);
-        storage_reader_unlock(file);
         free(pathname);
+        storage_reader_unlock();
         return;
     }
     free(num);
@@ -36,24 +36,24 @@ void read_file(int worker_no, long fd_client, api_msg* msg){
 
     if(send_msg(fd_client, msg) == -1){
         msg->response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
         free(pathname);
+        storage_reader_unlock();
         return;
     }
 
+    file->used++;
     reset_msg(msg);
 
     /**
     //Confirm it's ok --Maybe is senseless
     if(read_msg(fd_client, msg) == -1){
         msg->response = RES_ERROR_DATA;
-        storage_reader_unlock(file);
         return;
     }*/
 
     log_stats("[THREAD %d] [READ_FILE_SUCCESS] Successfully sent file \"%s\" to client.", worker_no, pathname); 
     log_stats("[WRITE_TO_CLIENT][READ_FILE][WB] %lu bytes were sent to client.", file->size);
-    storage_reader_unlock(file);
     free(pathname);
     msg->response = RES_SUCCESS;
+    storage_reader_unlock();
 }

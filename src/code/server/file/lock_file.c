@@ -7,22 +7,22 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
 
     reset_data_msg(msg);
 
-    File* file = search_storage(pathname,WRITE_S);
+    storage_writer_lock();
+    File* file = search_storage(pathname);
 
     if(file == NULL){
         msg->response = RES_NOT_EXIST;
         free(pathname);
+        storage_writer_unlock();
         return;
     }
-
-    //storage_writer_lock(file);
 
     /** 
     char* num = long_to_string(fd_client);
     if(!dict_contain(file->opened, num)){
         msg->response = RES_NOT_OPEN;
         free(num);
-        storage_writer_unlock(file);
+        storage_writer_unlock();
         return;
     }
     free(num);
@@ -30,7 +30,7 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
 
     if(file->fd_lock != -1 && file->fd_lock == fd_client){ // already locked by client
         msg->response = RES_YOU_LOCKED;
-        storage_writer_unlock(file);
+        storage_writer_unlock();
         free(pathname);
         //safe_pthread_cond_signal(&(file->lock_cond)); 
         return;
@@ -39,26 +39,30 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
     if(file->fd_lock != -1 && file->fd_lock != fd_client){ // already locked by other client
 
         long fd_lock = file->fd_lock;
-        storage_writer_unlock(file);
-
+        storage_writer_unlock();
+        
+       
         while(fd_lock != -1){//Wait unlock file || Active waiting
             usleep(50); //I slow down a bit before checking if there is another request
             //safe_pthread_cond_wait(&(file->lock_cond), &(files_mtx));//Problem when have multiple thread, i wanto to contine execute request
             threadpool_queue_next(tm, worker_no); //I can't do mutex inside becouse i'm not sure if the thread wake up (when i have more one thread)
 
-            File* file = search_storage(pathname,READ_S);
+            storage_reader_lock();
+            File* file = search_storage(pathname);
 
             if(file == NULL){
                 msg->response = RES_DELETE;
                 free(pathname);
+                 storage_reader_unlock();
                 return;
             }
 
             fd_lock = file->fd_lock;
-            storage_reader_unlock(file);
+            storage_reader_unlock();
         }
+       
         
-        storage_writer_lock(file);
+        storage_writer_lock();
         file->fd_lock = fd_client;
         log_stats("[THREAD %d] [LOCK_FILE_SUCCESS] Successfully locked file \"%s\".", worker_no, pathname);
     }
@@ -75,7 +79,9 @@ void locks_file(int worker_no, long fd_client, api_msg* msg){
         exit(EXIT_FAILURE);
     }
 
+    file->used++;
     free(pathname);
-    storage_writer_unlock(file);
+    storage_writer_unlock();
+
     msg->response = RES_SUCCESS;
 }

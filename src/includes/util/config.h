@@ -23,8 +23,26 @@ typedef struct _config {
     struct _list_c* tail;
 } config_file;
 
+/**
+ * @brief Function to read the config file by path.
+ * 
+ * @param path 
+ * @return config_file* 
+ */
 config_file* init_config(const char* path);
+
+/**
+ * @brief Print all found parameters
+ * 
+ * @param cf 
+ */
 void printConfig(config_file* cf);
+
+/**
+ * @brief Delete all parameters in memory.
+ * 
+ * @param cf 
+ */
 void free_config(config_file* cf);
 
 #endif

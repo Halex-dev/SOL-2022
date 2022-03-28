@@ -25,7 +25,7 @@ MAX_FILES = 10000\nMAX_SPACE = 128\nLOG_PATH = system/logs/server\n\
 POLICY = MFU\nDEBUG = no\nSTORAGE = ${STORAGE}" > ${CONFIG}
 
 echo -e "${GREEN}\n\tOpening server process.${NORMC}\n";
-valgrind --leak-check=full ${SERVER} ${CONFIG} & # opening server
+valgrind --leak-check=full --show-leak-kinds=all ${SERVER} ${CONFIG} & # opening server
 SERVER_PID=$! # getting server PID
 sleep 3 # just to make valgrind print stuff
 

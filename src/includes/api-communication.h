@@ -51,6 +51,7 @@ typedef enum {
      */
     RES_TOO_BIG = -31,
     RES_NOT_EMPTY = -32,
+    RES_EMPTY = -33,
 
     /**
      *  SERVER COMMUNICATION -39
@@ -64,11 +65,6 @@ typedef enum {
     O_ALL = 3,
     O_NULL = 0 
 } api_flags;
-
-#define FLAG(sys_call, str) if(sys_call != 0) {\
-        log_error("%s %s (codice %d)\n", str, strerror(errno), errno); \
-        return -1; \
-    }
 
 typedef struct {
     int data_length;

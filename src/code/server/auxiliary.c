@@ -88,7 +88,7 @@ void close_connection(long fd_client){
 
     // no need for mutex, only this thread deals with curr_state.conn/max_conn
     curr_state.conn--;
-    log_stats("[CLOSE-CONN] Closed connection with client %ld. (Attualmente connessi: %d)", fd_client, curr_state.conn);
+    log_stats("[CLOSE-CONN] Closed connection with client %ld. (Currently connected: %d)", fd_client, curr_state.conn);
 }
 
 /**____________________________________________________  STATE FUNCTION   ____________________________________________________ **/
@@ -99,7 +99,23 @@ void state_increment_file(){
         curr_state.files++;
 
         if(curr_state.files > server.max_files){
-            check_expell_file();
+            replace_data replace = get_expell_file();
+
+            if(replace.file == NULL){
+                return;
+            }
+                
+            //Lock get before do expell_onefile
+            curr_state.space -= replace.file->size;
+            curr_state.files--;
+            curr_state.n_policy++;
+                        
+            log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
+
+            log_stats("[REPLACEMENT] [%s] File \"%s\" was removed from the server by the replacement algorithm.", getPolicy(), replace.pathname);
+            log_stats("[REPLACEMENT] [BF] %lu bytes freed.", replace.file->size);
+
+            del_storage(replace.pathname);
         }
         
         if(curr_state.files > curr_state.max_files) 
@@ -167,6 +183,7 @@ int state_get_space(){
 }
 
 void printState(){
+    storage_reader_lock();
     safe_pthread_mutex_lock(&curr_state_mtx);
     printf("\n\n");
         // printing summary of stats
@@ -182,6 +199,7 @@ void printState(){
     print_storage();
     printf("\n");
     safe_pthread_mutex_unlock(&curr_state_mtx);
+    storage_reader_unlock();
 }
 
 /**____________________________________________________  REPLACE FUNCTION   ____________________________________________________ **/
@@ -228,41 +246,16 @@ void file_remove_rbt(void *d, void* usr){
 
     if(file->size == 0) return;
 
-    operation_reader_lock(file);
-
-    if(replace->file != NULL){
-        operation_reader_lock(replace->file);
-    }
-        
     if(!file->can_expelled){
-        
-        if(replace->file != NULL){
-            storage_reader_unlock(replace->file);
-        }
-        
-        storage_reader_unlock(file);
         return;
     }
 
     if(replace->file == NULL || replace->policy(file, replace->file) < 0){
-
-        //Unlock before change the file
-        if(replace->file != NULL) {
-            storage_reader_unlock(replace->file);
-        }
             
         // updating least_file
         replace->file = file;
         replace->pathname = p->key;
     }
-    else{
-        //Unlock before change the file
-        if(replace->file != NULL) {
-            storage_reader_unlock(replace->file);
-        }
-    }
-
-    storage_reader_unlock(file);
 }
 
 void file_remove_hash(void* key, size_t ksize, void* value, void* usr){
@@ -274,42 +267,18 @@ void file_remove_hash(void* key, size_t ksize, void* value, void* usr){
     if(file == NULL) return;
 
     if(file->size == 0) return;
-
-    operation_reader_lock(file);
-
-    if(replace->file != NULL){
-        operation_reader_lock(replace->file);
-    }
         
     if(!file->can_expelled){
-        
-        if(replace->file != NULL){
-            storage_reader_unlock(replace->file);
-        }
-        
-        storage_reader_unlock(file);
         return;
     }
 
     if(replace->file == NULL || replace->policy(file, replace->file) < 0){
 
-        //Unlock before change the file
-        if(replace->file != NULL) {
-            storage_reader_unlock(replace->file);
-        }
-            
         // updating least_file
         replace->file = file;
         replace->pathname = key;
     }
-    else{
-        //Unlock before change the file
-        if(replace->file != NULL) {
-            storage_reader_unlock(replace->file);
-        }
-    }
 
-    storage_reader_unlock(file);
 }
 
 replace_data get_expell_file(){
@@ -321,10 +290,10 @@ replace_data get_expell_file(){
     };
 
     if(server.storage == HASH){
-        storage_hash_hiterate_nolock(file_remove_hash, &replace);
+        storage_hash_hiterate(file_remove_hash, &replace);
     }
     else if(server.storage == RBT){
-        storage_rbt_hiterate_nolock(file_remove_rbt, &replace);
+        storage_rbt_hiterate(file_remove_rbt, &replace);
     }
 
     return replace;
@@ -359,8 +328,6 @@ int check_expell_size(File* file, long fd_client, size_t size){
                 log_error("break");
                 break;
             }
-                
-            operation_writer_lock(replace.file);
 
             msg.response = RES_DATA;
             msg.data_length = strlen(replace.pathname);
@@ -369,7 +336,6 @@ int check_expell_size(File* file, long fd_client, size_t size){
             //Send pathname
             if(send_msg(fd_client, &msg) == -1){
                 safe_pthread_mutex_unlock(&curr_state_mtx);
-                storage_writer_unlock(replace.file);
                 return -1;
             }
 
@@ -382,7 +348,6 @@ int check_expell_size(File* file, long fd_client, size_t size){
             //Send File data
             if(send_msg(fd_client, &msg) == -1){
                 safe_pthread_mutex_unlock(&curr_state_mtx);
-                storage_writer_unlock(replace.file);
                 return -1;
             }
 
@@ -399,7 +364,7 @@ int check_expell_size(File* file, long fd_client, size_t size){
             log_stats("[REPLACEMENT] [%s] File \"%s\" was removed from the server by the replacement algorithm.", getPolicy(), replace.pathname);
             log_stats("[REPLACEMENT] [BF] %lu bytes freed.", replace.file->size);
 
-            del_storage_nolock(replace.pathname);
+            del_storage(replace.pathname);
         }
 
         log_stats("[REPLACEMENT] In total %d (%ld) files were removed from the server.", file_removed, freed);
@@ -409,32 +374,4 @@ int check_expell_size(File* file, long fd_client, size_t size){
     safe_pthread_mutex_unlock(&curr_state_mtx);
     
     return 0;
-}
-
-void check_expell_file(){
-
-    storage_lock();
-
-    replace_data replace = get_expell_file();
-
-    if(replace.file == NULL){
-        storage_unlock();
-        return;
-    }
-        
-    operation_writer_lock(replace.file);
-    
-    //Lock get before do check_expell_file
-    curr_state.space -= replace.file->size;
-    curr_state.files--;
-    curr_state.n_policy++;
-                
-    log_stats("[CURRENT_SPACE] %u bytes are currently occupied.", curr_state.space);
-
-    log_stats("[REPLACEMENT] [%s] File \"%s\" was removed from the server by the replacement algorithm.", getPolicy(), replace.pathname);
-    log_stats("[REPLACEMENT] [BF] %lu bytes freed.", replace.file->size);
-
-    del_storage_nolock(replace.pathname);
-
-    storage_unlock();
 }
